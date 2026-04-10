@@ -1,0 +1,234 @@
+{
+  "formato": "F229_limpio",
+  "version": "1.0",
+  "items": [
+    {
+      "tipo": "item",
+      "codigo": "IB200",
+      "articulo": "3.27. Titulo 27 Libro 3 RETIE",
+      "requisito": "Protecciones",
+      "aspecto": "Funcionamiento de corte automático de alimentación",
+      "descripcion": "Las instalaciones para uso final de la electricidad deben contar con elementos y medidas de protección para impedir los efectos de las sobrecorrientes y sobretensiones, resguardar a los usuarios de los contactos directos a partes energizadas y anular los efectos de los contactos indirectos, que puedan causar choque eléctrico. Igualmente, debe contar con las protecciones para evitar daños en la instalación o en el medio que la rodea."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB201",
+      "articulo": "3.27. Titulo 27 Libro 3 RETIE",
+      "requisito": "Sistema de puesta a tierra",
+      "aspecto": "Continuidad de los conductores de tierra y conexiones equipotenciales",
+      "descripcion": "En toda instalación de uso final, el conductor neutro y el conductor de puesta a tierra deben ir independientes entre sí y deben conectarse con un puente equipotencial solo en el tablero general, donde está la protección principal y la conexión al electrodo de puesta a tierra."
+    },
+    {
+      "tipo": "seccion",
+      "titulo": "Medidas de protección básica"
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB203",
+      "articulo": "3.27.1.a. Titulo 27 Libro 3 RETIE",
+      "requisito": "Otros",
+      "aspecto": "Protección contra electrocución por contacto directo",
+      "descripcion": "Para minimizar los riesgos de choque eléctrico por contacto directo con partes energizadas, las instalaciones eléctricas deben cumplir los siguientes requisitos según aplique al tipo de instalación: a. Contar con el aislamiento apropiado acorde con el nivel de tensión de la parte energizada."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB204",
+      "articulo": "3.27.1.b. Titulo 27 Libro 3 RETIE",
+      "requisito": "Distancias de seguridad",
+      "aspecto": "Distancias de seguridad",
+      "descripcion": "Evitar la aproximación de las personas a partes bajo tensión garantizando las distancias de seguridad de acuerdo con el nivel de tensión, utilizando obstáculos o barreras que impidan el acceso de las personas sin autorización a las partes energizadas."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB205",
+      "articulo": "3.27.1.c. Titulo 27 Libro 3 RETIE",
+      "requisito": "Otros",
+      "aspecto": "Protección contra electrocución por contacto directo",
+      "descripcion": "Emplear sistemas de muy baja tensión en algunos tipos de aplicaciones, como piscinas y zonas húmedas."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB206",
+      "articulo": "3.27.1.d. Titulo 27 Libro 3 RETIE",
+      "requisito": "Protecciones",
+      "aspecto": "Funcionamiento de corte automático de alimentación",
+      "descripcion": "Disponer de dispositivos de corte automático de la alimentación para cada circuito individualmente."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB207",
+      "articulo": "3.27.1.e. Titulo 27 Libro 3 RETIE",
+      "requisito": "Otros",
+      "aspecto": "Protección contra electrocución por contacto directo",
+      "descripcion": "Usar sistemas de potencia aislados en algunas instalaciones, tales como minas, lugares críticos en instalaciones del cuidado de la salud."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB208",
+      "articulo": "3.27.1.f. Titulo 27 Libro 3 RETIE",
+      "requisito": "Protecciones",
+      "aspecto": "Selección de conductores",
+      "descripcion": "Para evitar el sobrecalentamiento de conductores, en sistemas trifásicos de instalaciones de uso final con cargas no lineales, los conductores de neutro deben ser dimensionados por lo menos al 173% de la corriente de fase según los lineamientos de las normas la IEEE 519 o IEEE1100. Igualmente, se debe aceptar el dimensionamiento del conductor de neutro como se indica en la norma IEC 60364-5-52 (artículos 523, 524 y Anexo E), cuando se conocen con precisión las corrientes armónicas de tercer orden, que efectivamente circulen por el neutro. En todo caso en el diseño se debe hacer mención expresa de la norma utilizada."
+    },
+    {
+      "tipo": "seccion",
+      "titulo": "Medidas de protección contra falla de aislamiento"
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB210",
+      "articulo": "3.27.2.a. Titulo 27 Libro 3 RETIE",
+      "requisito": "Otros",
+      "aspecto": "Protección contra electrocución por contacto indirecto",
+      "descripcion": "Toda instalación eléctrica debe cumplir los siguientes requisitos para evitar fallas y el posible contacto con partes energizadas indirectamente: a. El aislamiento debe ser adecuado para el nivel de tensión de los equipos."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB211",
+      "articulo": "3.27.2.b. Titulo 27 Libro 3 RETIE",
+      "requisito": "Sistema de puesta a tierra",
+      "aspecto": "Continuidad de los conductores de tierra y conexiones equipotenciales",
+      "descripcion": "Toda instalación, debe disponer de un sistema de puesta a tierra."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB212",
+      "articulo": "3.27.2.c. Titulo 27 Libro 3 RETIE",
+      "requisito": "Sistema de puesta a tierra",
+      "aspecto": "Continuidad de los conductores de tierra y conexiones equipotenciales",
+      "descripcion": "Para los sistemas de corriente alterna mencionados en la sección 250.21 de la NTC 2050 segunda actualización, no se les exige estar puestos a tierra."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB213",
+      "articulo": "3.27.2.d. Titulo 27 Libro 3 RETIE",
+      "requisito": "Sistema de puesta a tierra",
+      "aspecto": "Continuidad de los conductores de tierra y conexiones equipotenciales",
+      "descripcion": "Todas las carcasas o masas de equipos deben contar con conexión eléctrica a tierra, que protejan a las personas frente a las corrientes de fuga."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB214",
+      "articulo": "3.27.2.e. Titulo 27 Libro 3 RETIE",
+      "requisito": "Protecciones",
+      "aspecto": "Funcionamiento de corte automático de alimentación",
+      "descripcion": "Utilizar protecciones diferenciales de alta sensibilidad (GFCI o RCD) en las áreas donde la instalación genere mayor vulnerabilidad de la persona al paso de la corriente, tales como lugares húmedos y mojados."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB215",
+      "articulo": "3.27.2.f. Titulo 27 Libro 3 RETIE",
+      "requisito": "Otros",
+      "aspecto": "Protección contra electrocución por contacto indirecto",
+      "descripcion": "Se debe buscar la inaccesibilidad simultánea entre elementos conductores y tierra."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB216",
+      "articulo": "3.27.2.g. Titulo 27 Libro 3 RETIE",
+      "requisito": "Sistema de puesta a tierra",
+      "aspecto": "Continuidad de los conductores de tierra y conexiones equipotenciales",
+      "descripcion": "Se debe disponer de conexiones equipotenciales."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB217",
+      "articulo": "3.27.2.h. Titulo 27 Libro 3 RETIE",
+      "requisito": "Protecciones",
+      "aspecto": "Funcionamiento de corte automático de alimentación",
+      "descripcion": "Los circuitos protegidos por un interruptor diferencial de fuga deben operar con una curva de sensibilidad que supere la exigencia de la curva C1 de la Figura 1.5.1.2. a del Libro 1 de disposiciones generales."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB218",
+      "articulo": "3.27.2.i. Titulo 27 Libro 3 RETIE",
+      "requisito": "Otros",
+      "aspecto": "Protección contra electrocución por contacto directo",
+      "descripcion": "En algunas instalaciones como piscinas y zonas húmedas se deben utilizar sistemas de muy baja tensión, menores o igual a 12 V."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB219",
+      "articulo": "3.27.2.j. Titulo 27 Libro 3 RETIE",
+      "requisito": "Otros",
+      "aspecto": "Protección contra electrocución por contacto directo",
+      "descripcion": "En algunas instalaciones como minas, lugares críticos en instalaciones del cuidado de la salud o piscinas se debe disponer de circuitos aislados galvánicamente, con transformadores de aislamiento."
+    },
+    {
+      "tipo": "seccion",
+      "titulo": "Protecciones contra sobrecorrientes"
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB221",
+      "articulo": "3.27.3.a. Titulo 27 Libro 3 RETIE",
+      "requisito": "Protecciones",
+      "aspecto": "Dispositivos de seccionamiento y mando",
+      "descripcion": "La instalación eléctrica de cualquier edificación debe contar con por lo menos un tablero general con al menos una protección de sobrecorriente para cada alimentador o acometida."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB222",
+      "articulo": "3.27.3.b. Titulo 27 Libro 3 RETIE",
+      "requisito": "Protecciones",
+      "aspecto": "Dispositivos de seccionamiento y mando",
+      "descripcion": "Cada circuito debe ser provisto de un interruptor automático, que lo proteja de sobrecorrientes y debe ser identificado. Igualmente, cada circuito ramal de un panel de distribución debe estar provisto de protección contra sobrecorriente."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB223",
+      "articulo": "3.27.3.c. Titulo 27 Libro 3 RETIE",
+      "requisito": "Protecciones",
+      "aspecto": "Funcionamiento de corte automático de alimentación",
+      "descripcion": "La importancia de este tipo de instalación entre otras cosas, radica en que los pacientes en áreas críticas pueden sufrir electrocución con corrientes del orden de microamperios, que pueden no ser detectadas ni medidas, especialmente cuando se conecta un conductor eléctrico directamente al músculo cardíaco del paciente, por lo que es necesario extremar las medidas de seguridad."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB224",
+      "articulo": "3.27.3.d. Titulo 27 Libro 3 RETIE",
+      "requisito": "Protecciones",
+      "aspecto": "Selección de dispositivos de protección contra sobrecorrientes",
+      "descripcion": "No se debe cambiar el interruptor automático por uno de mayor capacidad que supere la capacidad de corriente de los conductores del circuito a proteger. La corriente de disparo del interruptor nunca debe superar la corriente a la cual el aislamiento del conductor o los equipos asociados alcancen la temperatura máxima de operación permitida."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB225",
+      "articulo": "3.27.3.e. Titulo 27 Libro 3 RETIE",
+      "requisito": "Protecciones",
+      "aspecto": "Funcionamiento de corte automático de alimentación",
+      "descripcion": "Debe instalarse protección contra falla a tierra de equipos, en sistemas en estrella sólidamente puestos a tierra, con una tensión a tierra superior a 150 V, sin que supere los 1.000 V entre fases, por cada dispositivo de desconexión de la acometida de 1.000 A nominales o más. El sensor puede abarcar todos los conductores del circuito o sólo el puente equipotencial principal, teniendo en cuenta las consideraciones y excepciones descritas en el artículo 230.95 de la NTC 2050 segunda actualización."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB226",
+      "articulo": "3.27.3.f. Titulo 27 Libro 3 RETIE",
+      "requisito": "Protecciones",
+      "aspecto": "Dispositivos de seccionamiento y mando",
+      "descripcion": "Los dispositivos de interrupción de corriente por fuga a tierra deben ir incorporados en los interruptores automáticos o ubicados al lado del mismo formando un conjunto dentro del panel o tablero que los contiene."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB227",
+      "articulo": "3.27.3.g. Titulo 27 Libro 3 RETIE",
+      "requisito": "Protecciones",
+      "aspecto": "Dispositivos de seccionamiento y mando",
+      "descripcion": "No se debe conectar permanentemente en el conductor puesto a tierra de cualquier circuito, un dispositivo contra sobrecorriente, a menos que la apertura del dispositivo abra simultáneamente todos los conductores de ese circuito."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB228",
+      "articulo": "3.27.3.h. Titulo 27 Libro 3 RETIE",
+      "requisito": "Protecciones",
+      "aspecto": "Dispositivos de seccionamiento y mando",
+      "descripcion": "Se debe dar cumplimiento a los requisitos de instalación de interruptores automáticos señalado en el Libro 2 de Productos del RETIE."
+    },
+    {
+      "tipo": "item",
+      "codigo": "IB229",
+      "articulo": "3.27.3.i. Titulo 27 Libro 3 RETIE",
+      "requisito": "Protecciones",
+      "aspecto": "Selección de dispositivos de protección contra sobrecorrientes",
+      "descripcion": "La instalación de los dispositivos de protección contra sobrecorriente debe atender a lo establecido en el estudio de coordinación de protecciones según título 8 del presente libro."
+    }
+  ]
+}
