@@ -1,5 +1,5 @@
 {
-  "formato": "F229_limpio",
+  "formato": "F229",
   "version": "1.0",
   "items": [
     {
@@ -8,6 +8,7 @@
       "articulo": "3.27. Titulo 27 Libro 3 RETIE",
       "requisito": "Protecciones",
       "aspecto": "Funcionamiento de corte automático de alimentación",
+      "actividad": "Verificar que la instalación cuente con protecciones contra sobrecorriente, sobretensión, contactos directos e indirectos.",
       "descripcion": "Las instalaciones para uso final de la electricidad deben contar con elementos y medidas de protección para impedir los efectos de las sobrecorrientes y sobretensiones, resguardar a los usuarios de los contactos directos a partes energizadas y anular los efectos de los contactos indirectos, que puedan causar choque eléctrico. Igualmente, debe contar con las protecciones para evitar daños en la instalación o en el medio que la rodea."
     },
     {
@@ -16,6 +17,7 @@
       "articulo": "3.27. Titulo 27 Libro 3 RETIE",
       "requisito": "Sistema de puesta a tierra",
       "aspecto": "Continuidad de los conductores de tierra y conexiones equipotenciales",
+      "actividad": "Verificar que el neutro y el conductor de puesta a tierra estén separados y correctamente conectados en el tablero general.",
       "descripcion": "En toda instalación de uso final, el conductor neutro y el conductor de puesta a tierra deben ir independientes entre sí y deben conectarse con un puente equipotencial solo en el tablero general, donde está la protección principal y la conexión al electrodo de puesta a tierra."
     },
     {
@@ -28,6 +30,7 @@
       "articulo": "3.27.1.a. Titulo 27 Libro 3 RETIE",
       "requisito": "Otros",
       "aspecto": "Protección contra electrocución por contacto directo",
+      "actividad": "Verificar que las partes energizadas tengan aislamiento adecuado según el nivel de tensión.",
       "descripcion": "Para minimizar los riesgos de choque eléctrico por contacto directo con partes energizadas, las instalaciones eléctricas deben cumplir los siguientes requisitos según aplique al tipo de instalación: a. Contar con el aislamiento apropiado acorde con el nivel de tensión de la parte energizada."
     },
     {
@@ -36,6 +39,7 @@
       "articulo": "3.27.1.b. Titulo 27 Libro 3 RETIE",
       "requisito": "Distancias de seguridad",
       "aspecto": "Distancias de seguridad",
+      "actividad": "Verificar que se cumplan las distancias de seguridad mediante barreras u obstáculos que impidan el acceso.",
       "descripcion": "Evitar la aproximación de las personas a partes bajo tensión garantizando las distancias de seguridad de acuerdo con el nivel de tensión, utilizando obstáculos o barreras que impidan el acceso de las personas sin autorización a las partes energizadas."
     },
     {
@@ -44,6 +48,7 @@
       "articulo": "3.27.1.c. Titulo 27 Libro 3 RETIE",
       "requisito": "Otros",
       "aspecto": "Protección contra electrocución por contacto directo",
+      "actividad": "Verificar el uso de sistemas de muy baja tensión en zonas húmedas o especiales.",
       "descripcion": "Emplear sistemas de muy baja tensión en algunos tipos de aplicaciones, como piscinas y zonas húmedas."
     },
     {
@@ -52,6 +57,7 @@
       "articulo": "3.27.1.d. Titulo 27 Libro 3 RETIE",
       "requisito": "Protecciones",
       "aspecto": "Funcionamiento de corte automático de alimentación",
+      "actividad": "Verificar que cada circuito cuente con dispositivo de corte automático independiente.",
       "descripcion": "Disponer de dispositivos de corte automático de la alimentación para cada circuito individualmente."
     },
     {
@@ -60,6 +66,7 @@
       "articulo": "3.27.1.e. Titulo 27 Libro 3 RETIE",
       "requisito": "Otros",
       "aspecto": "Protección contra electrocución por contacto directo",
+      "actividad": "Verificar el uso de sistemas aislados en instalaciones especiales como minas o áreas médicas.",
       "descripcion": "Usar sistemas de potencia aislados en algunas instalaciones, tales como minas, lugares críticos en instalaciones del cuidado de la salud."
     },
     {
@@ -68,6 +75,7 @@
       "articulo": "3.27.1.f. Titulo 27 Libro 3 RETIE",
       "requisito": "Protecciones",
       "aspecto": "Selección de conductores",
+      "actividad": "Verificar que el conductor neutro esté correctamente dimensionado en presencia de cargas no lineales.",
       "descripcion": "Para evitar el sobrecalentamiento de conductores, en sistemas trifásicos de instalaciones de uso final con cargas no lineales, los conductores de neutro deben ser dimensionados por lo menos al 173% de la corriente de fase según los lineamientos de las normas la IEEE 519 o IEEE1100. Igualmente, se debe aceptar el dimensionamiento del conductor de neutro como se indica en la norma IEC 60364-5-52 (artículos 523, 524 y Anexo E), cuando se conocen con precisión las corrientes armónicas de tercer orden, que efectivamente circulen por el neutro. En todo caso en el diseño se debe hacer mención expresa de la norma utilizada."
     },
     {
@@ -80,6 +88,7 @@
       "articulo": "3.27.2.a. Titulo 27 Libro 3 RETIE",
       "requisito": "Otros",
       "aspecto": "Protección contra electrocución por contacto indirecto",
+      "actividad": "Verificar que el aislamiento de los equipos sea adecuado para el nivel de tensión.",
       "descripcion": "Toda instalación eléctrica debe cumplir los siguientes requisitos para evitar fallas y el posible contacto con partes energizadas indirectamente: a. El aislamiento debe ser adecuado para el nivel de tensión de los equipos."
     },
     {
@@ -88,6 +97,7 @@
       "articulo": "3.27.2.b. Titulo 27 Libro 3 RETIE",
       "requisito": "Sistema de puesta a tierra",
       "aspecto": "Continuidad de los conductores de tierra y conexiones equipotenciales",
+      "actividad": "Verificar que la instalación cuente con sistema de puesta a tierra.",
       "descripcion": "Toda instalación, debe disponer de un sistema de puesta a tierra."
     },
     {
@@ -96,6 +106,7 @@
       "articulo": "3.27.2.c. Titulo 27 Libro 3 RETIE",
       "requisito": "Sistema de puesta a tierra",
       "aspecto": "Continuidad de los conductores de tierra y conexiones equipotenciales",
+      "actividad": "Verificar si el sistema aplica excepción de puesta a tierra según normativa.",
       "descripcion": "Para los sistemas de corriente alterna mencionados en la sección 250.21 de la NTC 2050 segunda actualización, no se les exige estar puestos a tierra."
     },
     {
@@ -104,6 +115,7 @@
       "articulo": "3.27.2.d. Titulo 27 Libro 3 RETIE",
       "requisito": "Sistema de puesta a tierra",
       "aspecto": "Continuidad de los conductores de tierra y conexiones equipotenciales",
+      "actividad": "Verificar que todas las masas metálicas estén conectadas a tierra.",
       "descripcion": "Todas las carcasas o masas de equipos deben contar con conexión eléctrica a tierra, que protejan a las personas frente a las corrientes de fuga."
     },
     {
@@ -112,6 +124,7 @@
       "articulo": "3.27.2.e. Titulo 27 Libro 3 RETIE",
       "requisito": "Protecciones",
       "aspecto": "Funcionamiento de corte automático de alimentación",
+      "actividad": "Verificar la instalación de protecciones diferenciales en zonas húmedas o de riesgo.",
       "descripcion": "Utilizar protecciones diferenciales de alta sensibilidad (GFCI o RCD) en las áreas donde la instalación genere mayor vulnerabilidad de la persona al paso de la corriente, tales como lugares húmedos y mojados."
     },
     {
@@ -120,6 +133,7 @@
       "articulo": "3.27.2.f. Titulo 27 Libro 3 RETIE",
       "requisito": "Otros",
       "aspecto": "Protección contra electrocución por contacto indirecto",
+      "actividad": "Verificar que no exista accesibilidad simultánea entre partes conductoras y tierra.",
       "descripcion": "Se debe buscar la inaccesibilidad simultánea entre elementos conductores y tierra."
     },
     {
@@ -128,6 +142,7 @@
       "articulo": "3.27.2.g. Titulo 27 Libro 3 RETIE",
       "requisito": "Sistema de puesta a tierra",
       "aspecto": "Continuidad de los conductores de tierra y conexiones equipotenciales",
+      "actividad": "Verificar la existencia de conexiones equipotenciales.",
       "descripcion": "Se debe disponer de conexiones equipotenciales."
     },
     {
@@ -136,6 +151,7 @@
       "articulo": "3.27.2.h. Titulo 27 Libro 3 RETIE",
       "requisito": "Protecciones",
       "aspecto": "Funcionamiento de corte automático de alimentación",
+      "actividad": "Verificar que los interruptores diferenciales cumplan con la curva de sensibilidad exigida.",
       "descripcion": "Los circuitos protegidos por un interruptor diferencial de fuga deben operar con una curva de sensibilidad que supere la exigencia de la curva C1 de la Figura 1.5.1.2. a del Libro 1 de disposiciones generales."
     },
     {
@@ -144,6 +160,7 @@
       "articulo": "3.27.2.i. Titulo 27 Libro 3 RETIE",
       "requisito": "Otros",
       "aspecto": "Protección contra electrocución por contacto directo",
+      "actividad": "Verificar el uso de muy baja tensión (≤12V) en zonas húmedas o piscinas.",
       "descripcion": "En algunas instalaciones como piscinas y zonas húmedas se deben utilizar sistemas de muy baja tensión, menores o igual a 12 V."
     },
     {
@@ -152,6 +169,7 @@
       "articulo": "3.27.2.j. Titulo 27 Libro 3 RETIE",
       "requisito": "Otros",
       "aspecto": "Protección contra electrocución por contacto directo",
+      "actividad": "Verificar el uso de transformadores de aislamiento en instalaciones críticas.",
       "descripcion": "En algunas instalaciones como minas, lugares críticos en instalaciones del cuidado de la salud o piscinas se debe disponer de circuitos aislados galvánicamente, con transformadores de aislamiento."
     },
     {
@@ -164,6 +182,7 @@
       "articulo": "3.27.3.a. Titulo 27 Libro 3 RETIE",
       "requisito": "Protecciones",
       "aspecto": "Dispositivos de seccionamiento y mando",
+      "actividad": "Verificar que exista tablero general con protección para cada alimentador.",
       "descripcion": "La instalación eléctrica de cualquier edificación debe contar con por lo menos un tablero general con al menos una protección de sobrecorriente para cada alimentador o acometida."
     },
     {
@@ -172,6 +191,7 @@
       "articulo": "3.27.3.b. Titulo 27 Libro 3 RETIE",
       "requisito": "Protecciones",
       "aspecto": "Dispositivos de seccionamiento y mando",
+      "actividad": "Verificar que cada circuito tenga protección contra sobrecorriente e identificación.",
       "descripcion": "Cada circuito debe ser provisto de un interruptor automático, que lo proteja de sobrecorrientes y debe ser identificado. Igualmente, cada circuito ramal de un panel de distribución debe estar provisto de protección contra sobrecorriente."
     },
     {
@@ -180,6 +200,7 @@
       "articulo": "3.27.3.c. Titulo 27 Libro 3 RETIE",
       "requisito": "Protecciones",
       "aspecto": "Funcionamiento de corte automático de alimentación",
+      "actividad": "Verificar que se implementen medidas de protección especiales en áreas críticas.",
       "descripcion": "La importancia de este tipo de instalación entre otras cosas, radica en que los pacientes en áreas críticas pueden sufrir electrocución con corrientes del orden de microamperios, que pueden no ser detectadas ni medidas, especialmente cuando se conecta un conductor eléctrico directamente al músculo cardíaco del paciente, por lo que es necesario extremar las medidas de seguridad."
     },
     {
@@ -188,6 +209,7 @@
       "articulo": "3.27.3.d. Titulo 27 Libro 3 RETIE",
       "requisito": "Protecciones",
       "aspecto": "Selección de dispositivos de protección contra sobrecorrientes",
+      "actividad": "Verificar que el interruptor no supere la capacidad de los conductores.",
       "descripcion": "No se debe cambiar el interruptor automático por uno de mayor capacidad que supere la capacidad de corriente de los conductores del circuito a proteger. La corriente de disparo del interruptor nunca debe superar la corriente a la cual el aislamiento del conductor o los equipos asociados alcancen la temperatura máxima de operación permitida."
     },
     {
@@ -196,6 +218,7 @@
       "articulo": "3.27.3.e. Titulo 27 Libro 3 RETIE",
       "requisito": "Protecciones",
       "aspecto": "Funcionamiento de corte automático de alimentación",
+      "actividad": "Verificar la instalación de protección contra falla a tierra en sistemas requeridos.",
       "descripcion": "Debe instalarse protección contra falla a tierra de equipos, en sistemas en estrella sólidamente puestos a tierra, con una tensión a tierra superior a 150 V, sin que supere los 1.000 V entre fases, por cada dispositivo de desconexión de la acometida de 1.000 A nominales o más. El sensor puede abarcar todos los conductores del circuito o sólo el puente equipotencial principal, teniendo en cuenta las consideraciones y excepciones descritas en el artículo 230.95 de la NTC 2050 segunda actualización."
     },
     {
@@ -204,6 +227,7 @@
       "articulo": "3.27.3.f. Titulo 27 Libro 3 RETIE",
       "requisito": "Protecciones",
       "aspecto": "Dispositivos de seccionamiento y mando",
+      "actividad": "Verificar que los dispositivos de fuga a tierra estén integrados correctamente en el tablero.",
       "descripcion": "Los dispositivos de interrupción de corriente por fuga a tierra deben ir incorporados en los interruptores automáticos o ubicados al lado del mismo formando un conjunto dentro del panel o tablero que los contiene."
     },
     {
@@ -212,6 +236,7 @@
       "articulo": "3.27.3.g. Titulo 27 Libro 3 RETIE",
       "requisito": "Protecciones",
       "aspecto": "Dispositivos de seccionamiento y mando",
+      "actividad": "Verificar que no existan protecciones en el conductor puesto a tierra sin desconexión simultánea.",
       "descripcion": "No se debe conectar permanentemente en el conductor puesto a tierra de cualquier circuito, un dispositivo contra sobrecorriente, a menos que la apertura del dispositivo abra simultáneamente todos los conductores de ese circuito."
     },
     {
@@ -220,6 +245,7 @@
       "articulo": "3.27.3.h. Titulo 27 Libro 3 RETIE",
       "requisito": "Protecciones",
       "aspecto": "Dispositivos de seccionamiento y mando",
+      "actividad": "Verificar cumplimiento de requisitos RETIE para instalación de interruptores automáticos.",
       "descripcion": "Se debe dar cumplimiento a los requisitos de instalación de interruptores automáticos señalado en el Libro 2 de Productos del RETIE."
     },
     {
@@ -228,6 +254,7 @@
       "articulo": "3.27.3.i. Titulo 27 Libro 3 RETIE",
       "requisito": "Protecciones",
       "aspecto": "Selección de dispositivos de protección contra sobrecorrientes",
+      "actividad": "Verificar que la selección de protecciones corresponda al estudio de coordinación.",
       "descripcion": "La instalación de los dispositivos de protección contra sobrecorriente debe atender a lo establecido en el estudio de coordinación de protecciones según título 8 del presente libro."
     }
   ]

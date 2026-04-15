@@ -7,3 +7,4 @@ build/
 .vscode/
 *.iml
 *.log
+.flutter-plugins-dependencies

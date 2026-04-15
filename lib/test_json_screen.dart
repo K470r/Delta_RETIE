@@ -22,13 +22,9 @@ class _TestJsonScreenState extends State<TestJsonScreen> {
         await rootBundle.loadString('assets/f229.json');
     final data = json.decode(response);
 
-    print("JSON cargado");
-
     setState(() {
       items = data['items'] ?? [];
     });
-
-    print("Items cargados: ${items.length}");
   }
 
   @override
@@ -38,7 +34,7 @@ class _TestJsonScreenState extends State<TestJsonScreen> {
         child: Column(
           children: [
 
-            // 🔹 HEADER (tipo Excel)
+            // 🔹 HEADER
             const FormatoHeader(
               codigo: "F-229-D",
               nombre:
@@ -80,6 +76,7 @@ class _TestJsonScreenState extends State<TestJsonScreen> {
                               crossAxisAlignment:
                                   CrossAxisAlignment.start,
                               children: [
+
                                 // 🔹 CÓDIGO + ARTÍCULO
                                 Text(
                                   "${item['codigo'] ?? ''}  |  ${item['articulo'] ?? ''}",
@@ -89,29 +86,35 @@ class _TestJsonScreenState extends State<TestJsonScreen> {
                                   ),
                                 ),
 
-                                const SizedBox(height: 6),
+                                const SizedBox(height: 8),
 
-                                // 🔹 REQUISITO
+                                // 🔹 ACTIVIDAD (PRINCIPAL)
+                                Text(
+                                  item['actividad'] ?? '',
+                                  textAlign: TextAlign.justify,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    height: 1.3,
+                                  ),
+                                ),
+
+                                const SizedBox(height: 8),
+
+                                // 🔹 REQUISITO (GRIS)
                                 Text(
                                   "Requisito: ${item['requisito'] ?? ''}",
-                                  style:
-                                      const TextStyle(fontSize: 13),
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey,
+                                  ),
                                 ),
 
                                 const SizedBox(height: 4),
 
-                                // 🔹 ASPECTO
+                                // 🔹 ASPECTO (GRIS)
                                 Text(
                                   "Aspecto: ${item['aspecto'] ?? ''}",
-                                  style:
-                                      const TextStyle(fontSize: 13),
-                                ),
-
-                                const SizedBox(height: 6),
-
-                                // 🔹 DESCRIPCIÓN
-                                Text(
-                                  item['descripcion'] ?? '',
                                   style: const TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey,
