@@ -1,7 +1,9 @@
+import 'screens/nc_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'widgets/formato_header.dart';
+import 'screens/nc_detail_screen.dart';
 
 class TestJsonScreen extends StatefulWidget {
   @override
@@ -10,6 +12,18 @@ class TestJsonScreen extends StatefulWidget {
 
 class _TestJsonScreenState extends State<TestJsonScreen> {
   List items = [];
+
+  // 🔹 DATOS DEL FORMATO (DESDE JSON)
+  String codigoFormato = "";
+  String nombreFormato = "";
+  String versionFormato = "";
+  String fechaFormato = "";
+
+  // 🔹 LISTA DE NC GUARDADAS
+  List<Map> noConformidades = [];
+
+  // 🔹 ESTADO VISUAL (BOTÓN ROJO)
+  Set<String> ncRegistradas = {};
 
   @override
   void initState() {
@@ -24,7 +38,36 @@ class _TestJsonScreenState extends State<TestJsonScreen> {
 
     setState(() {
       items = data['items'] ?? [];
+
+      // 🔥 NUEVO: leer metadata del formato
+      codigoFormato = data['codigo_formato'] ?? "F-229-D";
+      nombreFormato = data['nombre_formato'] ??
+          "LISTA DE VERIFICACIÓN DE  REQUISITOS DE  PROTECCIÓN DE LAS INSTALACIONES DE USO FINAL";
+      versionFormato = data['version'] ?? "00";
+      fechaFormato = data['fecha'] ?? "2026-04-15";
     });
+  }
+
+  // 🔹 ABRIR PANTALLA NC Y GUARDAR RESULTADO
+  void abrirNC(BuildContext context, Map item) async {
+    final resultado = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => NcDetailScreen(
+          item: item,
+          instructivo: codigoFormato, // 👈 dinámico
+        ),
+      ),
+    );
+
+    if (resultado != null && resultado is Map) {
+      setState(() {
+        ncRegistradas.add(item['codigo']);
+        noConformidades.add(resultado);
+      });
+
+      print("NC guardadas: ${noConformidades.length}");
+    }
   }
 
   @override
@@ -34,13 +77,36 @@ class _TestJsonScreenState extends State<TestJsonScreen> {
         child: Column(
           children: [
 
-            // 🔹 HEADER
-            const FormatoHeader(
-              codigo: "F-229-D",
-              nombre:
-                  "LISTA DE VERIFICACIÓN DE REQUISITOS DE PROTECCIÓN DE LAS INSTALACIONES DE USO FINAL",
-              version: "00",
-              fecha: "2025-03-22",
+            // 🔹 HEADER DINÁMICO
+            FormatoHeader(
+              codigo: codigoFormato,
+              nombre: nombreFormato,
+              version: versionFormato,
+              fecha: fechaFormato,
+            ),
+
+            // 🔹 BOTÓN VER NC
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => NcListScreen(
+                          ncList: noConformidades,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    "Ver No Conformidades (${noConformidades.length})",
+                  ),
+                ),
+              ),
             ),
 
             // 🔹 LISTA
@@ -66,6 +132,10 @@ class _TestJsonScreenState extends State<TestJsonScreen> {
                           );
                         }
 
+                        final codigo = item['codigo'] ?? '';
+                        final tieneNC =
+                            ncRegistradas.contains(codigo);
+
                         // 🔹 ITEM
                         return Card(
                           margin: const EdgeInsets.symmetric(
@@ -79,7 +149,7 @@ class _TestJsonScreenState extends State<TestJsonScreen> {
 
                                 // 🔹 CÓDIGO + ARTÍCULO
                                 Text(
-                                  "${item['codigo'] ?? ''}  |  ${item['articulo'] ?? ''}",
+                                  "$codigo  |  ${item['articulo'] ?? ''}",
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
@@ -88,7 +158,7 @@ class _TestJsonScreenState extends State<TestJsonScreen> {
 
                                 const SizedBox(height: 8),
 
-                                // 🔹 ACTIVIDAD (PRINCIPAL)
+                                // 🔹 ACTIVIDAD
                                 Text(
                                   item['actividad'] ?? '',
                                   textAlign: TextAlign.justify,
@@ -101,7 +171,7 @@ class _TestJsonScreenState extends State<TestJsonScreen> {
 
                                 const SizedBox(height: 8),
 
-                                // 🔹 REQUISITO (GRIS)
+                                // 🔹 REQUISITO
                                 Text(
                                   "Requisito: ${item['requisito'] ?? ''}",
                                   style: const TextStyle(
@@ -112,13 +182,39 @@ class _TestJsonScreenState extends State<TestJsonScreen> {
 
                                 const SizedBox(height: 4),
 
-                                // 🔹 ASPECTO (GRIS)
+                                // 🔹 ASPECTO
                                 Text(
                                   "Aspecto: ${item['aspecto'] ?? ''}",
                                   style: const TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey,
                                   ),
+                                ),
+
+                                const SizedBox(height: 10),
+
+                                // 🔹 BOTÓN NC
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.end,
+                                  children: [
+                                    ElevatedButton(
+                                      style:
+                                          ElevatedButton.styleFrom(
+                                        backgroundColor: tieneNC
+                                            ? Colors.red.shade400
+                                            : Colors.grey.shade300,
+                                        foregroundColor: tieneNC
+                                            ? Colors.white
+                                            : Colors.black,
+                                        elevation:
+                                            tieneNC ? 2 : 4,
+                                      ),
+                                      onPressed: () =>
+                                          abrirNC(context, item),
+                                      child: const Text("NC"),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
