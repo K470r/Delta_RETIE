@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:file_picker/file_picker.dart'; // 👈 NUEVO
+import 'package:file_picker/file_picker.dart';
+import 'package:record/record.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
@@ -24,7 +25,14 @@ class _NcDetailScreenState extends State<NcDetailScreen> {
   final TextEditingController observacionController =
       TextEditingController();
 
-  List<Map> evidencias = [];
+  final Record _recorder = Record();
+  bool grabando = false;
+
+  List<Map> fotosTomadas = [];
+  List<Map> fotosGaleria = [];
+  List<Map> documentos = [];
+  List<Map> videos = [];
+  List<Map> audios = [];
 
   @override
   void initState() {
@@ -34,69 +42,65 @@ class _NcDetailScreenState extends State<NcDetailScreen> {
       observacionController.text =
           widget.ncExistente!['observacion'] ?? "";
 
-      evidencias =
-          List<Map>.from(widget.ncExistente!['evidencias'] ?? []);
+      fotosTomadas =
+          List<Map>.from(widget.ncExistente!['fotosTomadas'] ?? []);
+      fotosGaleria =
+          List<Map>.from(widget.ncExistente!['fotosGaleria'] ?? []);
+      documentos =
+          List<Map>.from(widget.ncExistente!['documentos'] ?? []);
+      videos =
+          List<Map>.from(widget.ncExistente!['videos'] ?? []);
+      audios =
+          List<Map>.from(widget.ncExistente!['audios'] ?? []);
     }
   }
 
-  // 🔥 CÁMARA
+  // 📷 CÁMARA
   Future<void> tomarMultiplesFotos() async {
     final picker = ImagePicker();
 
     while (true) {
-      final XFile? foto = await picker.pickImage(
+      final foto = await picker.pickImage(
         source: ImageSource.camera,
         imageQuality: 70,
       );
 
       if (foto == null) break;
 
-      final directory = await getApplicationDocumentsDirectory();
+      final dir = await getApplicationDocumentsDirectory();
+      final ruta =
+          '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-      final String nuevaRuta =
-          '${directory.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-      final File nuevaImagen = await File(foto.path).copy(nuevaRuta);
+      final file = await File(foto.path).copy(ruta);
 
       setState(() {
-        evidencias.add({
-          "tipo": "foto",
-          "ruta": nuevaImagen.path,
-        });
+        fotosTomadas.add({"ruta": file.path});
       });
-
-      await Future.delayed(const Duration(milliseconds: 300));
     }
   }
 
-  // 🔥 GALERÍA
+  // 🖼 GALERÍA
   Future<void> cargarDesdeGaleria() async {
     final picker = ImagePicker();
-
-    final List<XFile> archivos = await picker.pickMultiImage(
-      imageQuality: 70,
-    );
+    final archivos = await picker.pickMultiImage(imageQuality: 70);
 
     if (archivos.isEmpty) return;
 
-    final directory = await getApplicationDocumentsDirectory();
+    final dir = await getApplicationDocumentsDirectory();
 
     for (var foto in archivos) {
-      final String nuevaRuta =
-          '${directory.path}/${DateTime.now().millisecondsSinceEpoch}_${foto.name}';
+      final ruta =
+          '${dir.path}/${DateTime.now().millisecondsSinceEpoch}_${foto.name}';
 
-      final File nuevaImagen = await File(foto.path).copy(nuevaRuta);
+      final file = await File(foto.path).copy(ruta);
 
       setState(() {
-        evidencias.add({
-          "tipo": "foto",
-          "ruta": nuevaImagen.path,
-        });
+        fotosGaleria.add({"ruta": file.path});
       });
     }
   }
 
-  // 🔥 DOCUMENTOS (SOLO PDF + IMÁGENES)
+  // 📄 DOCUMENTOS
   Future<void> cargarDocumento() async {
     final result = await FilePicker.platform.pickFiles(
       allowMultiple: true,
@@ -104,48 +108,139 @@ class _NcDetailScreenState extends State<NcDetailScreen> {
 
     if (result == null) return;
 
-    final directory = await getApplicationDocumentsDirectory();
+    final dir = await getApplicationDocumentsDirectory();
 
     for (var file in result.files) {
       final path = file.path;
       if (path == null) continue;
 
-      final extension = file.extension?.toLowerCase() ?? "";
+      final ext = file.extension?.toLowerCase() ?? "";
+      const allowed = ["pdf", "jpg", "jpeg", "png"];
 
-      // 🔹 VALIDACIÓN
-      const allowed = [
-        "pdf",
-        "jpg",
-        "jpeg",
-        "png"
-      ];
-
-      if (!allowed.contains(extension)) {
+      if (!allowed.contains(ext)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                "Archivo no permitido: ${file.name}"),
-          ),
+          SnackBar(content: Text("No permitido: ${file.name}")),
         );
         continue;
       }
 
-      final String nuevaRuta =
-          '${directory.path}/${DateTime.now().millisecondsSinceEpoch}_${file.name}';
+      final ruta =
+          '${dir.path}/${DateTime.now().millisecondsSinceEpoch}_${file.name}';
 
-      final File nuevoArchivo =
-          await File(path).copy(nuevaRuta);
+      final nuevo = await File(path).copy(ruta);
 
       setState(() {
-        evidencias.add({
-          "tipo": extension == "pdf"
-              ? "pdf"
-              : "foto",
-          "ruta": nuevaRuta,
-          "nombre": file.name,
+        documentos.add({
+          "ruta": nuevo.path,
+          "tipo": ext == "pdf" ? "pdf" : "imagen",
         });
       });
     }
+  }
+
+  // 🎥 VIDEO
+  Future<void> grabarVideo() async {
+    final picker = ImagePicker();
+
+    final video = await picker.pickVideo(
+      source: ImageSource.camera,
+    );
+
+    if (video == null) return;
+
+    final dir = await getApplicationDocumentsDirectory();
+    final ruta =
+        '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.mp4';
+
+    final file = await File(video.path).copy(ruta);
+
+    setState(() {
+      videos.add({"ruta": file.path});
+    });
+  }
+
+  // 🎙 AUDIO
+  Future<void> toggleAudio() async {
+    final dir = await getApplicationDocumentsDirectory();
+    final ruta =
+        '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.m4a';
+
+    if (!grabando) {
+      bool permiso = await _recorder.hasPermission();
+      if (!permiso) return;
+
+      await _recorder.start(
+        path: ruta,
+        encoder: AudioEncoder.aacLc,
+        bitRate: 128000,
+        samplingRate: 44100,
+      );
+
+      setState(() {
+        grabando = true;
+      });
+    } else {
+      final path = await _recorder.stop();
+
+      if (path != null) {
+        setState(() {
+          audios.add({"ruta": path});
+        });
+      }
+
+      setState(() {
+        grabando = false;
+      });
+    }
+  }
+
+  // 🔹 PREVIEW
+  Widget buildPreview(List<Map> lista, String tipo) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: lista.map((e) {
+        return Stack(
+          children: [
+            tipo == "foto"
+                ? Image.file(
+                    File(e['ruta']),
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                  )
+                : Container(
+                    width: 80,
+                    height: 80,
+                    color: Colors.black12,
+                    child: Icon(
+                      tipo == "pdf"
+                          ? Icons.picture_as_pdf
+                          : tipo == "video"
+                              ? Icons.videocam
+                              : Icons.mic,
+                    ),
+                  ),
+            Positioned(
+              top: 0,
+              right: 0,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    lista.remove(e);
+                  });
+                },
+                child: Container(
+                  color: Colors.black54,
+                  child: const Icon(Icons.close,
+                      color: Colors.white, size: 18),
+                ),
+              ),
+            ),
+          ],
+        );
+      }).toList(),
+    );
   }
 
   @override
@@ -159,24 +254,21 @@ class _NcDetailScreenState extends State<NcDetailScreen> {
         padding: const EdgeInsets.all(12),
         child: Column(
           children: [
-
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
 
-                    Text("Código: ${item['codigo']}",
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold)),
-
+                    Text("Código: ${item['codigo']}"),
                     Text("Instructivo: $instructivo"),
                     Text("Artículo: ${item['articulo']}"),
 
                     const SizedBox(height: 12),
 
+                    // 🔹 ACTIVIDAD
                     Text(
-                      item['actividad'] ?? '',
+                      item['actividad'] ?? "",
                       textAlign: TextAlign.justify,
                       style: const TextStyle(
                         fontSize: 15,
@@ -186,22 +278,19 @@ class _NcDetailScreenState extends State<NcDetailScreen> {
 
                     const SizedBox(height: 12),
 
-                    Text("Requisito: ${item['requisito']}"),
-                    Text("Aspecto: ${item['aspecto']}"),
-
-                    const SizedBox(height: 12),
-
+                    // 🔹 ARTÍCULO COMPLETO (RECUPERADO)
                     Text(
                       item['descripcion'] ?? '',
                       textAlign: TextAlign.justify,
-                      style:
-                          const TextStyle(color: Colors.grey),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey,
+                      ),
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
                     const Text("Observación"),
-
                     TextField(
                       controller: observacionController,
                       maxLines: 3,
@@ -216,70 +305,53 @@ class _NcDetailScreenState extends State<NcDetailScreen> {
                       onPressed: tomarMultiplesFotos,
                       child: const Text("Tomar fotos"),
                     ),
-
-                    const SizedBox(height: 8),
-
                     ElevatedButton(
                       onPressed: cargarDesdeGaleria,
-                      child:
-                          const Text("Cargar desde galería"),
+                      child: const Text("Cargar fotos"),
                     ),
-
-                    const SizedBox(height: 8),
-
                     ElevatedButton(
                       onPressed: cargarDocumento,
-                      child:
-                          const Text("Cargar documentos"),
+                      child: const Text("Cargar documentos"),
+                    ),
+                    ElevatedButton(
+                      onPressed: grabarVideo,
+                      child: const Text("Grabar video"),
+                    ),
+                    ElevatedButton(
+                      onPressed: toggleAudio,
+                      child: Text(
+                        grabando
+                            ? "Detener grabación"
+                            : "Grabar audio",
+                      ),
                     ),
 
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 16),
 
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: evidencias.map((e) {
-                        return Stack(
-                          children: [
+                    if (fotosTomadas.isNotEmpty) ...[
+                      const Text("📷 Fotos tomadas"),
+                      buildPreview(fotosTomadas, "foto"),
+                    ],
 
-                            e['tipo'] == 'foto'
-                                ? Image.file(
-                                    File(e['ruta']),
-                                    width: 80,
-                                    height: 80,
-                                    fit: BoxFit.cover,
-                                  )
-                                : Container(
-                                    width: 80,
-                                    height: 80,
-                                    color: Colors.red.shade100,
-                                    child: const Icon(
-                                        Icons.picture_as_pdf),
-                                  ),
+                    if (fotosGaleria.isNotEmpty) ...[
+                      const Text("🖼 Fotos cargadas"),
+                      buildPreview(fotosGaleria, "foto"),
+                    ],
 
-                            Positioned(
-                              top: 0,
-                              right: 0,
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    evidencias.remove(e);
-                                  });
-                                },
-                                child: Container(
-                                  color: Colors.black54,
-                                  child: const Icon(
-                                    Icons.close,
-                                    color: Colors.white,
-                                    size: 18,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      }).toList(),
-                    ),
+                    if (documentos.isNotEmpty) ...[
+                      const Text("📄 Documentos"),
+                      buildPreview(documentos, "pdf"),
+                    ],
+
+                    if (videos.isNotEmpty) ...[
+                      const Text("🎥 Videos"),
+                      buildPreview(videos, "video"),
+                    ],
+
+                    if (audios.isNotEmpty) ...[
+                      const Text("🎙 Audios"),
+                      buildPreview(audios, "audio"),
+                    ],
                   ],
                 ),
               ),
@@ -289,7 +361,7 @@ class _NcDetailScreenState extends State<NcDetailScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  final nc = {
+                  Navigator.pop(context, {
                     "codigo": item['codigo'],
                     "instructivo": instructivo,
                     "articulo": item['articulo'],
@@ -297,17 +369,17 @@ class _NcDetailScreenState extends State<NcDetailScreen> {
                     "requisito": item['requisito'],
                     "aspecto": item['aspecto'],
                     "descripcion": item['descripcion'],
-                    "observacion":
-                        observacionController.text,
-                    "evidencias": evidencias,
-                  };
-
-                  Navigator.pop(context, nc);
+                    "observacion": observacionController.text,
+                    "fotosTomadas": fotosTomadas,
+                    "fotosGaleria": fotosGaleria,
+                    "documentos": documentos,
+                    "videos": videos,
+                    "audios": audios,
+                  });
                 },
-                child: const Text(
-                    "REGISTRAR NO CONFORMIDAD"),
+                child: const Text("GUARDAR"),
               ),
-            ),
+            )
           ],
         ),
       ),
