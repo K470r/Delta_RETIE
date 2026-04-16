@@ -39,7 +39,6 @@ class _TestJsonScreenState extends State<TestJsonScreen> {
     setState(() {
       items = data['items'] ?? [];
 
-      // 🔥 NUEVO: leer metadata del formato
       codigoFormato = data['codigo_formato'] ?? "F-229-D";
       nombreFormato = data['nombre_formato'] ??
           "LISTA DE VERIFICACIÓN DE  REQUISITOS DE  PROTECCIÓN DE LAS INSTALACIONES DE USO FINAL";
@@ -48,22 +47,46 @@ class _TestJsonScreenState extends State<TestJsonScreen> {
     });
   }
 
-  // 🔹 ABRIR PANTALLA NC Y GUARDAR RESULTADO
+  // 🔹 ABRIR / EDITAR NC
   void abrirNC(BuildContext context, Map item) async {
+    final codigo = item['codigo'];
+
+    // 🔹 BUSCAR SI YA EXISTE NC
+    Map? ncExistente;
+
+    try {
+      ncExistente = noConformidades.firstWhere(
+        (nc) => nc['codigo'] == codigo,
+      );
+    } catch (e) {
+      ncExistente = null;
+    }
+
     final resultado = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => NcDetailScreen(
           item: item,
-          instructivo: codigoFormato, // 👈 dinámico
+          instructivo: codigoFormato,
+          ncExistente: ncExistente, // 👈 CLAVE
         ),
       ),
     );
 
     if (resultado != null && resultado is Map) {
       setState(() {
-        ncRegistradas.add(item['codigo']);
-        noConformidades.add(resultado);
+        ncRegistradas.add(codigo);
+
+        // 🔹 REEMPLAZAR SI YA EXISTE
+        final index = noConformidades.indexWhere(
+          (nc) => nc['codigo'] == codigo,
+        );
+
+        if (index >= 0) {
+          noConformidades[index] = resultado;
+        } else {
+          noConformidades.add(resultado);
+        }
       });
 
       print("NC guardadas: ${noConformidades.length}");
@@ -77,7 +100,7 @@ class _TestJsonScreenState extends State<TestJsonScreen> {
         child: Column(
           children: [
 
-            // 🔹 HEADER DINÁMICO
+            // 🔹 HEADER
             FormatoHeader(
               codigo: codigoFormato,
               nombre: nombreFormato,
