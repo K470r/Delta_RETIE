@@ -1,77 +1,204 @@
 -- ============================================================================
--- Delta RETIE — Esquema base
--- Plataforma del OEC: cotización → orden de servicio → inspección → dictamen,
--- con trazabilidad para el control de cumplimiento de ISO/IEC 17020.
+-- Delta RETIE — Esquema base (multi-organismo)
+-- Plataforma para Organismos de Inspección tipo A (RETIE / RETILAP):
+-- organismo y alcance acreditado → personal y designaciones → cotización →
+-- orden de servicio → inspección → dictamen, con trazabilidad ISO/IEC 17020.
 --
 -- Principios:
---   * Nada se borra: los registros se anulan con justificación (17020 §8.4).
+--   * Nada se borra: los registros se anulan o se cierran con fecha (17020 §8.4).
 --   * Toda modificación queda en bitácora (quién, qué, cuándo).
---   * Normas y formatos versionados: cada inspección guarda la versión usada.
+--   * Reglamentos, actividades y formatos versionados.
 -- ============================================================================
 
 create extension if not exists pgcrypto;
+create extension if not exists btree_gist;
 
 -- ─────────────────────────────── Tipos ───────────────────────────────
 create type rol_oec as enum (
-  'vendedor', 'inspector', 'revisor', 'director_tecnico',
-  'director_tecnico_suplente', 'calidad', 'administrativo'
+  'representante_legal',        -- gerencia (17020 §5.2.1)
+  'gerente',
+  'miembro_gerencia',
+  'responsable_sg',             -- responsable del sistema de gestión (§8)
+  'suplente_sg',
+  'director_tecnico',           -- §5.2.5
+  'director_tecnico_suplente',  -- §5.2.6
+  'inspector',                  -- §6.1
+  'revisor',
+  'vendedor',
+  'administrativo'
 );
-create type alcance_inspeccion as enum (
-  'USO_FINAL_RESIDENCIAL', 'USO_FINAL_NO_RESIDENCIAL', 'DISTRIBUCION',
-  'TRANSFORMACION', 'GENERACION', 'TRANSMISION'
-);
+create type estado_linea_alcance as enum ('en_tramite', 'acreditada', 'suspendida', 'retirada');
 create type estado_orden as enum (
   'cotizada', 'aprobada', 'asignada', 'en_inspeccion', 'en_revision',
   'emitida', 'entregada', 'cancelada'
 );
 create type resultado_item as enum ('C', 'NC', 'NA');
 
--- ─────────────────────────── Configuración ───────────────────────────
-create table configuracion_oec (
-  id                 boolean primary key default true check (id), -- fila única
-  razon_social       text not null,
-  nit                text not null,
-  tipo_organismo     char(1) not null check (tipo_organismo in ('A','B','C')),
-  codigo_acreditacion text,
-  poliza_rc_numero   text,
-  poliza_rc_vence    date,
-  director_tecnico_id          uuid,
-  director_tecnico_suplente_id uuid,
-  plazos             jsonb not null default '{
-    "vigenciaDeclaracionImparcialidad": 365, "vigenciaSupervisionEnSitio": 365,
-    "revisionDocumentos": 365, "auditoriaInterna": 365, "revisionDireccion": 365,
-    "analisisRiesgosImparcialidad": 365, "acuseQueja": 5, "resolucionQueja": 30,
-    "emisionDictamen": 15, "alertaAnticipada": 30 }'::jsonb
+-- ─────────────────────── Catálogo normativo ───────────────────────
+create table reglamentos (
+  id            text primary key,        -- 'RETIE-2024', 'RETILAP-2024', 'RETIE-2026'
+  nombre        text not null,
+  acto          text,                    -- resoluciones que lo adoptan/modifican
+  fuente_alcances text,                  -- nota técnica de ONAC de la que sale el catálogo
+  vigente_desde date,
+  vigente_hasta date
 );
 
--- ───────────────────────────── Personal (6.1) ─────────────────────────────
+-- Actividades de inspección acreditables (catálogo ONAC)
+create table actividades (
+  codigo        text primary key,        -- 'RETIE24-UF-BASICAS'
+  reglamento_id text not null references reglamentos(id),
+  grupo         text not null,
+  nombre        text not null,
+  referencias   text[] not null default '{}',
+  activa        boolean not null default true
+);
+
+-- ─────────────────────────── Organismos ───────────────────────────
+create table organismos (
+  id                   uuid primary key default gen_random_uuid(),
+  razon_social         text not null,
+  sigla                text,
+  nit                  text not null unique,
+  tipo                 char(1) not null default 'A' check (tipo in ('A','B','C')),
+  codigo_acreditacion  text unique,              -- p. ej. 15-OIN-001
+  acreditacion_otorgada date,
+  acreditacion_vence   date,
+  direccion            text,
+  ciudad               text,
+  telefono             text,
+  correo               text,
+  -- Tipo A (17020 Anexo A.1): declaración de independencia del organismo
+  declaracion_independencia date,
+  poliza_rc_numero     text,
+  poliza_rc_vence      date,
+  plazos               jsonb not null default '{
+    "vigenciaDeclaraciones": 365, "revisionResponsableSG": 30,
+    "vigenciaSupervisionEnSitio": 365, "revisionDocumentos": 365,
+    "auditoriaInterna": 365, "revisionDireccion": 365,
+    "analisisRiesgosImparcialidad": 365, "acuseQueja": 5, "resolucionQueja": 30,
+    "emisionDictamen": 15, "alertaAnticipada": 30, "alertaAcreditacion": 90 }'::jsonb,
+  activo               boolean not null default true,
+  creado               timestamptz not null default now(),
+  check (acreditacion_vence is null or acreditacion_otorgada is null or acreditacion_vence > acreditacion_otorgada)
+);
+
+create table sedes (
+  id           uuid primary key default gen_random_uuid(),
+  organismo_id uuid not null references organismos(id),
+  nombre       text not null,
+  direccion    text,
+  ciudad       text,
+  principal    boolean not null default false
+);
+create unique index sedes_una_principal on sedes(organismo_id) where principal;
+
+-- Alcance acreditado: líneas del catálogo con su estado ante ONAC
+create table alcance_acreditado (
+  organismo_id    uuid not null references organismos(id),
+  actividad_codigo text not null references actividades(codigo),
+  estado          estado_linea_alcance not null default 'acreditada',
+  fecha_estado    date not null default current_date,
+  observacion     text,
+  primary key (organismo_id, actividad_codigo)
+);
+
+-- ─────────────────────────── Personas ───────────────────────────
 create table personas (
   id               uuid primary key default gen_random_uuid(),
   usuario_id       uuid unique,               -- auth.users.id en Supabase
-  nombre           text not null,
+  tipo_documento   text not null default 'CC' check (tipo_documento in ('CC','CE','PA','PPT')),
   documento        text not null unique,
+  nombres          text not null,
+  apellidos        text not null,
   correo           text,
   telefono         text,
-  roles            rol_oec[] not null default '{}',
+  profesion        text,
   matricula_numero text,
-  matricula_vence  date,
-  activo           boolean not null default true,
+  matricula_entidad text,                     -- CONTE, COPNIA, CPIEMAP...
   creado           timestamptz not null default now()
 );
 
-alter table configuracion_oec
-  add foreign key (director_tecnico_id) references personas(id),
-  add foreign key (director_tecnico_suplente_id) references personas(id);
+-- Certificado de competencias (organismo de certificación de personas, ISO/IEC 17024)
+create table certificados_competencia (
+  id                uuid primary key default gen_random_uuid(),
+  persona_id        uuid not null references personas(id),
+  numero            text not null,
+  certificador      text not null,
+  fecha_emision     date not null,
+  fecha_vencimiento date not null,
+  soporte_ruta      text,
+  anulado           boolean not null default false,
+  check (fecha_vencimiento > fecha_emision),
+  unique (certificador, numero)
+);
 
--- Autorización formal por alcance (17020 §6.1.5 / 6.1.6)
-create table autorizaciones (
-  id           uuid primary key default gen_random_uuid(),
-  persona_id   uuid not null references personas(id),
-  alcance      alcance_inspeccion not null,
-  otorgada     date not null,
-  otorgada_por uuid not null references personas(id),
-  revocada     date,
-  soporte_url  text
+create table certificado_actividades (
+  certificado_id   uuid not null references certificados_competencia(id),
+  actividad_codigo text not null references actividades(codigo),
+  primary key (certificado_id, actividad_codigo)
+);
+
+-- Vinculación persona ↔ organismo (lo que ONAC pide: tipo y fecha de vinculación, sede)
+create table vinculaciones (
+  id              uuid primary key default gen_random_uuid(),
+  organismo_id    uuid not null references organismos(id),
+  persona_id      uuid not null references personas(id),
+  sede_id         uuid references sedes(id),
+  tipo            text not null check (tipo in ('laboral','prestacion_servicios','otro')),
+  cargo           text not null,
+  desde           date not null,
+  hasta           date,
+  check (hasta is null or hasta >= desde),
+  exclude using gist (organismo_id with =, persona_id with =, daterange(desde, hasta, '[]') with &&)
+);
+
+-- Designaciones de rol dentro del organismo (gerencia, SG, dirección técnica, inspección)
+create table designaciones (
+  id              uuid primary key default gen_random_uuid(),
+  organismo_id    uuid not null references organismos(id),
+  persona_id      uuid not null references personas(id),
+  rol             rol_oec not null,
+  desde           date not null,
+  hasta           date,
+  acto            text,                          -- acta / resolución interna de designación
+  designado_por   uuid references personas(id),
+  check (hasta is null or hasta >= desde),
+  -- Una sola persona vigente a la vez en roles únicos
+  exclude using gist (organismo_id with =, rol with =, daterange(desde, hasta, '[]') with &&)
+    where (rol in ('representante_legal', 'responsable_sg'))
+);
+
+-- Actividades autorizadas a un director técnico o inspector (17020 §6.1.6)
+create table designacion_actividades (
+  designacion_id   uuid not null references designaciones(id),
+  actividad_codigo text not null references actividades(codigo),
+  primary key (designacion_id, actividad_codigo)
+);
+
+-- Registro de la revisión continua del responsable del sistema de gestión
+create table revisiones_sg (
+  id            uuid primary key default gen_random_uuid(),
+  organismo_id  uuid not null references organismos(id),
+  persona_id    uuid not null references personas(id),
+  fecha         date not null default current_date,
+  aspectos      text[] not null default '{}',     -- numerales revisados
+  observaciones text,
+  requiere_accion boolean not null default false
+);
+
+-- Supervisión y monitoreo en sitio (17020 §6.1.8 – 6.1.9)
+create table supervisiones (
+  id            uuid primary key default gen_random_uuid(),
+  organismo_id  uuid not null references organismos(id),
+  inspector_id  uuid not null references personas(id),
+  supervisor_id uuid not null references personas(id),
+  fecha         date not null,
+  en_sitio      boolean not null default true,
+  orden_id      uuid,
+  resultado     text not null,
+  soporte_ruta  text,
+  check (inspector_id <> supervisor_id)
 );
 
 create table formacion (
@@ -80,40 +207,30 @@ create table formacion (
   tema        text not null,
   fecha       date not null,
   horas       numeric,
-  soporte_url text
-);
-
--- Supervisión y monitoreo en sitio (17020 §6.1.8 – 6.1.9)
-create table supervisiones (
-  id            uuid primary key default gen_random_uuid(),
-  inspector_id  uuid not null references personas(id),
-  supervisor_id uuid not null references personas(id),
-  fecha         date not null,
-  en_sitio      boolean not null default true,
-  orden_id      uuid,
-  resultado     text not null,
-  soporte_url   text,
-  check (inspector_id <> supervisor_id)
+  soporte_ruta text
 );
 
 -- ─────────────────────── Imparcialidad y confidencialidad (4.1, 4.2) ───────────────────────
 create table declaraciones (
-  id          uuid primary key default gen_random_uuid(),
-  persona_id  uuid not null references personas(id),
-  tipo        text not null check (tipo in ('imparcialidad', 'confidencialidad')),
-  fecha       date not null,
-  soporte_url text
+  id           uuid primary key default gen_random_uuid(),
+  organismo_id uuid not null references organismos(id),
+  persona_id   uuid not null references personas(id),
+  tipo         text not null check (tipo in ('imparcialidad', 'confidencialidad')),
+  fecha        date not null,
+  soporte_ruta text
 );
 
 create table clientes (
-  id         uuid primary key default gen_random_uuid(),
-  nombre     text not null,
-  nit        text not null unique,
-  contacto   text,
-  correo     text,
-  telefono   text,
-  direccion  text,
-  creado     timestamptz not null default now()
+  id           uuid primary key default gen_random_uuid(),
+  organismo_id uuid not null references organismos(id),
+  nombre       text not null,
+  nit          text not null,
+  contacto     text,
+  correo       text,
+  telefono     text,
+  direccion    text,
+  creado       timestamptz not null default now(),
+  unique (organismo_id, nit)
 );
 
 create table conflictos_interes (
@@ -126,24 +243,30 @@ create table conflictos_interes (
 );
 
 create table riesgos_imparcialidad (
-  id            uuid primary key default gen_random_uuid(),
+  id             uuid primary key default gen_random_uuid(),
+  organismo_id   uuid not null references organismos(id),
   fecha_analisis date not null,
-  fuente        text not null,
-  riesgo        text not null,
-  nivel         text not null check (nivel in ('bajo','medio','alto')),
-  tratamiento   text not null,
+  fuente         text not null,
+  riesgo         text not null,
+  nivel          text not null check (nivel in ('bajo','medio','alto')),
+  tratamiento    text not null,
   responsable_id uuid references personas(id)
 );
 
 -- ─────────────────────────── Equipos (6.2) ───────────────────────────
 create table equipos (
   id            uuid primary key default gen_random_uuid(),
-  codigo        text not null unique,
+  organismo_id  uuid not null references organismos(id),
+  sede_id       uuid references sedes(id),
+  codigo        text not null,
   nombre        text not null,
-  marca_modelo  text,
+  marca         text,
+  modelo        text,
   serie         text,
+  rango_medicion text,
   estado        text not null default 'operativo' check (estado in ('operativo','fuera_de_servicio','dado_de_baja')),
-  creado        timestamptz not null default now()
+  creado        timestamptz not null default now(),
+  unique (organismo_id, codigo)
 );
 
 create table calibraciones (
@@ -155,74 +278,69 @@ create table calibraciones (
   laboratorio   text,               -- laboratorio acreditado (trazabilidad)
   certificado   text,
   conforme      boolean not null default true,
-  soporte_url   text
+  soporte_ruta  text
 );
 
--- ──────────────────────── Normas y formatos versionados ────────────────────────
-create table reglamentos (
-  id        text primary key,       -- 'RETIE-2024', 'RETIE-2026'
-  nombre    text not null,
-  acto      text,                   -- resolución que lo adopta
-  vigente_desde date,
-  vigente_hasta date
-);
-
+-- ─────────────────────────── Formatos versionados ───────────────────────────
 create table formatos (
-  codigo     text not null,         -- 'F-229-D'
-  version    text not null,
-  titulo     text not null,
+  organismo_id uuid not null references organismos(id),
+  codigo       text not null,         -- 'F-229-D'
+  version      text not null,
+  titulo       text not null,
   reglamento_id text not null references reglamentos(id),
-  alcances   alcance_inspeccion[] not null default '{}',
-  contenido  jsonb not null,        -- secciones e ítems de la lista de verificación
-  vigente    boolean not null default false,
+  actividades  text[] not null default '{}',
+  contenido    jsonb not null,        -- secciones e ítems de la lista de verificación
+  vigente      boolean not null default false,
   aprobado_por uuid references personas(id),
-  aprobado   date,
-  primary key (codigo, version)
+  aprobado     date,
+  primary key (organismo_id, codigo, version)
 );
--- Solo una versión vigente por formato
-create unique index formatos_una_vigente on formatos(codigo) where vigente;
+create unique index formatos_una_vigente on formatos(organismo_id, codigo) where vigente;
 
 -- ─────────────────── Comercial: cotización y revisión de solicitud (7.1.5 – 7.1.6) ───────────────────
 create table cotizaciones (
   id            uuid primary key default gen_random_uuid(),
-  consecutivo   text not null unique,
+  organismo_id  uuid not null references organismos(id),
+  consecutivo   text not null,
   cliente_id    uuid not null references clientes(id),
   vendedor_id   uuid not null references personas(id),
   fecha         date not null default current_date,
   valida_hasta  date,
-  items         jsonb not null default '[]',  -- [{descripcion, alcance, cantidad, valor_unitario}]
+  items         jsonb not null default '[]',
   subtotal      numeric(14,2) not null default 0,
   iva           numeric(14,2) not null default 0,
   total         numeric(14,2) not null default 0,
   estado        text not null default 'borrador' check (estado in ('borrador','enviada','aprobada','rechazada','vencida')),
   aprobada_en   timestamptz,
-  aprobada_por_cliente text,          -- nombre / correo de quien aceptó
-  soporte_aprobacion_url text
+  aprobada_por_cliente text,
+  soporte_aprobacion_ruta text,
+  unique (organismo_id, consecutivo)
 );
 
 create table ordenes_servicio (
   id              uuid primary key default gen_random_uuid(),
-  consecutivo     text not null unique,
+  organismo_id    uuid not null references organismos(id),
+  consecutivo     text not null,
   cotizacion_id   uuid references cotizaciones(id),
   cliente_id      uuid not null references clientes(id),
   instalacion     text not null,
   direccion       text,
   municipio       text,
-  alcance         alcance_inspeccion not null,
+  actividad_codigo text not null references actividades(codigo),
   estado          estado_orden not null default 'aprobada',
-  -- Revisión de la solicitud
   solicitud_revisada_por uuid references personas(id),
   solicitud_revisada_en  timestamptz,
   solicitud_observaciones text,
-  -- Asignación
   inspector_id    uuid references personas(id),
+  director_tecnico_id uuid references personas(id),
   asignada_por    uuid references personas(id),
   asignada_en     timestamptz,
   fecha_programada date,
   formato_codigo  text,
   formato_version text,
   creado          timestamptz not null default now(),
-  foreign key (formato_codigo, formato_version) references formatos(codigo, version)
+  unique (organismo_id, consecutivo),
+  foreign key (organismo_id, formato_codigo, formato_version) references formatos(organismo_id, codigo, version)
 );
 
 -- ─────────────────────── Inspección en sitio (7.2, 7.3) ───────────────────────
@@ -261,7 +379,7 @@ create table mediciones (
   id             uuid primary key default gen_random_uuid(),
   inspeccion_id  uuid not null references inspecciones(id),
   item_codigo    text,
-  magnitud       text not null,     -- 'resistencia de puesta a tierra', 'aislamiento'...
+  magnitud       text not null,
   valor          numeric not null,
   unidad         text not null,
   limite         text,
@@ -272,9 +390,9 @@ create table evidencias (
   id             uuid primary key default gen_random_uuid(),
   inspeccion_id  uuid not null references inspecciones(id),
   item_codigo    text,
-  tipo           text not null,      -- MIME
-  ruta           text not null,      -- ruta en Supabase Storage
-  sha256         text not null,      -- integridad de la evidencia
+  tipo           text not null,
+  ruta           text not null,
+  sha256         text not null,
   tomada         timestamptz not null,
   latitud        double precision,
   longitud       double precision
@@ -285,7 +403,7 @@ create table dictamenes (
   id             uuid primary key default gen_random_uuid(),
   orden_id       uuid not null references ordenes_servicio(id),
   numero         text not null unique,
-  version        int not null default 1,  -- modificaciones generan nueva versión (7.4.4)
+  version        int not null default 1,
   reemplaza_id   uuid references dictamenes(id),
   motivo_modificacion text,
   resultado      text not null check (resultado in ('conforme','no_conforme')),
@@ -304,7 +422,8 @@ create table dictamenes (
 -- ─────────────────────── Quejas y apelaciones (7.5, 7.6) ───────────────────────
 create table quejas_apelaciones (
   id             uuid primary key default gen_random_uuid(),
-  consecutivo    text not null unique,
+  organismo_id   uuid not null references organismos(id),
+  consecutivo    text not null,
   tipo           text not null check (tipo in ('queja','apelacion')),
   cliente_id     uuid references clientes(id),
   orden_id       uuid references ordenes_servicio(id),
@@ -316,7 +435,8 @@ create table quejas_apelaciones (
   decidida_por   uuid references personas(id),
   decidida_en    date,
   notificada_en  date,
-  estado         text not null default 'abierta' check (estado in ('abierta','cerrada'))
+  estado         text not null default 'abierta' check (estado in ('abierta','cerrada')),
+  unique (organismo_id, consecutivo)
 );
 
 create table quejas_involucrados (
@@ -327,42 +447,46 @@ create table quejas_involucrados (
 
 -- ─────────────────────────── Sistema de gestión (8.x) ───────────────────────────
 create table documentos (
-  id          uuid primary key default gen_random_uuid(),
-  codigo      text not null,
-  titulo      text not null,
-  tipo        text not null check (tipo in ('manual','procedimiento','instructivo','formato','externo')),
-  version     text not null,
-  estado      text not null default 'borrador' check (estado in ('borrador','vigente','obsoleto')),
+  id            uuid primary key default gen_random_uuid(),
+  organismo_id  uuid not null references organismos(id),
+  codigo        text not null,
+  titulo        text not null,
+  tipo          text not null check (tipo in ('manual','procedimiento','instructivo','formato','externo')),
+  version       text not null,
+  estado        text not null default 'borrador' check (estado in ('borrador','vigente','obsoleto')),
   elaborado_por uuid references personas(id),
   aprobado_por  uuid references personas(id),
   aprobado      date,
   ultima_revision date,
-  archivo_ruta text,
-  unique (codigo, version)
+  archivo_ruta  text,
+  unique (organismo_id, codigo, version)
 );
-create unique index documentos_uno_vigente on documentos(codigo) where estado = 'vigente';
+create unique index documentos_uno_vigente on documentos(organismo_id, codigo) where estado = 'vigente';
 
 create table auditorias_internas (
-  id          uuid primary key default gen_random_uuid(),
-  fecha       date not null,
-  auditor_id  uuid references personas(id),
+  id           uuid primary key default gen_random_uuid(),
+  organismo_id uuid not null references organismos(id),
+  fecha        date not null,
+  auditor_id   uuid references personas(id),
   auditor_externo text,
-  numerales   text[] not null,
+  numerales    text[] not null,
   informe_ruta text
 );
 
 create table revisiones_direccion (
-  id        uuid primary key default gen_random_uuid(),
-  fecha     date not null,
-  acta_ruta text,
-  decisiones text
+  id           uuid primary key default gen_random_uuid(),
+  organismo_id uuid not null references organismos(id),
+  fecha        date not null,
+  acta_ruta    text,
+  decisiones   text
 );
 
 create table acciones (
   id            uuid primary key default gen_random_uuid(),
-  consecutivo   text not null unique,
+  organismo_id  uuid not null references organismos(id),
+  consecutivo   text not null,
   tipo          text not null check (tipo in ('correctiva','preventiva','mejora')),
-  origen        text not null,      -- auditoría, queja, revisión, trabajo no conforme...
+  origen        text not null,
   descripcion   text not null,
   analisis_causa text,
   responsable_id uuid references personas(id),
@@ -370,11 +494,13 @@ create table acciones (
   estado        text not null default 'abierta' check (estado in ('abierta','implementada','cerrada')),
   eficacia_verificada boolean not null default false,
   eficacia_verificada_por uuid references personas(id),
-  cerrada_en    date
+  cerrada_en    date,
+  unique (organismo_id, consecutivo)
 );
 
 create table subcontratistas (
   id               uuid primary key default gen_random_uuid(),
+  organismo_id     uuid not null references organismos(id),
   nombre           text not null,
   nit              text,
   servicio         text not null,
@@ -404,10 +530,10 @@ begin
   exception when others then uid := null;
   end;
   if tg_op = 'DELETE' then
-    raise exception 'No se permite eliminar registros de %; anúlelos con justificación (17020 §8.4)', tg_table_name;
+    raise exception 'No se permite eliminar registros de %; ciérrelos o anúlelos con justificación (17020 §8.4)', tg_table_name;
   end if;
   insert into bitacora(tabla, registro, operacion, usuario, antes, despues)
-  values (tg_table_name, coalesce((to_jsonb(new)->>'id'), ''), tg_op, uid,
+  values (tg_table_name, coalesce(to_jsonb(new)->>'id', ''), tg_op, uid,
           case when tg_op = 'UPDATE' then to_jsonb(old) end, to_jsonb(new));
   return new;
 end $$;
@@ -416,10 +542,11 @@ do $$
 declare t text;
 begin
   foreach t in array array[
-    'personas','autorizaciones','supervisiones','declaraciones','conflictos_interes',
-    'riesgos_imparcialidad','equipos','calibraciones','formatos','cotizaciones',
-    'ordenes_servicio','inspecciones','resultados_item','mediciones','evidencias',
-    'dictamenes','quejas_apelaciones','documentos','auditorias_internas',
+    'organismos','sedes','alcance_acreditado','personas','certificados_competencia',
+    'vinculaciones','designaciones','revisiones_sg','supervisiones','declaraciones',
+    'conflictos_interes','riesgos_imparcialidad','equipos','calibraciones','formatos',
+    'cotizaciones','ordenes_servicio','inspecciones','resultados_item','mediciones',
+    'evidencias','dictamenes','quejas_apelaciones','documentos','auditorias_internas',
     'revisiones_direccion','acciones','subcontratistas'
   ] loop
     execute format(
@@ -428,11 +555,85 @@ begin
   end loop;
 end $$;
 
+-- Las tablas de relación (actividades de certificados y designaciones) sí admiten
+-- borrado, pero también quedan en bitácora.
+create or replace function registrar_bitacora_relacion() returns trigger
+language plpgsql security definer as $$
+begin
+  insert into bitacora(tabla, registro, operacion, antes, despues)
+  values (tg_table_name, '', tg_op,
+          case when tg_op <> 'INSERT' then to_jsonb(old) end,
+          case when tg_op <> 'DELETE' then to_jsonb(new) end);
+  return coalesce(new, old);
+end $$;
+
+create trigger bitacora_certificado_actividades after insert or delete on certificado_actividades
+  for each row execute function registrar_bitacora_relacion();
+create trigger bitacora_designacion_actividades after insert or delete on designacion_actividades
+  for each row execute function registrar_bitacora_relacion();
+
 -- ───────────────── Reglas 17020 aplicadas por la base de datos ─────────────────
--- Asignación: el inspector debe tener autorización vigente para el alcance y
--- no tener conflicto de interés declarado con el cliente (4.1, 6.1).
+
+-- ¿La persona puede ejercer la actividad en el organismo en una fecha?
+-- Requiere: línea acreditada, vinculación vigente y certificado de competencias vigente.
+create or replace function puede_ejercer(p_org uuid, p_persona uuid, p_actividad text, p_fecha date default current_date)
+returns text language plpgsql stable as $$
+begin
+  if not exists (select 1 from alcance_acreditado a
+                 where a.organismo_id = p_org and a.actividad_codigo = p_actividad and a.estado = 'acreditada') then
+    return 'La actividad ' || p_actividad || ' no está en el alcance acreditado vigente del organismo (17020 §5.1 / RAC-3.0-01)';
+  end if;
+  if not exists (select 1 from vinculaciones v
+                 where v.organismo_id = p_org and v.persona_id = p_persona
+                   and v.desde <= p_fecha and (v.hasta is null or v.hasta >= p_fecha)) then
+    return 'La persona no tiene vinculación vigente con el organismo (17020 §6.1)';
+  end if;
+  if not exists (select 1 from certificados_competencia c
+                 join certificado_actividades ca on ca.certificado_id = c.id
+                 where c.persona_id = p_persona and not c.anulado and ca.actividad_codigo = p_actividad
+                   and c.fecha_emision <= p_fecha and c.fecha_vencimiento >= p_fecha) then
+    return 'La persona no tiene certificado de competencias vigente para ' || p_actividad || ' (17020 §6.1.1)';
+  end if;
+  return null;
+end $$;
+
+-- Las actividades se autorizan solo a directores técnicos e inspectores, y solo si puede_ejercer.
+create or replace function validar_designacion_actividad() returns trigger
+language plpgsql as $$
+declare d designaciones; motivo text;
+begin
+  select * into d from designaciones where id = new.designacion_id;
+  if d.rol not in ('director_tecnico', 'director_tecnico_suplente', 'inspector') then
+    raise exception 'Solo los directores técnicos e inspectores tienen actividades autorizadas';
+  end if;
+  motivo := puede_ejercer(d.organismo_id, d.persona_id, new.actividad_codigo, greatest(d.desde, current_date));
+  if motivo is not null then raise exception '%', motivo; end if;
+  return new;
+end $$;
+
+create trigger validar_designacion_actividad before insert on designacion_actividades
+  for each row execute function validar_designacion_actividad();
+
+-- Toda designación exige vinculación vigente con el organismo.
+create or replace function validar_designacion() returns trigger
+language plpgsql as $$
+begin
+  if not exists (select 1 from vinculaciones v
+                 where v.organismo_id = new.organismo_id and v.persona_id = new.persona_id
+                   and v.desde <= new.desde and (v.hasta is null or v.hasta >= new.desde)) then
+    raise exception 'La persona debe estar vinculada al organismo antes de designarla (17020 §5.2 / §6.1)';
+  end if;
+  return new;
+end $$;
+
+create trigger validar_designacion before insert on designaciones
+  for each row execute function validar_designacion();
+
+-- Asignación de una orden: solicitud revisada, inspector autorizado para la actividad
+-- y sin conflicto de interés con el cliente (4.1, 6.1, 7.1).
 create or replace function validar_asignacion() returns trigger
 language plpgsql as $$
+declare motivo text;
 begin
   if new.inspector_id is null then return new; end if;
   if tg_op = 'UPDATE' and new.inspector_id is not distinct from old.inspector_id then return new; end if;
@@ -441,12 +642,15 @@ begin
     raise exception 'La solicitud % no ha sido revisada (17020 §7.1.6)', new.consecutivo;
   end if;
   if not exists (
-    select 1 from autorizaciones a
-    where a.persona_id = new.inspector_id and a.alcance = new.alcance
-      and a.otorgada <= current_date and (a.revocada is null or a.revocada > current_date)
+    select 1 from designaciones d join designacion_actividades da on da.designacion_id = d.id
+    where d.organismo_id = new.organismo_id and d.persona_id = new.inspector_id and d.rol = 'inspector'
+      and da.actividad_codigo = new.actividad_codigo
+      and d.desde <= current_date and (d.hasta is null or d.hasta >= current_date)
   ) then
-    raise exception 'El inspector no tiene autorización vigente para el alcance % (17020 §6.1)', new.alcance;
+    raise exception 'El inspector no está autorizado para la actividad % en este organismo (17020 §6.1.6)', new.actividad_codigo;
   end if;
+  motivo := puede_ejercer(new.organismo_id, new.inspector_id, new.actividad_codigo);
+  if motivo is not null then raise exception '%', motivo; end if;
   if exists (
     select 1 from conflictos_interes c
     where c.persona_id = new.inspector_id and c.cliente_id = new.cliente_id and c.vigente
@@ -475,7 +679,7 @@ end $$;
 create trigger validar_equipo_inspeccion before insert on inspeccion_equipos
   for each row execute function validar_equipo_inspeccion();
 
--- Dictamen: revisión y aprobación por persona distinta al inspector (7.4).
+-- Dictamen: revisión por persona distinta al inspector (7.4).
 create or replace function validar_dictamen() returns trigger
 language plpgsql as $$
 declare insp uuid;
@@ -505,18 +709,24 @@ end $$;
 create trigger validar_decision_queja before update of decidida_por on quejas_apelaciones
   for each row execute function validar_decision_queja();
 
--- ─────────────────── Vistas de indicadores para el tablero ───────────────────
+-- ─────────────────── Vistas ───────────────────
+
+-- Personal en el formato que ONAC solicita (NTE-3.3-88 / 3.3-89, numeral 4.1 ítem 2)
+create view v_personal_onac as
+select v.organismo_id, s.nombre as sede,
+       p.nombres || ' ' || p.apellidos as nombre_completo,
+       p.tipo_documento || ' ' || p.documento as documento,
+       v.cargo, v.tipo || ' desde ' || to_char(v.desde, 'YYYY-MM-DD') as vinculacion,
+       (select string_agg(c.numero || ' (' || c.certificador || ', vence ' || c.fecha_vencimiento || ')', '; ')
+          from certificados_competencia c
+         where c.persona_id = p.id and not c.anulado and c.fecha_vencimiento >= current_date) as certificados
+from vinculaciones v
+join personas p on p.id = v.persona_id
+left join sedes s on s.id = v.sede_id
+where v.hasta is null or v.hasta >= current_date;
+
 create view v_equipos_estado as
 select e.*,
   (select max(c.vence) from calibraciones c where c.equipo_id = e.id and c.tipo = 'calibracion' and c.conforme) as vence_calibracion,
   (select max(c.vence) from calibraciones c where c.equipo_id = e.id and c.tipo = 'verificacion_intermedia') as vence_verificacion
 from equipos e;
-
-create view v_personas_estado as
-select p.*,
-  (select max(d.fecha) from declaraciones d where d.persona_id = p.id and d.tipo = 'imparcialidad') as ultima_declaracion_imparcialidad,
-  (select max(d.fecha) from declaraciones d where d.persona_id = p.id and d.tipo = 'confidencialidad') as acuerdo_confidencialidad,
-  (select max(s.fecha) from supervisiones s where s.inspector_id = p.id and s.en_sitio) as ultima_supervision_en_sitio,
-  (select coalesce(array_agg(a.alcance), '{}') from autorizaciones a
-     where a.persona_id = p.id and (a.revocada is null or a.revocada > current_date)) as alcances_autorizados
-from personas p;

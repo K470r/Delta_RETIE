@@ -12,9 +12,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#0b5cad" };
 
 const MENU = [
-  { href: "/", texto: "Tablero 17020" },
-  { href: "/ordenes", texto: "Órdenes de servicio" },
-  { href: "/recursos", texto: "Personal y equipos" },
+  { href: "/organismos", texto: "Organismos" },
+  { href: "/personas", texto: "Personas" },
+  { href: "/operacion", texto: "Operación (demo)" },
+  { href: "/ordenes", texto: "Órdenes (demo)" },
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -23,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen">
         <header className="border-b" style={{ borderColor: "var(--borde)", background: "var(--tarjeta)" }}>
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
-            <Link href="/" className="text-lg font-bold marca">Delta RETIE</Link>
+            <Link href="/organismos" className="text-lg font-bold marca">Delta RETIE</Link>
             <nav className="flex flex-wrap gap-4 text-sm">
               {MENU.map((m) => (
                 <Link key={m.href} href={m.href} className="hover:underline">{m.texto}</Link>
@@ -33,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </header>
         {MODO_DEMO && (
           <div className="bg-amber-50 px-4 py-1.5 text-center text-xs text-amber-900 dark:bg-amber-950 dark:text-amber-200">
-            Modo demostración: datos de ejemplo almacenados localmente.
+            Modo local: los datos se guardan solo en este navegador hasta conectar la base de datos (Supabase).
           </div>
         )}
         <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>

@@ -1,48 +1,78 @@
 -- Prueba de las reglas 17020 que impone la base de datos.
--- Ejecutar sobre una base recién migrada (con seed.sql). Cada bloque indica
--- si debe pasar o fallar; revisar que los errores coincidan.
+-- Ejecutar sobre una base recién migrada (0001, 0002 y seed.sql).
+-- Cada paso indica si debe PASAR o FALLAR.
 \set ON_ERROR_STOP off
-begin;
-insert into personas (id,nombre,documento,roles) values
- ('00000000-0000-0000-0000-000000000001','DT','1',array['director_tecnico']::rol_oec[]),
- ('00000000-0000-0000-0000-000000000002','Insp','2',array['inspector']::rol_oec[]);
-insert into clientes (id,nombre,nit) values ('00000000-0000-0000-0000-0000000000c1','Cli','900');
-insert into autorizaciones (persona_id,alcance,otorgada,otorgada_por) values
- ('00000000-0000-0000-0000-000000000002','USO_FINAL_RESIDENCIAL',current_date-10,'00000000-0000-0000-0000-000000000001');
-commit;
+\set org '''00000000-0000-0000-0000-00000000000a'''
+\set dt '''00000000-0000-0000-0000-000000000001'''
+\set insp '''00000000-0000-0000-0000-000000000002'''
+\set sg '''00000000-0000-0000-0000-000000000003'''
+\set sg2 '''00000000-0000-0000-0000-000000000004'''
 
-\echo '1) asignación sin revisión de solicitud → debe FALLAR (7.1)'
-insert into ordenes_servicio (consecutivo,cliente_id,instalacion,alcance,inspector_id)
-values ('OS-1','00000000-0000-0000-0000-0000000000c1','X','USO_FINAL_RESIDENCIAL','00000000-0000-0000-0000-000000000002');
+\echo '── Organismo y alcance ──'
+insert into organismos (id, razon_social, nit, codigo_acreditacion, acreditacion_otorgada, acreditacion_vence)
+values (:org, 'OIN Prueba S.A.S.', '900000001', '15-OIN-999', current_date - 400, current_date + 1000);
+insert into alcance_acreditado (organismo_id, actividad_codigo) values
+  (:org, 'RETIE24-UF-BASICAS'), (:org, 'RETIE24-SUB-MT'), (:org, 'RETILAP24-INTERIOR');
+\echo '1) actividad inexistente en el catálogo → debe FALLAR'
+insert into alcance_acreditado (organismo_id, actividad_codigo) values (:org, 'RETIE24-NO-EXISTE');
 
-\echo '2) alcance no autorizado → debe FALLAR (6.1)'
-insert into ordenes_servicio (consecutivo,cliente_id,instalacion,alcance,inspector_id,solicitud_revisada_en)
-values ('OS-2','00000000-0000-0000-0000-0000000000c1','X','TRANSFORMACION','00000000-0000-0000-0000-000000000002',now());
+\echo '── Personas, vinculación y certificados ──'
+insert into personas (id, documento, nombres, apellidos) values
+  (:dt, '1001', 'Ana', 'Directora'), (:insp, '1002', 'Luis', 'Inspector'),
+  (:sg, '1003', 'Marta', 'Calidad'), (:sg2, '1004', 'Pedro', 'Calidad');
+insert into certificados_competencia (id, persona_id, numero, certificador, fecha_emision, fecha_vencimiento) values
+  ('00000000-0000-0000-0000-0000000000c1', :insp, 'CC-1', 'OCP Ejemplo', current_date - 100, current_date + 600),
+  ('00000000-0000-0000-0000-0000000000c2', :dt,   'CC-2', 'OCP Ejemplo', current_date - 900, current_date - 5);
+insert into certificado_actividades values
+  ('00000000-0000-0000-0000-0000000000c1', 'RETIE24-UF-BASICAS'),
+  ('00000000-0000-0000-0000-0000000000c2', 'RETIE24-UF-BASICAS');
 
-\echo '3) orden correcta → debe PASAR'
-insert into ordenes_servicio (id,consecutivo,cliente_id,instalacion,alcance,inspector_id,solicitud_revisada_en,formato_codigo,formato_version)
-values ('00000000-0000-0000-0000-0000000000a3','OS-3','00000000-0000-0000-0000-0000000000c1','X','USO_FINAL_RESIDENCIAL','00000000-0000-0000-0000-000000000002',now(),'F-229-D','1.0');
-insert into inspecciones (id,orden_id,inspector_id)
-values ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000a3','00000000-0000-0000-0000-000000000002');
+\echo '2) designar sin vinculación → debe FALLAR'
+insert into designaciones (organismo_id, persona_id, rol, desde) values (:org, :insp, 'inspector', current_date);
 
-\echo '4) NC sin descripción → debe FALLAR (7.3)'
-insert into resultados_item (inspeccion_id,item_codigo,resultado) values ('00000000-0000-0000-0000-0000000000b1','IB200','NC');
+insert into vinculaciones (organismo_id, persona_id, tipo, cargo, desde) values
+  (:org, :dt, 'laboral', 'Director técnico', current_date - 30),
+  (:org, :insp, 'prestacion_servicios', 'Inspector', current_date - 30),
+  (:org, :sg, 'laboral', 'Coordinadora de calidad', current_date - 30),
+  (:org, :sg2, 'laboral', 'Analista de calidad', current_date - 30);
+\echo '3) vinculación duplicada en el mismo periodo → debe FALLAR'
+insert into vinculaciones (organismo_id, persona_id, tipo, cargo, desde) values (:org, :insp, 'laboral', 'X', current_date);
 
-insert into equipos (id,codigo,nombre) values ('00000000-0000-0000-0000-0000000000e1','EQ-1','Telurómetro');
-insert into calibraciones (equipo_id,tipo,fecha,vence) values ('00000000-0000-0000-0000-0000000000e1','calibracion',current_date-400,current_date-35);
-\echo '5) equipo con calibración vencida → debe FALLAR (6.2)'
-insert into inspeccion_equipos values ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000e1');
+\echo '── Designaciones ──'
+insert into designaciones (id, organismo_id, persona_id, rol, desde) values
+  ('00000000-0000-0000-0000-0000000000d1', :org, :insp, 'inspector', current_date),
+  ('00000000-0000-0000-0000-0000000000d2', :org, :dt, 'director_tecnico', current_date),
+  ('00000000-0000-0000-0000-0000000000d3', :org, :sg, 'responsable_sg', current_date - 10);
+\echo '4) segundo responsable del SG vigente al mismo tiempo → debe FALLAR'
+insert into designaciones (organismo_id, persona_id, rol, desde) values (:org, :sg2, 'responsable_sg', current_date);
 
-\echo '6) dictamen revisado por el propio inspector → debe FALLAR (7.4)'
-insert into dictamenes (orden_id,numero,resultado,revisado_por,revisado_en,aprobado_por,aprobado_en)
-values ('00000000-0000-0000-0000-0000000000a3','D-1','conforme','00000000-0000-0000-0000-000000000002',now(),'00000000-0000-0000-0000-000000000001',now());
+\echo '5) inspector autorizado en actividad certificada y acreditada → debe PASAR'
+insert into designacion_actividades values ('00000000-0000-0000-0000-0000000000d1', 'RETIE24-UF-BASICAS');
+\echo '6) inspector en actividad acreditada pero NO certificada → debe FALLAR'
+insert into designacion_actividades values ('00000000-0000-0000-0000-0000000000d1', 'RETIE24-SUB-MT');
+\echo '7) inspector en actividad NO acreditada → debe FALLAR'
+insert into designacion_actividades values ('00000000-0000-0000-0000-0000000000d1', 'RETIE24-EQ-PISCINAS');
+\echo '8) director técnico con certificado VENCIDO → debe FALLAR'
+insert into designacion_actividades values ('00000000-0000-0000-0000-0000000000d2', 'RETIE24-UF-BASICAS');
+\echo '9) actividades a un rol que no las lleva (responsable SG) → debe FALLAR'
+insert into designacion_actividades values ('00000000-0000-0000-0000-0000000000d3', 'RETIE24-UF-BASICAS');
 
-\echo '7) dictamen con revisión independiente → debe PASAR'
-insert into dictamenes (orden_id,numero,resultado,revisado_por,revisado_en,aprobado_por,aprobado_en)
-values ('00000000-0000-0000-0000-0000000000a3','D-2','conforme','00000000-0000-0000-0000-000000000001',now(),'00000000-0000-0000-0000-000000000001',now());
+\echo '10) relevo del responsable SG: cerrar el actual y designar al nuevo → debe PASAR'
+update designaciones set hasta = current_date - 1 where id = '00000000-0000-0000-0000-0000000000d3';
+insert into designaciones (organismo_id, persona_id, rol, desde) values (:org, :sg2, 'responsable_sg', current_date);
 
-\echo '8) eliminar registros → debe FALLAR (8.4)'
-delete from equipos;
+\echo '── Operación ──'
+insert into clientes (id, organismo_id, nombre, nit) values ('00000000-0000-0000-0000-0000000000f1', :org, 'Cliente', '800');
+\echo '11) asignar orden en actividad no autorizada al inspector → debe FALLAR'
+insert into ordenes_servicio (organismo_id, consecutivo, cliente_id, instalacion, actividad_codigo, inspector_id, solicitud_revisada_en)
+values (:org, 'OS-1', '00000000-0000-0000-0000-0000000000f1', 'X', 'RETIE24-SUB-MT', :insp, now());
+\echo '12) asignar orden correcta → debe PASAR'
+insert into ordenes_servicio (organismo_id, consecutivo, cliente_id, instalacion, actividad_codigo, inspector_id, solicitud_revisada_en)
+values (:org, 'OS-2', '00000000-0000-0000-0000-0000000000f1', 'X', 'RETIE24-UF-BASICAS', :insp, now());
+\echo '13) borrar una persona → debe FALLAR'
+delete from personas where id = :sg;
 
-\echo 'Bitácora generada:'
-select tabla, operacion, count(*) from bitacora group by 1,2 order by 1;
+\echo 'Personal en formato ONAC:'
+select sede, nombre_completo, documento, cargo, vinculacion, certificados from v_personal_onac order by 2;
+\echo 'Bitácora:'
+select tabla, operacion, count(*) from bitacora group by 1, 2 order by 1, 2;
