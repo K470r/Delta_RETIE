@@ -33,6 +33,8 @@ $$;
 -- Catálogos: lectura para todo usuario autenticado
 alter table reglamentos enable row level security;
 alter table actividades enable row level security;
+alter table categorias_competencia enable row level security;
+create policy lectura on categorias_competencia for select to authenticated using (true);
 create policy lectura on reglamentos for select to authenticated using (true);
 create policy lectura on actividades for select to authenticated using (true);
 
@@ -74,10 +76,22 @@ create policy lectura on certificados_competencia for select to authenticated us
 create policy gestion on certificados_competencia for all to authenticated using (
   exists (select 1 from organismos o where administra(o.id))) with check (true);
 
-alter table certificado_actividades enable row level security;
-create policy lectura on certificado_actividades for select to authenticated using (true);
-create policy gestion on certificado_actividades for all to authenticated using (
+alter table certificado_categorias enable row level security;
+create policy lectura on certificado_categorias for select to authenticated using (true);
+create policy gestion on certificado_categorias for all to authenticated using (
   exists (select 1 from organismos o where administra(o.id))) with check (true);
+
+-- Hoja de vida: la persona ve la suya; quien administra un organismo la gestiona y verifica
+do $$
+declare t text;
+begin
+  foreach t in array array['experiencias'] loop
+    execute format('alter table %I enable row level security', t);
+    execute format($f$create policy propia on %I for all to authenticated
+      using (persona_id = persona_actual() or exists (select 1 from organismos o where administra(o.id)))
+      with check (persona_id = persona_actual() or exists (select 1 from organismos o where administra(o.id)))$f$, t);
+  end loop;
+end $$;
 
 alter table designacion_actividades enable row level security;
 create policy lectura on designacion_actividades for select to authenticated using (

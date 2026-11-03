@@ -27,7 +27,21 @@ evidencias se guardan en el dispositivo y se sincronizan al volver la señal.
 Una actividad solo se puede autorizar a un director técnico o inspector si:
 1. está en el **alcance acreditado vigente** del organismo,
 2. la persona tiene **vinculación vigente** con el organismo, y
-3. la persona tiene un **certificado de competencias vigente** que la cubre.
+3. la persona cumple los **requisitos de competencia** de la categoría de esa actividad
+   (RETIE 2024 §4.4.2.x: categorías a–g; RETILAP 2024 §4.5.2.x: categorías 1–5):
+   - cédula y matrícula profesional;
+   - experiencia **verificada** (sin contar dos veces periodos traslapados): inspector RETIE
+     2 años en g / 3 años en a–f en la misma categoría; RETILAP 3 años;
+   - director técnico: RETIE más de 10 años en la categoría con mínimo 2 en gerencia o
+     dirección; RETILAP mínimo 7 años con mínimo 1 en coordinación, gerencia o dirección;
+   - RETILAP: posgrado en iluminación y, para túneles, escenarios deportivos, áreas
+     clasificadas, aeropuertos y hospitales, el curso de profundización (si el posgrado no lo incluye);
+   - certificado de competencias vigente en la categoría (5 años) **con el seguimiento del
+     mes 30 registrado y conforme**. RETILAP no lo exige mientras no exista organismo certificador.
+   - RETIE c–f: certificado vigente en g (se muestra como advertencia).
+
+Requisitos versionados en `datos/requisitos/*.json` (para comparar luego con RETIE/RETILAP 2026).
+Pruebas del motor: `npm test`.
 
 Si después vence el certificado, se retira la línea o termina la vinculación, la
 autorización queda marcada como incumplimiento en el tablero. Nada se borra:

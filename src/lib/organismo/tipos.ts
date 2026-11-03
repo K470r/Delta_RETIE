@@ -54,14 +54,45 @@ export type Organismo = {
   creado: string;
 };
 
+/** Certificado de competencias (ISO/IEC 17024) por categorías del reglamento. */
 export type CertificadoCompetencia = {
   id: string;
   numero: string;
   certificador: string;
+  reglamento: string;          // "RETIE-2024" | "RETILAP-2024"
+  categorias: string[];        // RETIE: "a".."g"; RETILAP: "1".."5"
   fechaEmision: string;
-  fechaVencimiento: string;
-  actividades: string[];
+  fechaVencimiento: string;    // por defecto emisión + 5 años
+  /** Seguimiento obligatorio al mes 30 (RETIE §4.4.2.6 / RETILAP §4.5.2.6). */
+  seguimiento?: { fecha: string; resultado: "conforme" | "no_conforme"; observacion?: string };
   anulado: boolean;
+};
+
+export type Formacion = {
+  id: string;
+  tipo: "pregrado" | "especializacion" | "maestria" | "doctorado" | "curso_profundizacion" | "otro";
+  titulo: string;
+  institucion: string;
+  fecha: string;
+  /** Áreas de iluminación que incluye (plan de estudios del posgrado o tema del curso). */
+  areasIluminacion: string[];
+  /** Posgrado/curso en iluminación o alumbrado público (RETILAP §4.5.2.5-2). */
+  enIluminacion: boolean;
+  verificada: boolean;
+};
+
+export type Experiencia = {
+  id: string;
+  empresa: string;
+  cargo: string;
+  desde: string;
+  hasta?: string;              // vacío = actual
+  reglamento: string;          // a qué tipo de instalaciones corresponde
+  categorias: string[];        // RETIE: categorías de instalación; RETILAP: opcional
+  tipos: string[];             // TipoExperiencia
+  descripcion?: string;
+  /** El soporte (certificación laboral) fue revisado por el OI. Solo cuenta la experiencia verificada. */
+  verificada: boolean;
 };
 
 export type Persona = {
@@ -75,6 +106,10 @@ export type Persona = {
   profesion?: string;
   matriculaNumero?: string;
   matriculaEntidad?: string;
+  /** Especialidad de ingeniería que figura en la matrícula (Ley 842 de 2003 / Ley 51 de 1986). */
+  matriculaEspecialidad?: string;
+  formacion: Formacion[];
+  experiencias: Experiencia[];
   certificados: CertificadoCompetencia[];
   creado: string;
 };
@@ -130,3 +165,7 @@ export type BaseOrganismos = {
 
 export type Plazos = { vigenciaDeclaraciones: number; revisionResponsableSG: number; alertaAnticipada: number; alertaAcreditacion: number };
 export const PLAZOS_POR_DEFECTO: Plazos = { vigenciaDeclaraciones: 365, revisionResponsableSG: 30, alertaAnticipada: 60, alertaAcreditacion: 90 };
+
+/** Rol técnico para efectos de requisitos de competencia. */
+export type RolTecnico = "inspector" | "director_tecnico";
+export const rolTecnico = (r: RolOEC): RolTecnico => (r === "inspector" ? "inspector" : "director_tecnico");

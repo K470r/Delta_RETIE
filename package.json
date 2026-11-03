@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "tsc --noEmit",
-    "seed:sql": "python3 scripts/generar_seed.py > supabase/seed.sql"
+    "seed:sql": "python3 scripts/generar_seed.py > supabase/seed.sql",
+    "test": "tsx --tsconfig tsconfig.json --test pruebas/*.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0",
@@ -23,6 +24,7 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "tailwindcss": "4.3.4",
+    "tsx": "^4.20.6",
     "typescript": "5.9.3"
   }
 }

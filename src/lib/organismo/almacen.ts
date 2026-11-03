@@ -5,6 +5,7 @@
  * adaptador remoto con la misma interfaz.
  */
 import { useSyncExternalStore } from "react";
+import { categoriaDeActividad } from "../requisitos";
 import type { BaseOrganismos } from "./tipos";
 
 const CLAVE = "delta-retie:organismos:v1";
@@ -17,7 +18,7 @@ function leer(): BaseOrganismos {
   if (cache) return cache;
   try {
     const crudo = localStorage.getItem(CLAVE);
-    cache = crudo ? { ...VACIA, ...JSON.parse(crudo) } : VACIA;
+    cache = crudo ? normalizar({ ...VACIA, ...JSON.parse(crudo) }) : VACIA;
   } catch {
     cache = VACIA;
   }
@@ -50,3 +51,23 @@ export function useBase(): BaseOrganismos | null {
 }
 
 export const nuevoId = () => crypto.randomUUID();
+
+/** Adapta datos guardados con versiones anteriores del modelo. */
+function normalizar(b: BaseOrganismos): BaseOrganismos {
+  return {
+    ...b,
+    personas: b.personas.map((p) => ({
+      ...p,
+      formacion: p.formacion ?? [],
+      experiencias: p.experiencias ?? [],
+      // v1 guardaba actividades ONAC en el certificado; ahora son categorías del reglamento.
+      certificados: p.certificados.map((c) => {
+        const viejo = c as typeof c & { actividades?: string[] };
+        if (c.categorias) return c;
+        const acts = viejo.actividades ?? [];
+        const m = acts.map(categoriaDeActividad).filter(Boolean);
+        return { ...c, reglamento: m[0]?.req.reglamento ?? "RETIE-2024", categorias: [...new Set(m.map((x) => x!.cat.codigo))] };
+      }),
+    })),
+  };
+}

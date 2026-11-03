@@ -3,16 +3,18 @@ import { useMemo, useState } from "react";
 import { actividad, nombreCorto } from "@/lib/catalogo";
 import { actualizar, nuevoId } from "@/lib/organismo/almacen";
 import {
-  certificadoVigente, hoyISO, lineasAcreditadas, motivoNoPuedeEjercer, nombrePersona,
+  hoyISO, lineasAcreditadas, motivoNoPuedeEjercer, nombrePersona,
   validarDesignacion, vigenteEn, vinculacionVigente,
 } from "@/lib/organismo/reglas";
+import { evaluarCompetencia } from "@/lib/organismo/competencia";
 import {
-  NOMBRE_ROL, ROLES_CON_ACTIVIDADES,
+  NOMBRE_ROL, ROLES_CON_ACTIVIDADES, rolTecnico,
   type BaseOrganismos, type Designacion, type Organismo, type RolOEC, type Vinculacion,
 } from "@/lib/organismo/tipos";
 import { Boton, Campo, Entrada, Errores, Selector } from "../Formulario";
 import { SelectorActividades } from "../SelectorActividades";
-import { FormularioCertificado, FormularioPersona } from "./FormularioPersona";
+import { FormularioPersona } from "./FormularioPersona";
+import { HojaDeVida, ListaRequisitos } from "./HojaDeVida";
 
 type Props = {
   base: BaseOrganismos;
@@ -112,24 +114,34 @@ function TarjetaDesignacion({ base, organismo, d, onFinalizar }: {
       </div>
       {d.actividades.length > 0 && (
         <ul className="space-y-1 text-sm">
-          {d.actividades.map((a) => {
-            const motivo = motivoNoPuedeEjercer(base, organismo, p, a, hoy);
-            const cert = certificadoVigente(p, a, hoy);
-            return (
-              <li key={a} className="flex items-start gap-2">
-                <span className={motivo ? "text-red-600" : "text-emerald-600"}>{motivo ? "✕" : "✓"}</span>
-                <span>
-                  {nombreCorto(a)}
-                  <span className="suave block text-xs">
-                    {motivo ?? `Certificado ${cert!.numero} (${cert!.certificador}) vigente hasta ${cert!.fechaVencimiento}`}
-                  </span>
-                </span>
-              </li>
-            );
-          })}
+          {d.actividades.map((a) => <FilaActividad key={a} base={base} organismo={organismo} d={d} actividad={a} />)}
         </ul>
       )}
     </article>
+  );
+}
+
+function FilaActividad({ base, organismo, d, actividad: a }: { base: BaseOrganismos; organismo: Organismo; d: Designacion; actividad: string }) {
+  const [abierta, setAbierta] = useState(false);
+  const p = base.personas.find((x) => x.id === d.personaId)!;
+  const rol = rolTecnico(d.rol);
+  const motivo = motivoNoPuedeEjercer(base, organismo, p, a, hoyISO(), rol);
+  const h = evaluarCompetencia(p, a, rol, hoyISO());
+  const cert = h.items.find((i) => i.requisito.startsWith("Certificado de competencias") && i.cumple);
+  return (
+    <li>
+      <button className="flex w-full items-start gap-2 text-left" onClick={() => setAbierta(!abierta)}>
+        <span className={motivo ? "text-red-600" : "text-emerald-600"}>{motivo ? "✕" : "✓"}</span>
+        <span>
+          {nombreCorto(a)} <span className="suave text-xs">({h.categoria})</span>
+          <span className={`block text-xs ${motivo ? "text-red-600" : "suave"}`}>
+            {motivo ?? (cert ? `Certificado ${cert.detalle}` : "Cumple los requisitos")}
+            {h.alertas.length > 0 && <span className="text-amber-600"> · {h.alertas.join(" · ")}</span>}
+          </span>
+        </span>
+      </button>
+      {abierta && <div className="ml-6 mt-1"><ListaRequisitos persona={p} actividad={a} rol={rol} /></div>}
+    </li>
   );
 }
 
@@ -149,7 +161,7 @@ function FormularioDesignacion({ base, organismo, roles, onTerminar }: {
   const hoy = hoyISO();
   const [personaId, setPersonaId] = useState("");
   const [creandoPersona, setCreandoPersona] = useState(false);
-  const [agregandoCert, setAgregandoCert] = useState(false);
+  const [verHoja, setVerHoja] = useState(false);
   const [filtro, setFiltro] = useState("");
   const [rol, setRol] = useState<RolOEC>(roles[0]);
   const [desde, setDesde] = useState(hoy);
@@ -291,24 +303,22 @@ function FormularioDesignacion({ base, organismo, roles, onTerminar }: {
             <div className="space-y-2">
               <h3 className="font-semibold">4. Actividades autorizadas (17020 §6.1.6)</h3>
               <p className="suave text-sm">
-                Solo se pueden autorizar actividades del alcance acreditado que estén cubiertas por un certificado de competencias vigente de la persona.
+                Solo se pueden autorizar actividades del alcance acreditado para las que la persona cumple los requisitos del reglamento
+                como {rol === "inspector" ? "inspector" : "director técnico"}: matrícula, formación, experiencia verificada y certificado de competencias vigente con seguimiento.
               </p>
               <div className="text-sm">
                 <b>Certificados:</b>{" "}
                 {persona.certificados.filter((c) => !c.anulado).length === 0 ? <span className="text-red-600">ninguno registrado</span>
                   : persona.certificados.filter((c) => !c.anulado).map((c) => (
-                    <span key={c.id} className={`mr-2 ${c.fechaVencimiento < hoy ? "text-red-600" : ""}`}>
-                      {c.numero} ({c.actividades.length} act., vence {c.fechaVencimiento})
-                    </span>
+                    <span key={c.id} className="mr-2">N.° {c.numero} (cat. {c.categorias.join(", ")}, vence {c.fechaVencimiento})</span>
                   ))}
-                {!agregandoCert && <button className="ml-1 underline marca" onClick={() => setAgregandoCert(true)}>+ agregar certificado</button>}
+                <button className="ml-1 underline marca" onClick={() => setVerHoja(!verHoja)}>
+                  {verHoja ? "ocultar hoja de vida" : "completar hoja de vida (certificados, experiencia, formación)"}
+                </button>
               </div>
-              {agregandoCert && (
-                <FormularioCertificado personaId={persona.id} sugeridas={lineasAcreditadas(organismo)}
-                  onGuardado={() => setAgregandoCert(false)} onCancelar={() => setAgregandoCert(false)} />
-              )}
+              {verHoja && <div className="rounded-lg border p-3" style={{ borderColor: "var(--borde)" }}><HojaDeVida persona={persona} /></div>}
               <SelectorActividades actividades={lineas} seleccion={acts} onCambio={setActs}
-                bloqueo={(c) => motivoNoPuedeEjercer(baseTentativa, organismo, persona, c, fechaEval)} />
+                bloqueo={(c) => motivoNoPuedeEjercer(baseTentativa, organismo, persona, c, fechaEval, rolTecnico(rol))} />
             </div>
           )}
 

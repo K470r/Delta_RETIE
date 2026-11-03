@@ -5,9 +5,11 @@
  * en pantalla y para el tablero de cumplimiento del organismo.
  */
 import { nombreCorto } from "../catalogo";
+import { categoriaDeActividad, etiquetaCategoria } from "../requisitos";
+import { estadoCertificado, evaluarCompetencia, motivoCompetencia } from "./competencia";
 import {
-  NOMBRE_ROL, PLAZOS_POR_DEFECTO, ROLES_CON_ACTIVIDADES, ROLES_UNICOS,
-  type BaseOrganismos, type Designacion, type Organismo, type Persona, type RolOEC,
+  NOMBRE_ROL, PLAZOS_POR_DEFECTO, ROLES_CON_ACTIVIDADES, ROLES_UNICOS, rolTecnico,
+  type BaseOrganismos, type Designacion, type Organismo, type Persona, type RolOEC, type RolTecnico,
 } from "./tipos";
 
 export const hoyISO = () => new Date().toISOString().slice(0, 10);
@@ -27,25 +29,23 @@ export function lineasAcreditadas(o: Organismo): string[] {
   return o.alcance.filter((l) => l.estado === "acreditada").map((l) => l.actividad);
 }
 
-export function certificadoVigente(p: Persona, actividad: string, fecha: string) {
-  return p.certificados.find(
-    (c) => !c.anulado && c.actividades.includes(actividad) && c.fechaEmision <= fecha && c.fechaVencimiento >= fecha,
-  );
-}
-
 export function vinculacionVigente(b: BaseOrganismos, organismoId: string, personaId: string, fecha: string) {
   return b.vinculaciones.find((v) => v.organismoId === organismoId && v.personaId === personaId && vigenteEn(v, fecha));
 }
 
-/** Motivo por el que la persona NO puede ejercer la actividad en el organismo, o null si puede. */
-export function motivoNoPuedeEjercer(b: BaseOrganismos, o: Organismo, p: Persona, actividad: string, fecha = hoyISO()): string | null {
+/**
+ * Motivo por el que la persona NO puede ejercer la actividad en el organismo
+ * con el rol indicado, o null si puede. Combina alcance acreditado, vinculación
+ * y requisitos de competencia del reglamento (formación, experiencia, certificado).
+ */
+export function motivoNoPuedeEjercer(
+  b: BaseOrganismos, o: Organismo, p: Persona, actividad: string, fecha = hoyISO(), rol: RolTecnico = "inspector",
+): string | null {
   if (!lineasAcreditadas(o).includes(actividad))
     return "No está en el alcance acreditado vigente del organismo";
   if (!vinculacionVigente(b, o.id, p.id, fecha))
     return "Sin vinculación vigente con el organismo";
-  if (!certificadoVigente(p, actividad, fecha))
-    return "Sin certificado de competencias vigente para esta actividad";
-  return null;
+  return motivoCompetencia(p, actividad, rol, fecha);
 }
 
 /** Valida una designación nueva antes de guardarla. */
@@ -70,7 +70,7 @@ export function validarDesignacion(b: BaseOrganismos, d: Omit<Designacion, "id">
     if (!d.actividades.length) errores.push("Seleccione al menos una actividad autorizada (17020 §6.1.6)");
     const fecha = d.desde > hoyISO() ? d.desde : hoyISO();
     for (const a of d.actividades) {
-      const m = motivoNoPuedeEjercer(b, o, p, a, fecha);
+      const m = motivoNoPuedeEjercer(b, o, p, a, fecha, rolTecnico(d.rol));
       if (m) errores.push(`${nombreCorto(a)}: ${m}`);
     }
   } else if (d.actividades.length) {
@@ -156,7 +156,7 @@ export function evaluarOrganismo(b: BaseOrganismos, o: Organismo, hoy = hoyISO()
     const sup = designacionesVigentes(b, o.id, ["director_tecnico_suplente"]);
     const inc: string[] = [], al: string[] = [];
     for (const a of lineas) {
-      const cubre = (ds: Designacion[]) => ds.some((d) => d.actividades.includes(a) && !motivoNoPuedeEjercer(b, o, persona(d.personaId)!, a, hoy));
+      const cubre = (ds: Designacion[]) => ds.some((d) => d.actividades.includes(a) && !motivoNoPuedeEjercer(b, o, persona(d.personaId)!, a, hoy, "director_tecnico"));
       if (!cubre(dts)) inc.push(`${nombreCorto(a)}: sin director técnico habilitado`);
       else if (!cubre(sup)) al.push(`${nombreCorto(a)}: sin director técnico suplente`);
     }
@@ -171,22 +171,53 @@ export function evaluarOrganismo(b: BaseOrganismos, o: Organismo, hoy = hoyISO()
         al.push(`${nombreCorto(a)}: sin inspector habilitado (no se pueden atender servicios)`);
     res.push(control("O-6.1-01", "6.1", "Inspectores habilitados para cada línea acreditada", [], al));
   }
-  // 6.1 Autorizaciones que perdieron soporte (certificado vencido, línea retirada, desvinculación)
+  // 6.1 Autorizaciones que perdieron soporte (certificado vencido o sin seguimiento, línea retirada, desvinculación)
   {
     const inc: string[] = [], al: string[] = [];
     for (const d of designacionesVigentes(b, o.id, ROLES_CON_ACTIVIDADES)) {
       const p = persona(d.personaId)!;
       for (const a of d.actividades) {
-        const m = motivoNoPuedeEjercer(b, o, p, a, hoy);
+        const m = motivoNoPuedeEjercer(b, o, p, a, hoy, rolTecnico(d.rol));
         if (m) inc.push(`${nombrePersona(p)} (${NOMBRE_ROL[d.rol]}) — ${nombreCorto(a)}: ${m}`);
         else {
-          const c = certificadoVigente(p, a, hoy)!;
-          if (dias(hoy, c.fechaVencimiento) <= plazos.alertaAnticipada)
-            al.push(`${nombrePersona(p)}: certificado ${c.numero} vence el ${c.fechaVencimiento}`);
+          const h = evaluarCompetencia(p, a, rolTecnico(d.rol), hoy);
+          al.push(...h.alertas.map((x) => `${nombrePersona(p)}: ${x}`));
+          al.push(...h.items.filter((i) => !i.cumple && !i.bloquea).map((i) => `${nombrePersona(p)}: ${i.requisito} — ${i.detalle}`));
         }
       }
     }
-    res.push(control("O-6.1-02", "6.1.1 – 6.1.6", "Autorizaciones soportadas por certificado vigente y alcance acreditado", inc, [...new Set(al)]));
+    res.push(control("O-6.1-02", "6.1.1 – 6.1.6", "Autorizaciones con requisitos de competencia vigentes (formación, experiencia, certificado y seguimiento)", inc, [...new Set(al)]));
+  }
+  // 6.1 Seguimiento del mes 30 y vencimiento de certificados del personal técnico
+  {
+    const inc: string[] = [], al: string[] = [];
+    const ids = [...new Set(designacionesVigentes(b, o.id, ROLES_CON_ACTIVIDADES).map((d) => d.personaId))];
+    for (const id of ids) {
+      const p = persona(id)!;
+      for (const c of p.certificados.filter((x) => !x.anulado)) {
+        const e = estadoCertificado(c, hoy, plazos.alertaAnticipada);
+        if (!e.vigente && c.fechaVencimiento >= hoy) inc.push(`${nombrePersona(p)}: ${e.motivo}`);
+        al.push(...e.alertas.map((x) => `${nombrePersona(p)}: ${x}`));
+      }
+    }
+    res.push(control("O-6.1-04", "6.1.1", "Certificados de competencias vigentes con seguimiento del mes 30", inc, al));
+  }
+  // 5.2.5 Los directores técnicos, en conjunto, cubren todo el alcance con certificado como inspector (RETIE/RETILAP)
+  {
+    const dts = designacionesVigentes(b, o.id, ["director_tecnico", "director_tecnico_suplente"]);
+    const inc: string[] = [];
+    const cats = new Map<string, string[]>();
+    for (const a of lineas) {
+      const m = categoriaDeActividad(a);
+      if (!m) continue;
+      const k = etiquetaCategoria(m.req.reglamento, m.cat.codigo);
+      cats.set(k, [...(cats.get(k) ?? []), a]);
+    }
+    for (const [k, acts] of cats) {
+      const cubierta = acts.every((a) => dts.some((d) => !motivoCompetencia(persona(d.personaId)!, a, "director_tecnico", hoy)));
+      if (!cubierta) inc.push(`Categoría ${k}: ningún director técnico cumple los requisitos para firmar dictámenes`);
+    }
+    res.push(control("O-5.2-03", "5.2.5", "Directores técnicos con competencia certificada en todas las categorías del alcance", inc));
   }
   // 6.1 Matrícula profesional
   {

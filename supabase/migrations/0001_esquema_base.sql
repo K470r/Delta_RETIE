@@ -40,8 +40,32 @@ create table reglamentos (
   nombre        text not null,
   acto          text,                    -- resoluciones que lo adoptan/modifican
   fuente_alcances text,                  -- nota técnica de ONAC de la que sale el catálogo
+  fuente_requisitos text,                -- numerales del reglamento con los requisitos de personal
   vigente_desde date,
-  vigente_hasta date
+  vigente_hasta date,
+  -- Requisitos de competencia del personal técnico
+  exige_certificado          boolean not null default true,  -- RETILAP: false mientras no exista certificador
+  vigencia_certificado_anios int not null default 5,
+  seguimiento_mes            int not null default 30,
+  matricula_requerida        boolean not null default true,
+  requiere_posgrado_iluminacion boolean not null default false,
+  experiencia_por_categoria  boolean not null default true,
+  tipos_experiencia_tecnica  text[] not null default '{}',
+  dt_experiencia_total       numeric,
+  dt_total_estricta          boolean not null default false,   -- "más de" (RETIE) vs "mínimo" (RETILAP)
+  dt_experiencia_direccion   numeric,
+  dt_tipos_direccion         text[] not null default '{}',
+  dt_por_categoria           boolean not null default true
+);
+
+-- Categorías de certificación de competencias de inspectores (RETIE a–g, RETILAP 1–5)
+create table categorias_competencia (
+  reglamento_id  text not null references reglamentos(id),
+  codigo         text not null,
+  nombre         text not null,
+  experiencia_inspector_anios numeric not null,
+  requiere_categoria_vigente text,     -- RETIE c–f exigen certificado vigente en g
+  primary key (reglamento_id, codigo)
 );
 
 -- Actividades de inspección acreditables (catálogo ONAC)
@@ -51,7 +75,10 @@ create table actividades (
   grupo         text not null,
   nombre        text not null,
   referencias   text[] not null default '{}',
-  activa        boolean not null default true
+  categoria     text not null,           -- categoría de certificación que la cubre
+  area_profundizacion text,              -- RETILAP: curso de profundización exigido
+  activa        boolean not null default true,
+  foreign key (reglamento_id, categoria) references categorias_competencia(reglamento_id, codigo)
 );
 
 -- ─────────────────────────── Organismos ───────────────────────────
@@ -116,27 +143,70 @@ create table personas (
   profesion        text,
   matricula_numero text,
   matricula_entidad text,                     -- CONTE, COPNIA, CPIEMAP...
-  creado           timestamptz not null default now()
+  matricula_especialidad text,                -- Ley 842 de 2003 / Ley 51 de 1986
+  creado           timestamptz not null default now(),
+  check (documento ~ '^[0-9A-Za-z]+$')
 );
 
 -- Certificado de competencias (organismo de certificación de personas, ISO/IEC 17024)
 create table certificados_competencia (
   id                uuid primary key default gen_random_uuid(),
   persona_id        uuid not null references personas(id),
+  reglamento_id     text not null references reglamentos(id),
   numero            text not null,
   certificador      text not null,
   fecha_emision     date not null,
   fecha_vencimiento date not null,
+  -- Seguimiento obligatorio al mes 30 (RETIE §4.4.2.6 / RETILAP §4.5.2.6)
+  seguimiento_fecha     date,
+  seguimiento_resultado text check (seguimiento_resultado in ('conforme','no_conforme')),
+  seguimiento_observacion text,
   soporte_ruta      text,
   anulado           boolean not null default false,
   check (fecha_vencimiento > fecha_emision),
+  check ((seguimiento_fecha is null) = (seguimiento_resultado is null)),
   unique (certificador, numero)
 );
 
-create table certificado_actividades (
-  certificado_id   uuid not null references certificados_competencia(id),
-  actividad_codigo text not null references actividades(codigo),
-  primary key (certificado_id, actividad_codigo)
+create table certificado_categorias (
+  certificado_id uuid not null references certificados_competencia(id),
+  reglamento_id  text not null,
+  categoria      text not null,
+  primary key (certificado_id, categoria),
+  foreign key (reglamento_id, categoria) references categorias_competencia(reglamento_id, codigo)
+);
+
+-- Formación académica (RETILAP exige posgrado en iluminación y cursos de profundización)
+create table formacion (
+  id                uuid primary key default gen_random_uuid(),
+  persona_id        uuid not null references personas(id),
+  tipo              text not null check (tipo in ('pregrado','especializacion','maestria','doctorado','curso_profundizacion','otro')),
+  titulo            text not null,
+  institucion       text not null,
+  fecha             date not null,
+  en_iluminacion    boolean not null default false,
+  areas_iluminacion text[] not null default '{}',
+  verificada        boolean not null default false,
+  verificada_por    uuid references personas(id),
+  soporte_ruta      text
+);
+
+-- Experiencia laboral del ejercicio profesional (solo cuenta la verificada)
+create table experiencias (
+  id             uuid primary key default gen_random_uuid(),
+  persona_id     uuid not null references personas(id),
+  empresa        text not null,
+  cargo          text not null,
+  desde          date not null,
+  hasta          date,
+  reglamento_id  text not null references reglamentos(id),
+  categorias     text[] not null default '{}',
+  tipos          text[] not null check (cardinality(tipos) > 0),
+  descripcion    text,
+  verificada     boolean not null default false,
+  verificada_por uuid references personas(id),
+  soporte_ruta   text,
+  check (hasta is null or hasta >= desde)
 );
 
 -- Vinculación persona ↔ organismo (lo que ONAC pide: tipo y fecha de vinculación, sede)
@@ -199,15 +269,6 @@ create table supervisiones (
   resultado     text not null,
   soporte_ruta  text,
   check (inspector_id <> supervisor_id)
-);
-
-create table formacion (
-  id          uuid primary key default gen_random_uuid(),
-  persona_id  uuid not null references personas(id),
-  tema        text not null,
-  fecha       date not null,
-  horas       numeric,
-  soporte_ruta text
 );
 
 -- ─────────────────────── Imparcialidad y confidencialidad (4.1, 4.2) ───────────────────────
@@ -542,7 +603,7 @@ do $$
 declare t text;
 begin
   foreach t in array array[
-    'organismos','sedes','alcance_acreditado','personas','certificados_competencia',
+    'organismos','sedes','alcance_acreditado','personas','certificados_competencia','formacion','experiencias',
     'vinculaciones','designaciones','revisiones_sg','supervisiones','declaraciones',
     'conflictos_interes','riesgos_imparcialidad','equipos','calibraciones','formatos',
     'cotizaciones','ordenes_servicio','inspecciones','resultados_item','mediciones',
@@ -567,16 +628,129 @@ begin
   return coalesce(new, old);
 end $$;
 
-create trigger bitacora_certificado_actividades after insert or delete on certificado_actividades
+create trigger bitacora_certificado_categorias after insert or delete on certificado_categorias
   for each row execute function registrar_bitacora_relacion();
 create trigger bitacora_designacion_actividades after insert or delete on designacion_actividades
   for each row execute function registrar_bitacora_relacion();
 
 -- ───────────────── Reglas 17020 aplicadas por la base de datos ─────────────────
 
--- ¿La persona puede ejercer la actividad en el organismo en una fecha?
--- Requiere: línea acreditada, vinculación vigente y certificado de competencias vigente.
-create or replace function puede_ejercer(p_org uuid, p_persona uuid, p_actividad text, p_fecha date default current_date)
+-- Vigencia de un certificado: dentro de sus fechas, no anulado y con el seguimiento
+-- del mes 30 (contado desde el día siguiente a la emisión) registrado y conforme.
+create or replace function certificado_vigente(c certificados_competencia, p_fecha date)
+returns boolean language sql stable as $$
+  select not c.anulado
+     and c.fecha_emision <= p_fecha and c.fecha_vencimiento >= p_fecha
+     and coalesce(c.seguimiento_resultado, '') <> 'no_conforme'
+     and (c.seguimiento_fecha is not null
+          or p_fecha <= (c.fecha_emision + 1 + make_interval(months => (select r.seguimiento_mes from reglamentos r where r.id = c.reglamento_id)))::date)
+$$;
+
+-- La vigencia no puede exceder la del reglamento (5 años).
+create or replace function validar_certificado() returns trigger
+language plpgsql as $$
+declare anios int;
+begin
+  select vigencia_certificado_anios into anios from reglamentos where id = new.reglamento_id;
+  if new.fecha_vencimiento > (new.fecha_emision + make_interval(years => anios))::date - 1 then
+    raise exception 'La vigencia del certificado no puede superar % años', anios;
+  end if;
+  return new;
+end $$;
+
+create trigger validar_certificado before insert or update of fecha_emision, fecha_vencimiento on certificados_competencia
+  for each row execute function validar_certificado();
+
+-- Años de experiencia verificada, uniendo periodos traslapados (no se cuentan dos veces).
+create or replace function anios_experiencia(p_persona uuid, p_reglamento text, p_categoria text, p_tipos text[], p_fecha date)
+returns numeric language sql stable as $$
+  select coalesce(sum(upper(r) - lower(r)), 0) / 365.25
+  from unnest((
+    select range_agg(daterange(e.desde, least(coalesce(e.hasta, p_fecha), p_fecha), '[]'))
+    from experiencias e
+    where e.persona_id = p_persona and e.verificada and e.reglamento_id = p_reglamento
+      and e.desde <= p_fecha
+      and (p_categoria is null or p_categoria = any(e.categorias))
+      and e.tipos && p_tipos
+  )) as r
+$$;
+
+-- Requisitos de competencia de la persona para una actividad y rol.
+-- Devuelve el primer requisito incumplido (texto) o null si cumple.
+create or replace function motivo_competencia(p_persona uuid, p_actividad text, p_rol text, p_fecha date default current_date)
+returns text language plpgsql stable as $$
+declare
+  a actividades; r reglamentos; k categorias_competencia; p personas;
+  cat_exp text; anios numeric; dir numeric;
+begin
+  select * into a from actividades where codigo = p_actividad;
+  select * into r from reglamentos where id = a.reglamento_id;
+  select * into k from categorias_competencia where reglamento_id = a.reglamento_id and codigo = a.categoria;
+  select * into p from personas where id = p_persona;
+
+  if r.matricula_requerida and coalesce(p.matricula_numero, '') = '' then
+    return 'Sin matrícula profesional registrada (Leyes 842 de 2003 y 51 de 1986)';
+  end if;
+
+  if r.requiere_posgrado_iluminacion then
+    if not exists (select 1 from formacion f where f.persona_id = p_persona and f.verificada and f.en_iluminacion
+                   and f.tipo in ('especializacion','maestria','doctorado')) then
+      return 'Sin posgrado verificado en iluminación y/o alumbrado público';
+    end if;
+    if a.area_profundizacion is not null and not exists (
+      select 1 from formacion f where f.persona_id = p_persona and f.verificada and a.area_profundizacion = any(f.areas_iluminacion)
+        and (f.tipo = 'curso_profundizacion' or (f.en_iluminacion and f.tipo in ('especializacion','maestria','doctorado')))) then
+      return 'Falta curso de profundización en ' || a.area_profundizacion;
+    end if;
+  end if;
+
+  cat_exp := case when r.experiencia_por_categoria then k.codigo end;
+  anios := anios_experiencia(p_persona, r.id, cat_exp, r.tipos_experiencia_tecnica, p_fecha);
+  if anios < k.experiencia_inspector_anios then
+    return format('Experiencia verificada insuficiente: %s de %s años', round(anios, 1), k.experiencia_inspector_anios);
+  end if;
+
+  if p_rol = 'director_tecnico' then
+    cat_exp := case when r.dt_por_categoria then k.codigo end;
+    anios := anios_experiencia(p_persona, r.id, cat_exp, r.tipos_experiencia_tecnica || r.dt_tipos_direccion, p_fecha);
+    dir := anios_experiencia(p_persona, r.id, cat_exp, r.dt_tipos_direccion, p_fecha);
+    if (r.dt_total_estricta and anios <= r.dt_experiencia_total) or (not r.dt_total_estricta and anios < r.dt_experiencia_total) then
+      return format('Experiencia de director técnico insuficiente: %s años (%s %s)', round(anios, 1),
+                    case when r.dt_total_estricta then 'más de' else 'mínimo' end, r.dt_experiencia_total);
+    end if;
+    if dir < r.dt_experiencia_direccion then
+      return format('Experiencia en gerencia/dirección insuficiente: %s de %s años', round(dir, 1), r.dt_experiencia_direccion);
+    end if;
+  end if;
+
+  if r.exige_certificado and not exists (
+    select 1 from certificados_competencia c join certificado_categorias cc on cc.certificado_id = c.id
+    where c.persona_id = p_persona and cc.reglamento_id = r.id and cc.categoria = k.codigo and certificado_vigente(c, p_fecha)) then
+    return format('Sin certificado de competencias vigente (con seguimiento) en la categoría %s', k.codigo);
+  end if;
+  return null;
+end $$;
+
+-- Verificación de soportes de hoja de vida: la registra otra persona (no autoverificación).
+create or replace function validar_verificacion() returns trigger
+language plpgsql as $$
+begin
+  if new.verificada and (tg_op = 'INSERT' or not old.verificada) then
+    if new.verificada_por is null or new.verificada_por = new.persona_id then
+      raise exception 'El soporte debe verificarlo otra persona del organismo (indique verificada_por)';
+    end if;
+  end if;
+  return new;
+end $$;
+
+create trigger validar_verificacion before insert or update of verificada on experiencias
+  for each row execute function validar_verificacion();
+create trigger validar_verificacion before insert or update of verificada on formacion
+  for each row execute function validar_verificacion();
+
+-- ¿La persona puede ejercer la actividad en el organismo con el rol, en una fecha?
+-- Requiere: línea acreditada, vinculación vigente y requisitos de competencia.
+create or replace function puede_ejercer(p_org uuid, p_persona uuid, p_actividad text, p_fecha date default current_date, p_rol text default 'inspector')
 returns text language plpgsql stable as $$
 begin
   if not exists (select 1 from alcance_acreditado a
@@ -588,13 +762,7 @@ begin
                    and v.desde <= p_fecha and (v.hasta is null or v.hasta >= p_fecha)) then
     return 'La persona no tiene vinculación vigente con el organismo (17020 §6.1)';
   end if;
-  if not exists (select 1 from certificados_competencia c
-                 join certificado_actividades ca on ca.certificado_id = c.id
-                 where c.persona_id = p_persona and not c.anulado and ca.actividad_codigo = p_actividad
-                   and c.fecha_emision <= p_fecha and c.fecha_vencimiento >= p_fecha) then
-    return 'La persona no tiene certificado de competencias vigente para ' || p_actividad || ' (17020 §6.1.1)';
-  end if;
-  return null;
+  return motivo_competencia(p_persona, p_actividad, p_rol, p_fecha);
 end $$;
 
 -- Las actividades se autorizan solo a directores técnicos e inspectores, y solo si puede_ejercer.
@@ -606,8 +774,9 @@ begin
   if d.rol not in ('director_tecnico', 'director_tecnico_suplente', 'inspector') then
     raise exception 'Solo los directores técnicos e inspectores tienen actividades autorizadas';
   end if;
-  motivo := puede_ejercer(d.organismo_id, d.persona_id, new.actividad_codigo, greatest(d.desde, current_date));
-  if motivo is not null then raise exception '%', motivo; end if;
+  motivo := puede_ejercer(d.organismo_id, d.persona_id, new.actividad_codigo, greatest(d.desde, current_date),
+                          case when d.rol = 'inspector' then 'inspector' else 'director_tecnico' end);
+  if motivo is not null then raise exception '% (17020 §6.1)', motivo; end if;
   return new;
 end $$;
 
@@ -717,9 +886,11 @@ select v.organismo_id, s.nombre as sede,
        p.nombres || ' ' || p.apellidos as nombre_completo,
        p.tipo_documento || ' ' || p.documento as documento,
        v.cargo, v.tipo || ' desde ' || to_char(v.desde, 'YYYY-MM-DD') as vinculacion,
-       (select string_agg(c.numero || ' (' || c.certificador || ', vence ' || c.fecha_vencimiento || ')', '; ')
+       (select string_agg(c.numero || ' (' || c.reglamento_id || ' cat. ' ||
+                 (select string_agg(cc.categoria, ',' order by cc.categoria) from certificado_categorias cc where cc.certificado_id = c.id)
+                 || ', vence ' || c.fecha_vencimiento || ')', '; ')
           from certificados_competencia c
-         where c.persona_id = p.id and not c.anulado and c.fecha_vencimiento >= current_date) as certificados
+         where c.persona_id = p.id and certificado_vigente(c, current_date)) as certificados
 from vinculaciones v
 join personas p on p.id = v.persona_id
 left join sedes s on s.id = v.sede_id
