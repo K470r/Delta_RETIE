@@ -1,0 +1,409 @@
+{
+  "reglamento": "RETIE-2024",
+  "nombre": "Reglamento Técnico de Instalaciones Eléctricas – RETIE 2024",
+  "acto": "Resolución MinEnergía 40117 del 2 de abril de 2024, modificada por la Resolución 40304 del 2 de julio de 2025",
+  "fuente": "ONAC NTE-3.3-88 v01 (2025-07-23), Anexo 1 — columna 'Alcance RETIE 2024 NTE 3.3-84 (Derogada)'",
+  "actividades": [
+    {
+      "codigo": "RETIE24-GEN-CENTRAL",
+      "grupo": "Generación",
+      "nombre": "Inspección de instalaciones eléctricas de centrales de generación",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 2 – Requisitos para el proceso de generación",
+        "Título 18 – Requisitos generales para centrales de generación",
+        "3.18.1 Edificaciones de centrales de generación"
+      ]
+    },
+    {
+      "codigo": "RETIE24-GEN-FNCE",
+      "grupo": "Generación",
+      "nombre": "Inspección de instalaciones eléctricas de generación con fuentes no convencionales de energía, autogeneradores a pequeña escala – AGPE y generación distribuida – GD",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 2 – Requisitos para el proceso de generación",
+        "Título 18 – Requisitos generales para centrales de generación",
+        "3.18.2 Requisitos generales para instalaciones de generación con FNCE, AGPE y GD"
+      ]
+    },
+    {
+      "codigo": "RETIE24-GEN-VARIAS",
+      "grupo": "Generación",
+      "nombre": "Inspección de instalaciones de generación de energía eléctrica con varias fuentes",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 2 – Requisitos para el proceso de generación",
+        "Título 18 – Requisitos generales para centrales de generación",
+        "3.18.3 Instalaciones de generación de energía eléctrica con varias fuentes"
+      ]
+    },
+    {
+      "codigo": "RETIE24-TRANS-LINEAS",
+      "grupo": "Transmisión",
+      "nombre": "Inspección de instalaciones eléctricas de líneas de transmisión",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 3 – Requisitos para las líneas de transmisión",
+        "Título 19 – Requisitos generales de las líneas de transmisión"
+      ]
+    },
+    {
+      "codigo": "RETIE24-SUB-AT",
+      "grupo": "Transformación",
+      "nombre": "Inspección de instalaciones eléctricas de transformación (subestación) de alta y extra alta tensión",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 5 – Requisitos para instalaciones de transformación (subestaciones)",
+        "Título 22 – Requisitos generales de subestaciones",
+        "Título 23 – Requisitos específicos según tipo de subestación",
+        "3.23.1 Subestaciones de alta y extra alta tensión"
+      ]
+    },
+    {
+      "codigo": "RETIE24-SUB-MT",
+      "grupo": "Transformación",
+      "nombre": "Inspección de instalaciones eléctricas de transformación (subestación) en media tensión",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 5 – Requisitos para instalaciones de transformación (subestaciones)",
+        "Título 22 – Requisitos generales de subestaciones",
+        "Título 23 – Requisitos específicos según tipo de subestación",
+        "3.23.2 Subestaciones de media tensión tipo interior o en edificaciones",
+        "3.23.3 Subestaciones tipo poste",
+        "3.23.4 Subestaciones tipo pedestal o tipo jardín",
+        "3.23.5 Cuartos de subestación paquetizados o prefabricados",
+        "3.23.6 Mantenimiento de subestaciones"
+      ]
+    },
+    {
+      "codigo": "RETIE24-UF-SUB-MT",
+      "grupo": "Uso final",
+      "nombre": "Inspección de instalaciones eléctricas de uso final. Transformación (subestación) en media tensión",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 24 – Aplicación de normas técnicas",
+        "Título 25 – Régimen de conexión a tierra – RCT",
+        "Título 26 – Acometidas",
+        "Título 27 – Protección de las instalaciones de uso final"
+      ]
+    },
+    {
+      "codigo": "RETIE24-DIST-REDES",
+      "grupo": "Distribución",
+      "nombre": "Inspección de instalaciones eléctricas de redes de distribución",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 4 – Requisitos para las redes de distribución",
+        "Título 20 – Requisitos generales de redes de distribución"
+      ]
+    },
+    {
+      "codigo": "RETIE24-UF-DIST",
+      "grupo": "Uso final",
+      "nombre": "Inspección de instalaciones eléctricas de uso final. Redes de distribución",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 24 – Aplicación de normas técnicas",
+        "Título 25 – Régimen de conexión a tierra – RCT",
+        "Título 26 – Acometidas",
+        "Título 27 – Protección de las instalaciones de uso final",
+        "Capítulo 4 – Requisitos para las redes de distribución",
+        "Título 20 – Requisitos generales de redes de distribución"
+      ]
+    },
+    {
+      "codigo": "RETIE24-UF-MEDICA",
+      "grupo": "Uso final especial",
+      "nombre": "Instalaciones eléctricas de uso final en instituciones de asistencia médica",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 27 – Protección de las instalaciones de uso final",
+        "Título 28 – Clasificación de las instalaciones de uso final y requisitos específicos según el tipo de instalación",
+        "3.28.3 Instalaciones especiales",
+        "3.28.3.2 Instituciones de asistencia médica"
+      ]
+    },
+    {
+      "codigo": "RETIE24-UF-PELIG-I",
+      "grupo": "Uso final especial",
+      "nombre": "Instalaciones eléctricas de uso final en sitios clasificados como peligrosos, para clase I divisiones 1 y 2",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 27 – Protección de las instalaciones de uso final",
+        "Título 28 – Clasificación de las instalaciones de uso final y requisitos específicos según el tipo de instalación",
+        "3.28.3 Instalaciones especiales",
+        "3.28.3.1 Instalaciones eléctricas en lugares clasificados como peligrosos"
+      ]
+    },
+    {
+      "codigo": "RETIE24-UF-PELIG-II",
+      "grupo": "Uso final especial",
+      "nombre": "Instalaciones eléctricas de uso final en sitios clasificados como peligrosos, para clase II divisiones 1 y 2",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 27 – Protección de las instalaciones de uso final",
+        "Título 28 – Clasificación de las instalaciones de uso final y requisitos específicos según el tipo de instalación",
+        "3.28.3 Instalaciones especiales",
+        "3.28.3.1 Instalaciones eléctricas en lugares clasificados como peligrosos"
+      ]
+    },
+    {
+      "codigo": "RETIE24-UF-PELIG-III",
+      "grupo": "Uso final especial",
+      "nombre": "Instalaciones eléctricas de uso final en sitios clasificados como peligrosos, para clase III divisiones 1 y 2",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 27 – Protección de las instalaciones de uso final",
+        "Título 28 – Clasificación de las instalaciones de uso final y requisitos específicos según el tipo de instalación",
+        "3.28.3 Instalaciones especiales",
+        "3.28.3.1 Instalaciones eléctricas en lugares clasificados como peligrosos"
+      ]
+    },
+    {
+      "codigo": "RETIE24-UF-TUNELES",
+      "grupo": "Uso final especial",
+      "nombre": "Inspección de instalaciones eléctricas de uso final: túneles y cavernas subterráneas",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 27 – Protección de las instalaciones de uso final",
+        "Título 28 – Clasificación de las instalaciones de uso final y requisitos específicos según el tipo de instalación",
+        "3.28.5 Túneles y cavernas subterráneas"
+      ]
+    },
+    {
+      "codigo": "RETIE24-UF-MINAS",
+      "grupo": "Uso final especial",
+      "nombre": "Inspección de instalaciones eléctricas de uso final: minas y minas subterráneas",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 27 – Protección de las instalaciones de uso final",
+        "Título 28 – Clasificación de las instalaciones de uso final y requisitos específicos según el tipo de instalación",
+        "3.28.6 Instalaciones eléctricas en minas"
+      ]
+    },
+    {
+      "codigo": "RETIE24-EQ-ASCENSORES",
+      "grupo": "Equipos especiales",
+      "nombre": "Inspección de instalaciones eléctricas de uso final para equipos especiales: ascensores, escaleras y andenes móviles electromecánicos y rampas para el transporte de personas",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 27 – Protección de las instalaciones de uso final",
+        "Título 28 – Clasificación de las instalaciones de uso final y requisitos específicos según el tipo de instalación",
+        "3.28.4 Instalación de equipos especiales",
+        "3.28.4.2 Ascensores, escaleras y andenes móviles electromecánicos y rampas para el transporte de personas"
+      ]
+    },
+    {
+      "codigo": "RETIE24-EQ-GRUAS",
+      "grupo": "Equipos especiales",
+      "nombre": "Inspección de instalaciones eléctricas de uso final para equipos especiales: grúas colgantes y elevadores de carga",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 27 – Protección de las instalaciones de uso final",
+        "Título 28 – Clasificación de las instalaciones de uso final y requisitos específicos según el tipo de instalación",
+        "3.28.4 Instalación de equipos especiales",
+        "3.28.4.1 Grúas colgantes y elevadores de carga"
+      ]
+    },
+    {
+      "codigo": "RETIE24-EQ-RAYOSX",
+      "grupo": "Equipos especiales",
+      "nombre": "Inspección de instalaciones eléctricas de uso final para equipos especiales: equipos de rayos X",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 27 – Protección de las instalaciones de uso final",
+        "Título 28 – Clasificación de las instalaciones de uso final y requisitos específicos según el tipo de instalación",
+        "3.28.4 Instalación de equipos especiales",
+        "3.28.4.3 Equipos de rayos X"
+      ]
+    },
+    {
+      "codigo": "RETIE24-EQ-CELDAS",
+      "grupo": "Equipos especiales",
+      "nombre": "Inspección de instalaciones eléctricas de uso final para equipos especiales: celdas electrolíticas",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 27 – Protección de las instalaciones de uso final",
+        "Título 28 – Clasificación de las instalaciones de uso final y requisitos específicos según el tipo de instalación",
+        "3.28.4 Instalación de equipos especiales",
+        "3.28.4.4 Celdas electrolíticas"
+      ]
+    },
+    {
+      "codigo": "RETIE24-EQ-GALVANO",
+      "grupo": "Equipos especiales",
+      "nombre": "Inspección de instalaciones eléctricas de uso final para equipos especiales: equipos de galvanoplastia",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 27 – Protección de las instalaciones de uso final",
+        "Título 28 – Clasificación de las instalaciones de uso final y requisitos específicos según el tipo de instalación",
+        "3.28.4 Instalación de equipos especiales",
+        "3.28.4.5 Equipos de galvanoplastia"
+      ]
+    },
+    {
+      "codigo": "RETIE24-EQ-BOMBAS",
+      "grupo": "Equipos especiales",
+      "nombre": "Inspección de instalaciones eléctricas de uso final para equipos especiales: bombas contra incendio",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 27 – Protección de las instalaciones de uso final",
+        "Título 28 – Clasificación de las instalaciones de uso final y requisitos específicos según el tipo de instalación",
+        "3.28.4 Instalación de equipos especiales",
+        "3.28.4.7 Bombas contra incendio"
+      ]
+    },
+    {
+      "codigo": "RETIE24-EQ-EMERGENCIA",
+      "grupo": "Equipos especiales",
+      "nombre": "Inspección de instalaciones eléctricas de uso final para equipos especiales: sistemas de emergencia",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 27 – Protección de las instalaciones de uso final",
+        "Título 28 – Clasificación de las instalaciones de uso final y requisitos específicos según el tipo de instalación",
+        "3.28.4 Instalación de equipos especiales",
+        "3.28.4.8 Sistemas de emergencia"
+      ]
+    },
+    {
+      "codigo": "RETIE24-EQ-PISCINAS",
+      "grupo": "Equipos especiales",
+      "nombre": "Inspección de instalaciones eléctricas de uso final para equipos especiales: piscinas, fuentes y similares",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 27 – Protección de las instalaciones de uso final",
+        "Título 28 – Clasificación de las instalaciones de uso final y requisitos específicos según el tipo de instalación",
+        "3.28.4 Instalación de equipos especiales",
+        "3.28.4.6 Piscinas, fuentes e instalaciones similares"
+      ]
+    },
+    {
+      "codigo": "RETIE24-UF-CONCENTRACION",
+      "grupo": "Uso final especial",
+      "nombre": "Inspección de instalaciones eléctricas de uso final especiales: alta concentración de personas y sitios de reuniones públicas",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 27 – Protección de las instalaciones de uso final",
+        "Título 28 – Clasificación de las instalaciones de uso final y requisitos específicos según el tipo de instalación",
+        "3.28.3 Instalaciones especiales",
+        "3.28.3.3 Instalaciones en sitios con alta concentración de personas y sitios de reuniones públicas"
+      ]
+    },
+    {
+      "codigo": "RETIE24-UF-AGRICOLA",
+      "grupo": "Uso final especial",
+      "nombre": "Inspección de instalaciones eléctricas de uso final especiales: edificios para usos agrícolas o pecuarios",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 27 – Protección de las instalaciones de uso final",
+        "Título 28 – Clasificación de las instalaciones de uso final y requisitos específicos según el tipo de instalación",
+        "3.28.3 Instalaciones especiales",
+        "3.28.3.4 Edificios para usos agrícolas o pecuarios"
+      ]
+    },
+    {
+      "codigo": "RETIE24-UF-MOVILES",
+      "grupo": "Uso final especial",
+      "nombre": "Inspección de instalaciones eléctricas de uso final especiales: viviendas móviles, vehículos recreativos, remolques estacionados",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 27 – Protección de las instalaciones de uso final",
+        "Título 28 – Clasificación de las instalaciones de uso final y requisitos específicos según el tipo de instalación",
+        "3.28.3 Instalaciones especiales",
+        "3.28.3.6 Viviendas móviles, vehículos recreativos, remolques estacionados"
+      ]
+    },
+    {
+      "codigo": "RETIE24-UF-FLOTANTES",
+      "grupo": "Uso final especial",
+      "nombre": "Inspección de instalaciones eléctricas de uso final especiales: casas flotantes y palafíticas",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 27 – Protección de las instalaciones de uso final",
+        "Título 28 – Clasificación de las instalaciones de uso final y requisitos específicos según el tipo de instalación",
+        "3.28.3 Instalaciones especiales",
+        "3.28.3.5 Casas flotantes y palafíticas"
+      ]
+    },
+    {
+      "codigo": "RETIE24-UF-BASICAS",
+      "grupo": "Uso final",
+      "nombre": "Inspección de instalaciones eléctricas de uso final. Instalaciones básicas",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 24 – Aplicación de normas técnicas",
+        "Título 25 – Régimen de conexión a tierra – RCT",
+        "Título 26 – Acometidas",
+        "Título 27 – Protección de las instalaciones de uso final",
+        "Título 28 – Clasificación de las instalaciones de uso final",
+        "3.28.1 Instalaciones básicas"
+      ]
+    },
+    {
+      "codigo": "RETIE24-UF-AUTOGEN",
+      "grupo": "Uso final",
+      "nombre": "Inspección de instalaciones eléctricas de uso final. Autogeneración de energía",
+      "referencias": [
+        "Libro 3, Título 1 – Campo de aplicación",
+        "Capítulo 1 – Requerimientos generales de las instalaciones eléctricas",
+        "Capítulo 6 – Requisitos para instalaciones de uso final",
+        "Título 24 – Aplicación de normas técnicas",
+        "Título 25 – Régimen de conexión a tierra – RCT",
+        "Título 26 – Acometidas",
+        "Título 27 – Protección de las instalaciones de uso final",
+        "Capítulo 2 – Requisitos para el proceso de generación",
+        "3.18.2 Generación con FNCE, AGPE y GD",
+        "3.18.3 Generación con varias fuentes"
+      ]
+    }
+  ]
+}

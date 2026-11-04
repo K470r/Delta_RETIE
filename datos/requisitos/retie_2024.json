@@ -1,0 +1,116 @@
+{
+  "reglamento": "RETIE-2024",
+  "fuente": "Resolución 40117 de 2024, numerales 4.4.2.2 (categorías), 4.4.2.5 (prerrequisitos) y 4.4.2.6 (vigencia)",
+  "exigeCertificado": true,
+  "notaCertificado": "",
+  "vigenciaCertificadoAnios": 5,
+  "seguimientoMes": 30,
+  "matriculaRequerida": true,
+  "formacionEspecializada": null,
+  "categorias": [
+    {
+      "codigo": "a",
+      "nombre": "Generación de energía eléctrica en tensión DC superior a 1.500 V y AC superior a 1.000 V",
+      "actividades": [
+        "RETIE24-GEN-CENTRAL",
+        "RETIE24-GEN-FNCE",
+        "RETIE24-GEN-VARIAS"
+      ],
+      "experienciaInspectorAnios": 3,
+      "requiereCategoriaVigente": null
+    },
+    {
+      "codigo": "b",
+      "nombre": "Transmisión de energía eléctrica y subestaciones o transformación en tensión igual o superior a 57.500 V",
+      "actividades": [
+        "RETIE24-TRANS-LINEAS",
+        "RETIE24-SUB-AT"
+      ],
+      "experienciaInspectorAnios": 3,
+      "requiereCategoriaVigente": null
+    },
+    {
+      "codigo": "c",
+      "nombre": "Redes de distribución y subestaciones o transformación en tensión inferior a 57.500 V",
+      "actividades": [
+        "RETIE24-DIST-REDES",
+        "RETIE24-SUB-MT"
+      ],
+      "experienciaInspectorAnios": 3,
+      "requiereCategoriaVigente": "g"
+    },
+    {
+      "codigo": "d",
+      "nombre": "Uso final en instituciones de asistencia médica",
+      "actividades": [
+        "RETIE24-UF-MEDICA"
+      ],
+      "experienciaInspectorAnios": 3,
+      "requiereCategoriaVigente": "g"
+    },
+    {
+      "codigo": "e",
+      "nombre": "Uso final en sitios clasificados como peligrosos, minas, minas subterráneas, túneles y cavernas",
+      "actividades": [
+        "RETIE24-UF-PELIG-I",
+        "RETIE24-UF-PELIG-II",
+        "RETIE24-UF-PELIG-III",
+        "RETIE24-UF-MINAS",
+        "RETIE24-UF-TUNELES"
+      ],
+      "experienciaInspectorAnios": 3,
+      "requiereCategoriaVigente": "g"
+    },
+    {
+      "codigo": "f",
+      "nombre": "Uso final para equipos especiales e instalaciones de uso final especiales",
+      "actividades": [
+        "RETIE24-EQ-ASCENSORES",
+        "RETIE24-EQ-GRUAS",
+        "RETIE24-EQ-RAYOSX",
+        "RETIE24-EQ-CELDAS",
+        "RETIE24-EQ-GALVANO",
+        "RETIE24-EQ-BOMBAS",
+        "RETIE24-EQ-EMERGENCIA",
+        "RETIE24-EQ-PISCINAS",
+        "RETIE24-UF-CONCENTRACION",
+        "RETIE24-UF-AGRICOLA",
+        "RETIE24-UF-MOVILES",
+        "RETIE24-UF-FLOTANTES"
+      ],
+      "experienciaInspectorAnios": 3,
+      "requiereCategoriaVigente": "g",
+      "notaExperiencia": "Mínimo 3 años en cualquiera de los tipos de instalación que pertenecen a la categoría"
+    },
+    {
+      "codigo": "g",
+      "nombre": "Uso final distintas a d, e, f, con autogeneración a pequeña escala (DC < 1.500 V, AC < 1.000 V), redes de distribución y subestaciones asociadas (< 57.500 V)",
+      "actividades": [
+        "RETIE24-UF-BASICAS",
+        "RETIE24-UF-AUTOGEN",
+        "RETIE24-UF-DIST",
+        "RETIE24-UF-SUB-MT"
+      ],
+      "experienciaInspectorAnios": 2,
+      "requiereCategoriaVigente": null
+    }
+  ],
+  "tiposExperienciaTecnica": [
+    "diseno",
+    "construccion",
+    "operacion",
+    "mantenimiento",
+    "inspeccion"
+  ],
+  "directorTecnico": {
+    "experienciaTotalAnios": 10,
+    "experienciaTotalEstricta": true,
+    "experienciaDireccionAnios": 2,
+    "tiposExperienciaDireccion": [
+      "gerencia_direccion"
+    ],
+    "porCategoria": true,
+    "texto": "Más de diez años en diseño, construcción, operación, mantenimiento o inspección, además de gerencia o dirección (mínimo 2 años de la experiencia total), de la misma o similar categoría"
+  },
+  "experienciaPorCategoria": true
+}

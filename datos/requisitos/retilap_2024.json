@@ -1,0 +1,96 @@
+{
+  "reglamento": "RETILAP-2024",
+  "fuente": "Resolución 40150 de 2024, numerales 4.5.2.x (categorías), 4.5.2.5 (prerrequisitos) y 4.5.2.6 (vigencia)",
+  "exigeCertificado": false,
+  "notaCertificado": "Mientras no exista organismo de certificación de personas para RETILAP, no se exige el certificado; sí los demás prerrequisitos.",
+  "vigenciaCertificadoAnios": 5,
+  "seguimientoMes": 30,
+  "matriculaRequerida": true,
+  "formacionEspecializada": {
+    "texto": "Título de especialista en iluminación y/o alumbrado público (o maestría/doctorado en iluminación) de institución reconocida por el MEN",
+    "tipos": [
+      "especializacion",
+      "maestria",
+      "doctorado"
+    ]
+  },
+  "areasProfundizacion": {
+    "tuneles": "Iluminación en túneles",
+    "deportivos_profesionales": "Iluminación en escenarios deportivos profesionales",
+    "clasificadas_especiales": "Iluminación en áreas clasificadas y especiales",
+    "aeropuertos": "Iluminación en plataformas, calles de rodaje y pistas de aeropuertos y helipuertos",
+    "hospitales": "Iluminación en hospitales o centros de atención médica"
+  },
+  "categorias": [
+    {
+      "codigo": "1",
+      "nombre": "Instalaciones de sistemas de iluminación interior",
+      "actividades": [
+        "RETILAP24-INTERIOR"
+      ],
+      "experienciaInspectorAnios": 3
+    },
+    {
+      "codigo": "2",
+      "nombre": "Iluminación exterior y escenarios deportivos (incluye profesionales con transmisión de TV)",
+      "actividades": [
+        "RETILAP24-EXTERIOR"
+      ],
+      "experienciaInspectorAnios": 3
+    },
+    {
+      "codigo": "3",
+      "nombre": "Alumbrado público y sistemas de telegestión",
+      "actividades": [
+        "RETILAP24-ALUMBRADO"
+      ],
+      "experienciaInspectorAnios": 3
+    },
+    {
+      "codigo": "4",
+      "nombre": "Iluminación en túneles",
+      "actividades": [
+        "RETILAP24-TUNELES"
+      ],
+      "experienciaInspectorAnios": 3
+    },
+    {
+      "codigo": "5",
+      "nombre": "Áreas clasificadas y especiales, aeropuertos y helipuertos, hospitales o centros de atención médica",
+      "actividades": [
+        "RETILAP24-CLASIFICADAS",
+        "RETILAP24-AEROPUERTOS",
+        "RETILAP24-HOSPITALES"
+      ],
+      "experienciaInspectorAnios": 3
+    }
+  ],
+  "profundizacionPorActividad": {
+    "RETILAP24-TUNELES": "tuneles",
+    "RETILAP24-EXTERIOR": "deportivos_profesionales",
+    "RETILAP24-CLASIFICADAS": "clasificadas_especiales",
+    "RETILAP24-AEROPUERTOS": "aeropuertos",
+    "RETILAP24-HOSPITALES": "hospitales"
+  },
+  "experienciaPorCategoria": false,
+  "tiposExperienciaTecnica": [
+    "diseno",
+    "construccion",
+    "operacion",
+    "mantenimiento",
+    "interventoria",
+    "inspeccion",
+    "direccion_tecnica_oi"
+  ],
+  "directorTecnico": {
+    "experienciaTotalAnios": 7,
+    "experienciaTotalEstricta": false,
+    "experienciaDireccionAnios": 1,
+    "tiposExperienciaDireccion": [
+      "coordinacion_proyectos",
+      "gerencia_direccion"
+    ],
+    "porCategoria": false,
+    "texto": "Mínimo siete años en diseño, construcción, operación, mantenimiento, interventoría, inspección o dirección técnica de OI de iluminación, y mínimo un año en coordinación, gerencia o dirección de proyectos"
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "reglamento": "RETILAP-2024",
+  "nombre": "Reglamento Técnico de Iluminación y Alumbrado Público – RETILAP 2024",
+  "acto": "Resolución MinEnergía 40150 del 3 de mayo de 2024, modificada por la Resolución 40318 del 9 de julio de 2025",
+  "fuente": "ONAC NTE-3.3-89 v01 (2025-08-12), tabla 'Alcance RETILAP 2024'",
+  "actividades": [
+    {
+      "codigo": "RETILAP24-EXTERIOR",
+      "grupo": "Iluminación exterior",
+      "nombre": "Inspección de instalaciones de sistemas de iluminación exterior y escenarios deportivos (incluyendo los escenarios profesionales con sistemas de transmisión de televisión)",
+      "referencias": [
+        "Libro 1, Título 1 – Objeto y ámbito de aplicación (Art. 1.1.1)",
+        "Libro 3, Título 1 – Requisitos generales para la realización de proyectos de iluminación",
+        "Título 4 – Instalaciones de proyectos de iluminación exterior (Art. 3.4.1 a 3.4.5)",
+        "Libro 4, Título 3 – Demostración de conformidad de instalaciones: Art. 4.3.1, 4.3.2, 4.3.3, 4.3.4, 4.3.5, 4.3.8",
+        "Art. 4.3.17 Mediciones fotométricas en escenarios deportivos"
+      ]
+    },
+    {
+      "codigo": "RETILAP24-ALUMBRADO",
+      "grupo": "Alumbrado público",
+      "nombre": "Inspección de instalaciones de sistemas de iluminación de alumbrado público y sistemas de telegestión",
+      "referencias": [
+        "Libro 1, Título 1 – Objeto y ámbito de aplicación (Art. 1.1.1)",
+        "Libro 3, Título 1 – Requisitos generales para la realización de proyectos de iluminación",
+        "Título 3 – Instalaciones de proyectos de alumbrado público",
+        "Título 7 – Sistemas de telegestión",
+        "Libro 4, Título 3 – Demostración de conformidad de instalaciones: Art. 4.3.1, 4.3.2, 4.3.3, 4.3.4, 4.3.5, 4.3.8",
+        "Art. 4.3.10 a 4.3.14 Mediciones fotométricas en alumbrado público"
+      ]
+    },
+    {
+      "codigo": "RETILAP24-TUNELES",
+      "grupo": "Iluminación exterior",
+      "nombre": "Inspección de instalaciones de sistemas de iluminación en túneles",
+      "referencias": [
+        "Libro 1, Título 1 – Objeto y ámbito de aplicación (Art. 1.1.1)",
+        "Libro 3, Título 1 – Requisitos generales para la realización de proyectos de iluminación",
+        "Título 5 – Instalaciones de proyectos de iluminación en túneles",
+        "Libro 4, Título 3 – Demostración de conformidad de instalaciones: Art. 4.3.1, 4.3.2, 4.3.3, 4.3.4, 4.3.5, 4.3.8",
+        "Art. 4.3.9 Mediciones fotométricas en iluminación interior"
+      ]
+    },
+    {
+      "codigo": "RETILAP24-AEROPUERTOS",
+      "grupo": "Iluminación exterior",
+      "nombre": "Inspección de instalaciones de iluminación en plataformas, calles de rodaje y pistas de aeropuertos y helipuertos",
+      "referencias": [
+        "Libro 1, Título 1 – Objeto y ámbito de aplicación (Art. 1.1.1)",
+        "Libro 3, Título 1 – Requisitos generales para la realización de proyectos de iluminación",
+        "Título 2 – Iluminación interior",
+        "Título 4 – Iluminación exterior (Art. 3.4.6 aeródromos, aeropuertos y helipuertos)",
+        "Libro 4, Título 3 – Demostración de conformidad de instalaciones: Art. 4.3.1, 4.3.2, 4.3.3, 4.3.4, 4.3.5, 4.3.8",
+        "Art. 4.3.9"
+      ]
+    },
+    {
+      "codigo": "RETILAP24-CLASIFICADAS",
+      "grupo": "Iluminación especial",
+      "nombre": "Inspección de instalaciones de sistemas de iluminación en áreas clasificadas y especiales",
+      "referencias": [
+        "Libro 1, Título 1 – Objeto y ámbito de aplicación (Art. 1.1.1)",
+        "Libro 3, Título 1 – Requisitos generales para la realización de proyectos de iluminación",
+        "Título 2 – Iluminación interior",
+        "Título 4 – Iluminación exterior",
+        "Título 6 – Instalaciones de iluminación de áreas clasificadas y especiales",
+        "Libro 4, Título 3 – Demostración de conformidad de instalaciones: Art. 4.3.1, 4.3.2, 4.3.3, 4.3.4, 4.3.5, 4.3.8",
+        "Art. 4.3.9"
+      ]
+    },
+    {
+      "codigo": "RETILAP24-HOSPITALES",
+      "grupo": "Iluminación interior",
+      "nombre": "Inspección de instalaciones de iluminación en hospitales o centros de atención médica",
+      "referencias": [
+        "Libro 1, Título 1 – Objeto y ámbito de aplicación (Art. 1.1.1)",
+        "Libro 3, Título 1 – Requisitos generales para la realización de proyectos de iluminación",
+        "Título 2 – Iluminación interior (3.2.2.5 instituciones de asistencia médica)",
+        "Título 4 – Iluminación exterior",
+        "Libro 4, Título 3 – Demostración de conformidad de instalaciones: Art. 4.3.1, 4.3.2, 4.3.3, 4.3.4, 4.3.5, 4.3.8",
+        "Art. 4.3.9"
+      ]
+    },
+    {
+      "codigo": "RETILAP24-INTERIOR",
+      "grupo": "Iluminación interior",
+      "nombre": "Inspección de instalaciones de sistemas de iluminación interior",
+      "referencias": [
+        "Libro 1, Título 1 – Objeto y ámbito de aplicación (Art. 1.1.1)",
+        "Libro 3, Título 1 – Requisitos generales para la realización de proyectos de iluminación",
+        "Título 2 – Instalaciones de sistemas de iluminación interior",
+        "Libro 4, Título 3 – Demostración de conformidad de instalaciones: Art. 4.3.1, 4.3.2, 4.3.3, 4.3.4, 4.3.5, 4.3.8",
+        "Art. 4.3.9 Mediciones fotométricas en iluminación interior"
+      ]
+    }
+  ]
+}

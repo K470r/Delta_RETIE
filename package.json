@@ -1,0 +1,30 @@
+{
+  "name": "delta-retie",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Plataforma web del OEC: cotización, inspección RETIE y control de cumplimiento ISO/IEC 17020",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "tsc --noEmit",
+    "seed:sql": "python3 scripts/generar_seed.py > supabase/seed.sql",
+    "test": "tsx --tsconfig tsconfig.json --test pruebas/*.test.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.118.0",
+    "idb": "8.0.4",
+    "next": "15.5.28",
+    "react": "19.1.10",
+    "react-dom": "19.1.10"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.4",
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "tailwindcss": "4.3.4",
+    "tsx": "^4.20.6",
+    "typescript": "5.9.3"
+  }
+}
