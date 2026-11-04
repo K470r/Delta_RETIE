@@ -20,21 +20,17 @@ envíela en el chat.
 
 > **No** vuelva a ejecutar `instalar_todo.sql`: ya lo hizo y fallaría porque las tablas ya existen.
 
-## Paso 2 (recomendado) — Que el correo traiga también un código
+## Paso 2 (opcional, más adelante) — Que el correo traiga también un código
 
-Sirve cuando se abre el correo en un equipo distinto (por ejemplo, el correo en el celular
-y la aplicación en el PC): basta con escribir el código.
+Supabase solo deja editar las plantillas de correo si se configura un servidor de correo
+propio (**Authentication → Emails → SMTP Settings**). Con el servidor gratuito el correo
+trae solo el enlace, y eso basta: ábralo en el mismo equipo donde usa la aplicación.
+Cuando se configure un SMTP propio, agregue a las plantillas **Magic link or OTP** y
+**Confirm sign up** esta línea, para poder ingresar con el código desde otro equipo:
 
-1. Menú de la izquierda: **Authentication** → **Emails** (en algunas versiones: **Email Templates**).
-2. Abra la plantilla **Magic Link**. En el cuadro del mensaje, agregue al final esta línea:
-
-   ```html
-   <p>Su código de ingreso es: <b>{{ .Token }}</b></p>
-   ```
-
-3. Haga clic en **Save**.
-4. Repita lo mismo en la plantilla **Confirm signup** (es la que llega la primera vez que un
-   correo ingresa).
+```html
+<p>Su código de ingreso es: <b>{{ .Token }}</b></p>
+```
 
 ## Paso 3 — Ingresar
 
@@ -51,8 +47,10 @@ Supabase permite pocos correos por hora con su servidor de correo gratuito. Si a
 2. Dentro del organismo aparece el recuadro **Arranque del organismo**:
    1. Regístrese como persona (cédula, nombres, matrícula). El correo ya viene puesto:
       así su usuario queda enlazado a su cédula.
-   2. Desígnese (por ejemplo, director técnico). En el mismo formulario se registran la
+   2. Desígnese en la gerencia (por ejemplo, gerente) o como responsable del SG. En el mismo formulario se registran la
       vinculación y las declaraciones de imparcialidad y confidencialidad.
+   (La designación como director técnico exige que **otra persona** del organismo verifique
+   su experiencia; hágala después.)
 3. Desde ese momento puede vincular y designar a las demás personas. Cada persona
    registrada con su correo podrá ingresar con ese mismo correo y verá su organismo.
 
@@ -61,3 +59,9 @@ Supabase permite pocos correos por hora con su servidor de correo gratuito. Si a
 En **Authentication → URL Configuration** cambie **Site URL** por la dirección pública
 (por ejemplo `https://delta-retie.vercel.app`) y agréguela también en **Redirect URLs**.
 Mientras tanto, el valor por defecto `http://localhost:3000` sirve para las pruebas.
+
+## Borrar los datos de prueba
+
+`supabase/limpiar_datos_prueba.sql` borra los organismos con NIT que empieza por `PRUEBA`
+y las personas con documento que empieza por `PRUEBA`. La bitácora se conserva.
+Péguelo en el SQL Editor y haga clic en **Run**; al final debe mostrar `0` y `0`.

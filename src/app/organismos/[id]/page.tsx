@@ -110,7 +110,14 @@ function Arranque({ base, o, irA }: { base: BaseOrganismos; o: Organismo; irA: (
           Regístrese como persona con su cédula y su correo de ingreso ({sesion.correo}).
           {yo && <span className="no-underline"> ✓ {nombrePersona(yo)}</span>}
         </li>
-        <li>Desígnese, por ejemplo, como director técnico o gerente (la vinculación y las declaraciones se registran en el mismo formulario).</li>
+        <li>
+          Desígnese en la <b>gerencia</b> (por ejemplo, gerente) o como <b>responsable del sistema de gestión</b>. La vinculación y las
+          declaraciones se registran en el mismo formulario.
+          <span className="suave block text-xs">
+            La designación como director técnico exige actividades autorizadas, y para eso su experiencia debe estar verificada por
+            <b> otra persona</b> del organismo (no se permite la autoverificación). Hágala después, cuando haya designado a esa persona.
+          </span>
+        </li>
       </ol>
       {!yo ? (
         <div className="rounded-lg border p-3" style={{ borderColor: "var(--borde)" }}>
@@ -118,8 +125,7 @@ function Arranque({ base, o, irA }: { base: BaseOrganismos; o: Organismo; irA: (
         </div>
       ) : (
         <div className="flex flex-wrap gap-2">
-          <Boton onClick={() => irA("dt")}>Designarme director técnico</Boton>
-          <Boton variante="secundario" onClick={() => irA("gerencia")}>Designarme en la gerencia</Boton>
+          <Boton onClick={() => irA("gerencia")}>Designarme en la gerencia</Boton>
           <Boton variante="secundario" onClick={() => irA("sg")}>Designarme responsable del SG</Boton>
         </div>
       )}
