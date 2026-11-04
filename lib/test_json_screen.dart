@@ -30,10 +30,24 @@ class _TestJsonScreenState extends State<TestJsonScreen> {
   final String inspeccionId =
       DateTime.now().millisecondsSinceEpoch.toString();
 
+  // 🔹 USUARIO Y ROL (Supabase)
+  String? rol;
+
   @override
   void initState() {
     super.initState();
     cargarJson();
+    cargarRol();
+  }
+
+  Future<void> cargarRol() async {
+    if (!SupabaseService.disponible) return;
+    try {
+      final r = await SupabaseService.rolActual();
+      if (mounted) setState(() => rol = r);
+    } catch (_) {
+      // Sin tabla de perfiles todavía: se ignora.
+    }
   }
 
   Future<void> cargarJson() async {
@@ -143,6 +157,31 @@ class _TestJsonScreenState extends State<TestJsonScreen> {
               version: versionFormato,
               fecha: fechaFormato,
             ),
+
+            // 🔹 USUARIO
+            if (SupabaseService.disponible &&
+                SupabaseService.usuario != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        "${SupabaseService.usuario!.email ?? ''}"
+                        "${rol != null ? '  ($rol)' : ''}",
+                        style: const TextStyle(
+                            fontSize: 12, color: Colors.grey),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: SupabaseService.cerrarSesion,
+                      icon: const Icon(Icons.logout, size: 16),
+                      label: const Text("Salir"),
+                    ),
+                  ],
+                ),
+              ),
 
             // 🔹 BOTÓN VER NC
             Padding(
