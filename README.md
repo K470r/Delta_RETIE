@@ -1,17 +1,22 @@
 # delta_retie
 
-A new Flutter project.
+App Flutter para inspecciones RETIE (lista de verificación F-229 y registro de no conformidades con evidencias).
 
-## Getting Started
+## Conexión con Supabase
 
-This project is a starting point for a Flutter application.
+La app guarda cada no conformidad en la tabla `no_conformidades` y sube las evidencias al bucket `evidencias` de Supabase Storage. Si no hay credenciales configuradas, funciona solo en local.
 
-A few resources to get you started if this is your first Flutter project:
+1. Crea un proyecto en [supabase.com](https://supabase.com).
+2. En **SQL Editor**, ejecuta [`supabase/schema.sql`](supabase/schema.sql) (crea la tabla, el bucket y las políticas).
+3. Copia `supabase.env.example.json` a `supabase.env.json` y pon tu **Project URL** y **anon key** (Project Settings → API). Ese archivo está en `.gitignore`.
+4. Instala dependencias y ejecuta:
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```bash
+flutter pub get
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter run --dart-define-from-file=supabase.env.json
+```
+
+> ⚠️ Las políticas de `schema.sql` permiten acceso con la anon key porque la app aún no tiene login. Antes de producción hay que agregar Supabase Auth y restringirlas.

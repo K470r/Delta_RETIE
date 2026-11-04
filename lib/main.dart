@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'test_json_screen.dart'; // 👈 NUEVO
-// import 'screens/lista_items_screen.dart'; // opcional comentarlo
+import 'services/supabase_service.dart';
+import 'test_json_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await SupabaseService.inicializar();
   runApp(const MyApp());
 }
 
@@ -13,7 +15,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Delta RETIE',
-      home: TestJsonScreen(), // 👈 CAMBIO
+      home: TestJsonScreen(),
     );
   }
 }

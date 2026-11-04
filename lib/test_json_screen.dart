@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'widgets/formato_header.dart';
 import 'screens/nc_detail_screen.dart';
+import 'services/supabase_service.dart';
 
 class TestJsonScreen extends StatefulWidget {
   @override
@@ -24,6 +25,10 @@ class _TestJsonScreenState extends State<TestJsonScreen> {
 
   // 🔹 ESTADO VISUAL (BOTÓN ROJO)
   Set<String> ncRegistradas = {};
+
+  // 🔹 ID DE LA INSPECCIÓN ACTUAL (agrupa las NC en Supabase)
+  final String inspeccionId =
+      DateTime.now().millisecondsSinceEpoch.toString();
 
   @override
   void initState() {
@@ -90,6 +95,37 @@ class _TestJsonScreenState extends State<TestJsonScreen> {
       });
 
       print("NC guardadas: ${noConformidades.length}");
+
+      // 🔹 SINCRONIZAR CON SUPABASE
+      if (SupabaseService.disponible) {
+        sincronizarNC(context, codigo, resultado);
+      }
+    }
+  }
+
+  Future<void> sincronizarNC(
+      BuildContext context, String codigo, Map nc) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final sincronizada = await SupabaseService.guardarNC(
+        inspeccionId: inspeccionId,
+        nc: nc,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        final index =
+            noConformidades.indexWhere((e) => e['codigo'] == codigo);
+        if (index >= 0) noConformidades[index] = sincronizada;
+      });
+
+      messenger.showSnackBar(
+        SnackBar(content: Text("NC $codigo guardada en Supabase")),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text("Error al guardar en Supabase: $e")),
+      );
     }
   }
 

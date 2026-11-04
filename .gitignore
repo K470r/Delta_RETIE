@@ -8,3 +8,5 @@ build/
 *.iml
 *.log
 .flutter-plugins-dependencies
+# Credenciales Supabase
+supabase.env.json
