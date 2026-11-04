@@ -60,7 +60,26 @@ NTE-3.3-89). Los PDF fuente están en la misma carpeta.
 | Inspección en sitio F-229 sin conexión | `/inspeccion/[orden]` |
 
 Mientras no se configure Supabase, los datos se guardan **solo en el navegador**
-(localStorage / IndexedDB).
+(localStorage / IndexedDB). La estructura del organismo ya trabaja con Supabase;
+la operación sigue en modo demostración.
+
+### Acceso y conexión a Supabase (Fase 1b)
+
+- **Ingreso sin contraseña** en `/ingresar`: enlace mágico o código enviado al correo
+  (Supabase Auth). Con Supabase configurado, todas las páginas exigen sesión.
+- **Cada usuario es una persona**: la base de datos enlaza el usuario con la persona
+  (cédula) que tenga su mismo correo, al registrarse el usuario o al registrar la persona.
+  El enlace no se puede cambiar desde la aplicación.
+- **Administrador de la plataforma** (tabla `administradores_plataforma`): el único que
+  crea organismos. Inicialmente `directortecnico.gceisas@gmail.com`.
+- **Arranque de un organismo**: quien lo crea lo administra mientras nadie esté designado
+  en gerencia, SG o dirección técnica, y en ese periodo solo puede vincularse y designarse
+  a sí mismo. Desde entonces mandan los roles (§5.2).
+- **Verificación de soportes** de la hoja de vida: queda a nombre de quien inició sesión;
+  la base de datos rechaza la autoverificación y la verificación a nombre de otro.
+- Los errores de las reglas de la base de datos se muestran en pantalla, en español.
+- Adaptador: `src/lib/organismo/almacenSupabase.ts` (misma interfaz que el modo local en
+  `almacen.ts`): lee lo que la seguridad por filas permite y envía solo los cambios.
 
 ## Cómo funciona el control 17020
 
@@ -106,10 +125,24 @@ npm run dev        # http://localhost:3000
 npm run build      # compila y verifica tipos
 ```
 
-Base de datos: crear un proyecto en Supabase, ejecutar en orden
-`supabase/migrations/*.sql` y luego `supabase/seed.sql`, y copiar `.env.example`
-a `.env.local` con la URL y la clave pública. `supabase/tests/reglas_17020.sql`
-verifica las reglas.
+Base de datos: en un proyecto nuevo de Supabase pegar `supabase/instalar_todo.sql`
+en el SQL Editor (o ejecutar en orden `supabase/migrations/*.sql` y `supabase/seed.sql`),
+y copiar `.env.example` a `.env.local` con la URL y la clave pública.
+Las migraciones nuevas se entregan como archivo aparte en `supabase/migrations/`.
+
+Pruebas de la base de datos en un PostgreSQL local (simula el esquema `auth` de Supabase):
+
+```bash
+createdb prueba
+psql -d prueba -f supabase/tests/simular_supabase.sql
+psql -d prueba -f supabase/instalar_todo.sql
+psql -d prueba -f supabase/tests/reglas_17020.sql     # reglas 17020 y competencia
+psql -d prueba -f supabase/tests/autenticacion.sql    # 0003: acceso, arranque, verificación
+```
+
+`scripts/simular_adaptador.ts` convierte las operaciones del adaptador en SQL para probarlas
+igual, sobre una base nueva: después de `simular_supabase.sql`, `instalar_todo.sql` y
+`supabase/tests/funciones_prueba.sql`, ejecutar `npx tsx scripts/simular_adaptador.ts | psql -d otra_base`.
 
 ## Hoja de ruta
 
@@ -117,7 +150,7 @@ verifica las reglas.
 |---|---|
 | 1 | Base, tablero 17020, inspección sin conexión ✅ |
 | 1a | Organismo, alcance acreditado, gerencia, responsable SG, directores técnicos, inspectores ✅ |
-| 1b | Conexión a Supabase, inicio de sesión por rol, sincronización de evidencias ← **siguiente** |
+| 1b | Conexión a Supabase e inicio de sesión ✅ — publicación web y sincronización de evidencias ← **siguiente** |
 | 2 | Cotización, aprobación del cliente, revisión de solicitud, asignación |
 | 3 | Revisión técnica, decisión, dictamen PDF con QR de verificación, portal del cliente |
 | 4 | Control documental, quejas y apelaciones, auditorías, revisión por la dirección, acciones |

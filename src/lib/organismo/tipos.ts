@@ -52,6 +52,8 @@ export type Organismo = {
   sedes: Sede[];
   alcance: LineaAlcance[];
   creado: string;
+  /** Usuario que lo creó (Supabase). Lo asigna la base de datos. */
+  creadoPor?: string;
 };
 
 /** Certificado de competencias (ISO/IEC 17024) por categorías del reglamento. */
@@ -79,6 +81,8 @@ export type Formacion = {
   /** Posgrado/curso en iluminación o alumbrado público (RETILAP §4.5.2.5-2). */
   enIluminacion: boolean;
   verificada: boolean;
+  /** Persona que verificó el soporte (quien inició sesión; nunca la misma persona). */
+  verificadaPor?: string;
 };
 
 export type Experiencia = {
@@ -93,6 +97,8 @@ export type Experiencia = {
   descripcion?: string;
   /** El soporte (certificación laboral) fue revisado por el OI. Solo cuenta la experiencia verificada. */
   verificada: boolean;
+  /** Persona que verificó el soporte (quien inició sesión; nunca la misma persona). */
+  verificadaPor?: string;
 };
 
 export type Persona = {
@@ -112,6 +118,8 @@ export type Persona = {
   experiencias: Experiencia[];
   certificados: CertificadoCompetencia[];
   creado: string;
+  /** Usuario de acceso enlazado (Supabase Auth). Lo asigna la base de datos por el correo. */
+  usuarioId?: string;
 };
 
 export type Vinculacion = {

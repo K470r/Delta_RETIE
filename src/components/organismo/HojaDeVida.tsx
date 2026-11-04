@@ -4,19 +4,35 @@
  * competencias con su seguimiento. Alimenta la habilitación por categoría.
  */
 import { useState } from "react";
-import { actualizar, nuevoId } from "@/lib/organismo/almacen";
+import { actualizar, nuevoId, useBase, usePersonaActual } from "@/lib/organismo/almacen";
 import {
   aniosExperiencia, estadoCertificado, evaluarCompetencia, fechaSeguimiento, sumarAnios,
 } from "@/lib/organismo/competencia";
-import { hoyISO } from "@/lib/organismo/reglas";
+import { hoyISO, nombrePersona } from "@/lib/organismo/reglas";
 import type { CertificadoCompetencia, Experiencia, Formacion, Persona, RolTecnico } from "@/lib/organismo/tipos";
 import {
   AREAS_ILUMINACION, NOMBRE_TIPO_EXPERIENCIA, REQUISITOS, etiquetaCategoria, requisitosDe, type TipoExperiencia,
 } from "@/lib/requisitos";
 import { Boton, Campo, Entrada, Errores, Grupo, Selector } from "../Formulario";
 
-const modificarPersona = (id: string, f: (p: Persona) => Persona) =>
-  actualizar((b) => ({ ...b, personas: b.personas.map((p) => (p.id === id ? f(p) : p)) }));
+const modificarPersona = (id: string, f: (p: Persona) => Persona, mostrarError = true) =>
+  actualizar((b) => ({ ...b, personas: b.personas.map((p) => (p.id === id ? f(p) : p)) }), { mostrarError });
+
+/** Quién verifica soportes: la persona que inició sesión (la base de datos lo exige). */
+function useVerificador() {
+  const base = useBase();
+  const yo = usePersonaActual(base);
+  return {
+    yo: yo?.id,
+    nombre: (id?: string) => (id ? nombrePersona(base?.personas.find((p) => p.id === id)) : ""),
+  };
+}
+
+function VerificadoPor({ id }: { id?: string }) {
+  const { nombre } = useVerificador();
+  const n = nombre(id);
+  return n ? <span className="suave block text-xs">Verificó: {n}</span> : null;
+}
 
 const NOMBRE_REG = (r: string) => (r.startsWith("RETILAP") ? "RETILAP 2024" : "RETIE 2024");
 
@@ -90,7 +106,7 @@ function FormularioCertificado({ persona, onTerminar }: { persona: Persona; onTe
 
   const emision = (f: string) => setC({ ...c, fechaEmision: f, fechaVencimiento: venceManual || !f ? c.fechaVencimiento : sumarAnios(f, req.vigenciaCertificadoAnios) });
 
-  const guardar = () => {
+  const guardar = async () => {
     const e: string[] = [];
     if (!c.numero.trim()) e.push("El número del certificado es obligatorio");
     if (persona.certificados.some((x) => x.numero === c.numero.trim() && x.certificador === c.certificador.trim())) e.push("Ese certificado ya está registrado");
@@ -102,7 +118,8 @@ function FormularioCertificado({ persona, onTerminar }: { persona: Persona; onTe
     if (!c.categorias.length) e.push("Marque las categorías que certifica");
     setErrores(e);
     if (e.length) return;
-    modificarPersona(persona.id, (p) => ({ ...p, certificados: [...p.certificados, { ...c, numero: c.numero.trim(), certificador: c.certificador.trim(), id: nuevoId(), anulado: false }] }));
+    const error = await modificarPersona(persona.id, (p) => ({ ...p, certificados: [...p.certificados, { ...c, numero: c.numero.trim(), certificador: c.certificador.trim(), id: nuevoId(), anulado: false }] }), false);
+    if (error) return setErrores([error]);
     onTerminar();
   };
 
@@ -156,9 +173,9 @@ function FormularioSeguimiento({ persona, cert, onTerminar }: { persona: Persona
       </Campo>
       <Campo etiqueta="Observación / soporte"><Entrada value={obs} onChange={(e) => setObs(e.target.value)} /></Campo>
       <div className="flex items-end gap-2">
-        <Boton onClick={() => {
-          modificarPersona(persona.id, (p) => ({ ...p, certificados: p.certificados.map((x) => (x.id === cert.id ? { ...x, seguimiento: { fecha, resultado, observacion: obs || undefined } } : x)) }));
-          onTerminar();
+        <Boton onClick={async () => {
+          const error = await modificarPersona(persona.id, (p) => ({ ...p, certificados: p.certificados.map((x) => (x.id === cert.id ? { ...x, seguimiento: { fecha, resultado, observacion: obs || undefined } } : x)) }));
+          if (!error) onTerminar();
         }}>Guardar</Boton>
         <Boton variante="secundario" onClick={onTerminar}>Cancelar</Boton>
       </div>
@@ -169,6 +186,7 @@ function FormularioSeguimiento({ persona, cert, onTerminar }: { persona: Persona
 // ───────────────────────────── Experiencia ─────────────────────────────
 function Experiencias({ persona }: { persona: Persona }) {
   const [nueva, setNueva] = useState(false);
+  const { yo } = useVerificador();
   const hoy = hoyISO();
   const resumen = REQUISITOS.map((r) => ({
     r, total: aniosExperiencia(persona, { reglamento: r.reglamento, tipos: [...r.tiposExperienciaTecnica, ...r.directorTecnico.tiposExperienciaDireccion] }, hoy),
@@ -188,11 +206,14 @@ function Experiencias({ persona }: { persona: Persona }) {
               {e.categorias.length > 0 && ` · categorías ${e.categorias.join(", ")}`}</div>
             <div className="suave text-xs">{e.tipos.map((t) => NOMBRE_TIPO_EXPERIENCIA[t as TipoExperiencia] ?? t).join(", ")}</div>
           </div>
-          <label className="flex items-center gap-1 text-xs">
-            <input type="checkbox" checked={e.verificada}
-              onChange={() => modificarPersona(persona.id, (p) => ({ ...p, experiencias: p.experiencias.map((x) => (x.id === e.id ? { ...x, verificada: !x.verificada } : x)) }))} />
-            Soporte verificado
-          </label>
+          <div className="text-right">
+            <label className="flex items-center justify-end gap-1 text-xs">
+              <input type="checkbox" checked={e.verificada}
+                onChange={() => modificarPersona(persona.id, (p) => ({ ...p, experiencias: p.experiencias.map((x) => (x.id === e.id ? { ...x, verificada: !x.verificada, verificadaPor: x.verificada ? undefined : yo } : x)) }))} />
+              Soporte verificado
+            </label>
+            {e.verificada && <VerificadoPor id={e.verificadaPor} />}
+          </div>
         </div>
       ))}
       {nueva ? <FormularioExperiencia persona={persona} onTerminar={() => setNueva(false)} />
@@ -204,11 +225,12 @@ function Experiencias({ persona }: { persona: Persona }) {
 function FormularioExperiencia({ persona, onTerminar }: { persona: Persona; onTerminar: () => void }) {
   const [e, setE] = useState<Omit<Experiencia, "id">>({ empresa: "", cargo: "", desde: "", reglamento: "RETIE-2024", categorias: [], tipos: [], verificada: false });
   const [errores, setErrores] = useState<string[]>([]);
+  const { yo } = useVerificador();
   const req = requisitosDe(e.reglamento)!;
   const tipos = [...req.tiposExperienciaTecnica, ...req.directorTecnico.tiposExperienciaDireccion];
   const alternar = (k: "categorias" | "tipos", v: string) => setE({ ...e, [k]: e[k].includes(v) ? e[k].filter((x) => x !== v) : [...e[k], v] });
 
-  const guardar = () => {
+  const guardar = async () => {
     const err: string[] = [];
     if (!e.empresa.trim() || !e.cargo.trim()) err.push("Empresa y cargo son obligatorios");
     if (!e.desde) err.push("Fecha de inicio obligatoria");
@@ -218,7 +240,8 @@ function FormularioExperiencia({ persona, onTerminar }: { persona: Persona; onTe
     if (req.experienciaPorCategoria && !e.categorias.length) err.push("Marque la(s) categoría(s) de instalación en que se obtuvo la experiencia");
     setErrores(err);
     if (err.length) return;
-    modificarPersona(persona.id, (p) => ({ ...p, experiencias: [...p.experiencias, { ...e, id: nuevoId(), hasta: e.hasta || undefined }] }));
+    const error = await modificarPersona(persona.id, (p) => ({ ...p, experiencias: [...p.experiencias, { ...e, id: nuevoId(), hasta: e.hasta || undefined, verificadaPor: e.verificada ? yo : undefined }] }), false);
+    if (error) return setErrores([error]);
     onTerminar();
   };
 
@@ -275,6 +298,7 @@ const NOMBRE_FORMACION: Record<Formacion["tipo"], string> = {
 
 function Formaciones({ persona }: { persona: Persona }) {
   const [nueva, setNueva] = useState(false);
+  const { yo } = useVerificador();
   return (
     <section className="space-y-2">
       <h3 className="text-sm font-semibold">Formación académica</h3>
@@ -284,11 +308,14 @@ function Formaciones({ persona }: { persona: Persona }) {
             <b>{NOMBRE_FORMACION[f.tipo]}</b>: {f.titulo} · {f.institucion} · {f.fecha}
             {f.enIluminacion && <div className="text-xs">En iluminación / alumbrado público{f.areasIluminacion.length > 0 && `: ${f.areasIluminacion.map((a) => AREAS_ILUMINACION[a]).join("; ")}`}</div>}
           </div>
-          <label className="flex items-center gap-1 text-xs">
-            <input type="checkbox" checked={f.verificada}
-              onChange={() => modificarPersona(persona.id, (p) => ({ ...p, formacion: p.formacion.map((x) => (x.id === f.id ? { ...x, verificada: !x.verificada } : x)) }))} />
-            Soporte verificado
-          </label>
+          <div className="text-right">
+            <label className="flex items-center justify-end gap-1 text-xs">
+              <input type="checkbox" checked={f.verificada}
+                onChange={() => modificarPersona(persona.id, (p) => ({ ...p, formacion: p.formacion.map((x) => (x.id === f.id ? { ...x, verificada: !x.verificada, verificadaPor: x.verificada ? undefined : yo } : x)) }))} />
+              Soporte verificado
+            </label>
+            {f.verificada && <VerificadoPor id={f.verificadaPor} />}
+          </div>
         </div>
       ))}
       {nueva ? <FormularioFormacion persona={persona} onTerminar={() => setNueva(false)} />
@@ -300,13 +327,15 @@ function Formaciones({ persona }: { persona: Persona }) {
 function FormularioFormacion({ persona, onTerminar }: { persona: Persona; onTerminar: () => void }) {
   const [f, setF] = useState<Omit<Formacion, "id">>({ tipo: "especializacion", titulo: "", institucion: "", fecha: "", areasIluminacion: [], enIluminacion: false, verificada: false });
   const [errores, setErrores] = useState<string[]>([]);
-  const guardar = () => {
+  const { yo } = useVerificador();
+  const guardar = async () => {
     const e: string[] = [];
     if (!f.titulo.trim() || !f.institucion.trim() || !f.fecha) e.push("Título, institución y fecha son obligatorios");
     if (f.tipo === "curso_profundizacion" && !f.areasIluminacion.length) e.push("Indique el área de profundización del curso");
     setErrores(e);
     if (e.length) return;
-    modificarPersona(persona.id, (p) => ({ ...p, formacion: [...p.formacion, { ...f, id: nuevoId(), enIluminacion: f.enIluminacion || f.tipo === "curso_profundizacion" }] }));
+    const error = await modificarPersona(persona.id, (p) => ({ ...p, formacion: [...p.formacion, { ...f, id: nuevoId(), enIluminacion: f.enIluminacion || f.tipo === "curso_profundizacion", verificadaPor: f.verificada ? yo : undefined }] }), false);
+    if (error) return setErrores([error]);
     onTerminar();
   };
   return (

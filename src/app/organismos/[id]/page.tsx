@@ -4,14 +4,16 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { Boton, Campo, Entrada, Errores, Grupo, Selector, Texto } from "@/components/Formulario";
 import { FormularioOrganismo } from "@/components/organismo/FormularioOrganismo";
+import { FormularioPersona } from "@/components/organismo/FormularioPersona";
 import { SeccionDesignaciones } from "@/components/organismo/SeccionDesignaciones";
 import { SelectorActividades } from "@/components/SelectorActividades";
 import { EtiquetaEstado } from "@/components/Estado";
 import { ACTIVIDADES, actividad, agrupar } from "@/lib/catalogo";
 import { NUMERALES_17020 } from "@/lib/iso17020";
-import { actualizar, nuevoId, useBase } from "@/lib/organismo/almacen";
+import { actualizar, nuevoId, useBase, usePersonaActual } from "@/lib/organismo/almacen";
+import { useSesion } from "@/lib/sesion";
 import { designacionesVigentes, evaluarOrganismo, hoyISO, nombrePersona, vigenteEn } from "@/lib/organismo/reglas";
-import type { BaseOrganismos, EstadoLinea, Organismo } from "@/lib/organismo/tipos";
+import type { BaseOrganismos, EstadoLinea, Organismo, RolOEC } from "@/lib/organismo/tipos";
 
 const PESTANAS = [
   { id: "resumen", texto: "Cumplimiento" },
@@ -56,6 +58,7 @@ function Contenido() {
         ))}
       </nav>
 
+      <Arranque base={base} o={o} irA={(p) => router.replace(`/organismos/${o.id}?p=${p}`, { scroll: false })} />
       {pestana === "resumen" && <Resumen base={base} o={o} />}
       {pestana === "alcance" && <Alcance base={base} o={o} />}
       {pestana === "gerencia" && (
@@ -83,6 +86,44 @@ function Contenido() {
       )}
       {pestana === "onac" && <PersonalONAC base={base} o={o} />}
     </div>
+  );
+}
+
+// ───────────────────────── Arranque del organismo ─────────────────────────
+const ROLES_ADMINISTRACION: RolOEC[] = ["representante_legal", "gerente", "responsable_sg", "suplente_sg", "director_tecnico", "director_tecnico_suplente"];
+
+/** Guía para quien creó el organismo: mientras nadie lo administre, debe registrarse y designarse él mismo. */
+function Arranque({ base, o, irA }: { base: BaseOrganismos; o: Organismo; irA: (pestana: string) => void }) {
+  const sesion = useSesion();
+  const yo = usePersonaActual(base);
+  if (sesion.estado !== "con_sesion" || o.creadoPor !== sesion.usuarioId) return null;
+  if (designacionesVigentes(base, o.id, ROLES_ADMINISTRACION).length) return null;
+  return (
+    <section className="tarjeta space-y-3 border-2 p-4" style={{ borderColor: "var(--marca)" }}>
+      <h2 className="font-semibold">Arranque del organismo</h2>
+      <p className="text-sm">
+        Usted creó este organismo. Mientras nadie esté designado en la gerencia, el sistema de gestión o la dirección técnica,
+        solo usted puede administrarlo y <b>solo puede vincularse y designarse a sí mismo</b>. Después podrá designar a las demás personas.
+      </p>
+      <ol className="list-decimal space-y-2 pl-5 text-sm">
+        <li className={yo ? "suave line-through" : ""}>
+          Regístrese como persona con su cédula y su correo de ingreso ({sesion.correo}).
+          {yo && <span className="no-underline"> ✓ {nombrePersona(yo)}</span>}
+        </li>
+        <li>Desígnese, por ejemplo, como director técnico o gerente (la vinculación y las declaraciones se registran en el mismo formulario).</li>
+      </ol>
+      {!yo ? (
+        <div className="rounded-lg border p-3" style={{ borderColor: "var(--borde)" }}>
+          <FormularioPersona base={base} correoFijo={sesion.correo} onGuardado={() => {}} />
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          <Boton onClick={() => irA("dt")}>Designarme director técnico</Boton>
+          <Boton variante="secundario" onClick={() => irA("gerencia")}>Designarme en la gerencia</Boton>
+          <Boton variante="secundario" onClick={() => irA("sg")}>Designarme responsable del SG</Boton>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -220,14 +261,15 @@ function RevisionesSG({ base, o }: { base: BaseOrganismos; o: Organismo }) {
   const quien = responsables.some((d) => d.personaId === elegido) ? elegido : responsables[0]?.personaId ?? "";
   const revisiones = base.revisionesSG.filter((r) => r.organismoId === o.id).sort((a, b) => b.fecha.localeCompare(a.fecha));
 
-  const guardar = () => {
+  const guardar = async () => {
     const e: string[] = [];
     if (!quien) e.push("Solo el responsable del SG (o su suplente) vigente puede registrar revisiones");
     if (!aspectos.length) e.push("Marque los numerales revisados");
     if (!obs.trim()) e.push("Describa lo revisado y lo encontrado");
     setErrores(e);
     if (e.length) return;
-    actualizar((b) => ({ ...b, revisionesSG: [...b.revisionesSG, { id: nuevoId(), organismoId: o.id, personaId: quien, fecha, aspectos, observaciones: obs, requiereAccion: accion }] }));
+    const error = await actualizar((b) => ({ ...b, revisionesSG: [...b.revisionesSG, { id: nuevoId(), organismoId: o.id, personaId: quien, fecha, aspectos, observaciones: obs, requiereAccion: accion }] }), { mostrarError: false });
+    if (error) return setErrores([error]);
     setAbierto(false); setAspectos([]); setObs(""); setAccion(false);
   };
 

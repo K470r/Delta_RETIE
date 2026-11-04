@@ -17,9 +17,10 @@ export function FormularioOrganismo({ base, organismo, onGuardado, onCancelar }:
   const [sede, setSede] = useState({ nombre: "Sede principal", direccion: "", ciudad: "" });
   const [alcance, setAlcance] = useState<string[]>([]);
   const [errores, setErrores] = useState<string[]>([]);
+  const [guardando, setGuardando] = useState(false);
   const set = (k: keyof Datos) => (e: { target: { value: string } }) => setD({ ...d, [k]: e.target.value || undefined });
 
-  const guardar = () => {
+  const guardar = async () => {
     const e: string[] = [];
     if (!d.razonSocial?.trim()) e.push("La razón social es obligatoria");
     if (!d.nit?.trim()) e.push("El NIT es obligatorio");
@@ -31,7 +32,8 @@ export function FormularioOrganismo({ base, organismo, onGuardado, onCancelar }:
     if (e.length) return;
 
     const id = organismo?.id ?? nuevoId();
-    actualizar((b) => ({
+    setGuardando(true);
+    const error = await actualizar((b) => ({
       ...b,
       organismos: organismo
         ? b.organismos.map((o) => (o.id === id ? { ...o, ...d } : o))
@@ -40,7 +42,9 @@ export function FormularioOrganismo({ base, organismo, onGuardado, onCancelar }:
             sedes: [{ id: nuevoId(), ...sede, principal: true }],
             alcance: alcance.map((a) => ({ actividad: a, estado: "acreditada", fechaEstado: d.acreditacionOtorgada ?? hoyISO() })),
           }],
-    }));
+    }), { mostrarError: false });
+    setGuardando(false);
+    if (error) return setErrores([error]);
     onGuardado(id);
   };
 
@@ -100,7 +104,7 @@ export function FormularioOrganismo({ base, organismo, onGuardado, onCancelar }:
 
       <Errores errores={errores} />
       <div className="flex gap-2">
-        <Boton onClick={guardar}>{organismo ? "Guardar cambios" : "Crear organismo"}</Boton>
+        <Boton onClick={guardar} disabled={guardando}>{guardando ? "Guardando…" : organismo ? "Guardar cambios" : "Crear organismo"}</Boton>
         {onCancelar && <Boton variante="secundario" onClick={onCancelar}>Cancelar</Boton>}
       </div>
     </div>

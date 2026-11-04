@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import "./globals.css";
 import { MODO_DEMO } from "@/lib/datos";
+import { BarraUsuario, MarcoSesion } from "@/components/MarcoSesion";
 
 export const metadata: Metadata = {
   title: "Delta RETIE",
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Link key={m.href} href={m.href} className="hover:underline">{m.texto}</Link>
               ))}
             </nav>
+            <BarraUsuario />
           </div>
         </header>
         {MODO_DEMO && (
@@ -37,7 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             Modo local: los datos se guardan solo en este navegador hasta conectar la base de datos (Supabase).
           </div>
         )}
-        <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
+        <main className="mx-auto max-w-6xl px-4 py-6"><MarcoSesion>{children}</MarcoSesion></main>
       </body>
     </html>
   );

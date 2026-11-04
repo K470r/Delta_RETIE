@@ -1,0 +1,97 @@
+"use client";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { Boton, Campo, Entrada, Errores } from "@/components/Formulario";
+import { mensajeAuth } from "@/lib/errores";
+import { useSesion } from "@/lib/sesion";
+import { CON_SUPABASE, supabase } from "@/lib/supabase";
+
+export default function Ingresar() {
+  return <Suspense><Formulario /></Suspense>;
+}
+
+/** Errores que Supabase devuelve en la dirección cuando el enlace falla (#error=...). */
+function errorEnDireccion(): string | null {
+  if (typeof window === "undefined") return null;
+  const p = new URLSearchParams(window.location.hash.slice(1) || window.location.search.slice(1));
+  const d = p.get("error_description") ?? p.get("error");
+  return d ? mensajeAuth(d.replace(/\+/g, " ")) : null;
+}
+
+function Formulario() {
+  const sesion = useSesion();
+  const router = useRouter();
+  const volver = useSearchParams().get("volver") || "/organismos";
+  const [correo, setCorreo] = useState("");
+  const [codigo, setCodigo] = useState("");
+  const [enviado, setEnviado] = useState(false);
+  const [ocupado, setOcupado] = useState(false);
+  const [errores, setErrores] = useState<string[]>([]);
+
+  useEffect(() => {
+    const e = errorEnDireccion();
+    if (e) setErrores([e]);
+  }, []);
+
+  useEffect(() => {
+    if (sesion.estado === "con_sesion" || sesion.estado === "local") router.replace(volver.startsWith("/") ? volver : "/organismos");
+  }, [sesion.estado, router, volver]);
+
+  if (!CON_SUPABASE) return <p className="suave">Modo local: no se requiere iniciar sesión.</p>;
+  if (sesion.estado === "con_sesion") return <p className="suave">Ingresando…</p>;
+
+  const enviar = async () => {
+    const c = correo.trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c)) return setErrores(["Escriba un correo válido"]);
+    setOcupado(true); setErrores([]);
+    const { error } = await supabase().auth.signInWithOtp({
+      email: c,
+      options: { emailRedirectTo: `${window.location.origin}/ingresar?volver=${encodeURIComponent(volver)}`, shouldCreateUser: true },
+    });
+    setOcupado(false);
+    if (error) return setErrores([mensajeAuth(error.message)]);
+    setCorreo(c);
+    setEnviado(true);
+  };
+
+  const verificar = async () => {
+    const t = codigo.replace(/\s/g, "");
+    if (!/^\d{6,10}$/.test(t)) return setErrores(["El código son los números que llegaron en el correo"]);
+    setOcupado(true); setErrores([]);
+    const { error } = await supabase().auth.verifyOtp({ email: correo, token: t, type: "email" });
+    setOcupado(false);
+    if (error) setErrores([mensajeAuth(error.message)]);
+  };
+
+  return (
+    <div className="mx-auto max-w-md space-y-4">
+      <h1 className="text-2xl font-bold">Ingresar</h1>
+      {!enviado ? (
+        <form className="tarjeta space-y-3 p-4" onSubmit={(e) => { e.preventDefault(); enviar(); }}>
+          <p className="suave text-sm">Sin contraseña: le enviaremos un enlace (y un código) a su correo.</p>
+          <Campo etiqueta="Correo electrónico">
+            <Entrada type="email" autoComplete="email" value={correo} onChange={(e) => setCorreo(e.target.value)} placeholder="nombre@empresa.com" autoFocus />
+          </Campo>
+          <Errores errores={errores} />
+          <Boton type="submit" disabled={ocupado}>{ocupado ? "Enviando…" : "Enviarme el enlace"}</Boton>
+        </form>
+      ) : (
+        <form className="tarjeta space-y-3 p-4" onSubmit={(e) => { e.preventDefault(); verificar(); }}>
+          <p className="text-sm">Enviamos un correo a <b>{correo}</b>.</p>
+          <ol className="suave list-decimal space-y-1 pl-5 text-sm">
+            <li>Abra el correo (revise también <i>spam</i> o <i>promociones</i>).</li>
+            <li>Haga clic en el enlace <b>en este mismo equipo</b>, o escriba aquí el código si el correo lo trae.</li>
+          </ol>
+          <Campo etiqueta="Código del correo">
+            <Entrada inputMode="numeric" autoComplete="one-time-code" value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="123456" />
+          </Campo>
+          <Errores errores={errores} />
+          <div className="flex flex-wrap gap-2">
+            <Boton type="submit" disabled={ocupado}>{ocupado ? "Verificando…" : "Ingresar con el código"}</Boton>
+            <Boton variante="secundario" onClick={() => { setEnviado(false); setCodigo(""); setErrores([]); }}>Usar otro correo</Boton>
+          </div>
+        </form>
+      )}
+    </div>
+  );
+}

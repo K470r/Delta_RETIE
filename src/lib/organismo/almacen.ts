@@ -1,20 +1,40 @@
 /**
- * Almacén de organismos y personal.
- * Modo local (sin Supabase): guarda en el navegador (localStorage) para poder
- * probar el flujo completo. Al conectar Supabase se reemplaza por el
- * adaptador remoto con la misma interfaz.
+ * Almacén de organismos y personal, con la misma interfaz en dos modos:
+ *  - Supabase (si hay NEXT_PUBLIC_SUPABASE_URL y la clave pública): lee lo que la
+ *    seguridad por filas permite y guarda cada cambio en la base de datos.
+ *  - Local (sin Supabase): guarda en el navegador (localStorage) para pruebas.
+ *
+ * `actualizar(cambio)` recibe una función que transforma la base y devuelve una
+ * promesa con el mensaje de error en español (o null si se guardó).
  */
 import { useSyncExternalStore } from "react";
 import { categoriaDeActividad } from "../requisitos";
-import type { BaseOrganismos } from "./tipos";
+import { mensajeError } from "../errores";
+import { CON_SUPABASE } from "../supabase";
+import { sesionActual, suscribirSesion, useSesion } from "../sesion";
+import { cargarBase, guardarCambios } from "./almacenSupabase";
+import type { BaseOrganismos, Persona } from "./tipos";
 
 const CLAVE = "delta-retie:organismos:v1";
 const VACIA: BaseOrganismos = { organismos: [], personas: [], vinculaciones: [], designaciones: [], declaraciones: [], revisionesSG: [] };
 
 let cache: BaseOrganismos | null = null;
 const oyentes = new Set<() => void>();
+const avisar = () => oyentes.forEach((f) => f());
 
-function leer(): BaseOrganismos {
+// ───────────────────────── Error visible en pantalla ─────────────────────────
+let errorGlobal: string | null = null;
+const oyentesError = new Set<() => void>();
+export function mostrarError(e: string | null) {
+  errorGlobal = e;
+  oyentesError.forEach((f) => f());
+}
+export function useErrorGlobal(): string | null {
+  return useSyncExternalStore((f) => { oyentesError.add(f); return () => { oyentesError.delete(f); }; }, () => errorGlobal, () => null);
+}
+
+// ───────────────────────── Modo local ─────────────────────────
+function leerLocal(): BaseOrganismos {
   if (cache) return cache;
   try {
     const crudo = localStorage.getItem(CLAVE);
@@ -25,32 +45,106 @@ function leer(): BaseOrganismos {
   return cache!;
 }
 
-export function actualizar(cambio: (b: BaseOrganismos) => BaseOrganismos) {
-  cache = cambio(leer());
-  try {
-    localStorage.setItem(CLAVE, JSON.stringify(cache));
-  } catch {
-    /* almacenamiento no disponible: se conserva en memoria */
-  }
-  oyentes.forEach((f) => f());
+function suscribirLocal(f: () => void) {
+  oyentes.add(f);
+  const enOtraPestana = (e: StorageEvent) => {
+    if (e.key === CLAVE) { cache = null; f(); }
+  };
+  window.addEventListener("storage", enOtraPestana);
+  return () => { oyentes.delete(f); window.removeEventListener("storage", enOtraPestana); };
 }
+
+// ───────────────────────── Modo Supabase ─────────────────────────
+let usuarioCargado: string | null = null;
+let cargando: Promise<void> | null = null;
+let cola: Promise<unknown> = Promise.resolve();
+
+/** Vuelve a leer la base desde Supabase. */
+export function recargar(): Promise<void> {
+  const s = sesionActual();
+  if (s.estado !== "con_sesion") return Promise.resolve();
+  cargando = cargarBase()
+    .then((b) => { cache = b; usuarioCargado = s.usuarioId; })
+    .catch((e) => { mostrarError(`No se pudieron leer los datos: ${mensajeError(e)}`); cache ??= VACIA; })
+    .finally(() => { cargando = null; avisar(); });
+  return cargando;
+}
+
+function alCambiarSesion() {
+  const s = sesionActual();
+  if (s.estado !== "con_sesion") {
+    if (cache) { cache = null; usuarioCargado = null; avisar(); }
+    return;
+  }
+  if (usuarioCargado !== s.usuarioId && !cargando) {
+    cache = null;
+    avisar();
+    recargar();
+  }
+}
+
+function suscribirRemoto(f: () => void) {
+  oyentes.add(f);
+  const quitar = suscribirSesion(alCambiarSesion);
+  alCambiarSesion();
+  return () => { oyentes.delete(f); quitar(); };
+}
+
+// ───────────────────────── Interfaz común ─────────────────────────
 
 export function useBase(): BaseOrganismos | null {
   return useSyncExternalStore(
-    (f) => {
-      oyentes.add(f);
-      const enOtraPestana = (e: StorageEvent) => {
-        if (e.key === CLAVE) { cache = null; f(); }
-      };
-      window.addEventListener("storage", enOtraPestana);
-      return () => { oyentes.delete(f); window.removeEventListener("storage", enOtraPestana); };
-    },
-    leer,
+    CON_SUPABASE ? suscribirRemoto : suscribirLocal,
+    CON_SUPABASE ? () => cache : leerLocal,
     () => null,
   );
 }
 
+type Opciones = {
+  /** Mostrar el error en el aviso general (por defecto). Los formularios lo muestran ellos mismos. */
+  mostrarError?: boolean;
+};
+
+export function actualizar(cambio: (b: BaseOrganismos) => BaseOrganismos, opciones: Opciones = {}): Promise<string | null> {
+  if (!CON_SUPABASE) {
+    cache = cambio(leerLocal());
+    try {
+      localStorage.setItem(CLAVE, JSON.stringify(cache));
+    } catch {
+      /* almacenamiento no disponible: se conserva en memoria */
+    }
+    avisar();
+    return Promise.resolve(null);
+  }
+  // Los cambios se envían uno tras otro para que cada uno parta del estado anterior.
+  const tarea = cola.then(async () => {
+    if (cargando) await cargando;
+    if (!cache) return "Los datos aún no se han cargado";
+    const antes = cache;
+    const despues = cambio(antes);
+    let error: string | null;
+    try {
+      error = await guardarCambios(antes, despues);
+    } catch (e) {
+      error = mensajeError(e);
+    }
+    if (!error) { cache = despues; avisar(); }
+    await recargar();   // estado real (valores por defecto de la base, o lo que sí se guardó)
+    if (error && opciones.mostrarError !== false) mostrarError(error);
+    return error;
+  });
+  cola = tarea.catch(() => null);
+  return tarea;
+}
+
 export const nuevoId = () => crypto.randomUUID();
+
+/** Persona enlazada al usuario que inició sesión (por el correo). */
+export function usePersonaActual(base: BaseOrganismos | null): Persona | undefined {
+  const s = useSesion();
+  if (!base || s.estado !== "con_sesion") return undefined;
+  return base.personas.find((p) => p.usuarioId === s.usuarioId);
+}
 
 /** Adapta datos guardados con versiones anteriores del modelo. */
 function normalizar(b: BaseOrganismos): BaseOrganismos {

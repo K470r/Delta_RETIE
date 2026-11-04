@@ -173,6 +173,7 @@ function FormularioDesignacion({ base, organismo, roles, onTerminar }: {
   const [declImp, setDeclImp] = useState(hoy);
   const [declConf, setDeclConf] = useState(hoy);
   const [errores, setErrores] = useState<string[]>([]);
+  const [guardando, setGuardando] = useState(false);
 
   const persona = base.personas.find((p) => p.id === personaId);
   const vinculoExistente = persona ? vinculacionVigente(base, organismo.id, persona.id, desde) : undefined;
@@ -191,7 +192,7 @@ function FormularioDesignacion({ base, organismo, roles, onTerminar }: {
   const lineas = lineasAcreditadas(organismo).map((c) => actividad(c)!).filter(Boolean);
   const fechaEval = desde > hoy ? desde : hoy;
 
-  const guardar = () => {
+  const guardar = async () => {
     if (!persona) return setErrores(["Seleccione o cree una persona"]);
     const e: string[] = [];
     if (!vinculoExistente) {
@@ -205,7 +206,8 @@ function FormularioDesignacion({ base, organismo, roles, onTerminar }: {
     setErrores(e);
     if (e.length) return;
 
-    actualizar((b) => ({
+    setGuardando(true);
+    const error = await actualizar((b) => ({
       ...b,
       vinculaciones: vinculoExistente ? b.vinculaciones
         : [...b.vinculaciones, { ...vinc, id: nuevoId(), organismoId: organismo.id, personaId: persona.id }],
@@ -217,7 +219,9 @@ function FormularioDesignacion({ base, organismo, roles, onTerminar }: {
           .filter(({ tipo, fecha }) => !b.declaraciones.some((x) => x.organismoId === organismo.id && x.personaId === persona.id && x.tipo === tipo && x.fecha === fecha))
           .map(({ tipo, fecha }) => ({ id: nuevoId(), organismoId: organismo.id, personaId: persona.id, tipo, fecha })),
       ],
-    }));
+    }), { mostrarError: false });
+    setGuardando(false);
+    if (error) return setErrores([error]);
     onTerminar();
   };
 
@@ -339,7 +343,7 @@ function FormularioDesignacion({ base, organismo, roles, onTerminar }: {
 
       <Errores errores={errores} />
       <div className="flex gap-2">
-        <Boton onClick={guardar} disabled={!persona}>Guardar designación</Boton>
+        <Boton onClick={guardar} disabled={!persona || guardando}>{guardando ? "Guardando…" : "Guardar designación"}</Boton>
         <Boton variante="secundario" onClick={onTerminar}>Cancelar</Boton>
       </div>
     </div>
