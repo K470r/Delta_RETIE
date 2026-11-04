@@ -94,3 +94,35 @@ solo los pasos 5 y 6.
    Déjela abierta mientras use la aplicación (para apagarla: Ctrl+C).
 6. Abra el navegador en <http://localhost:3000>, escriba su correo y abra el enlace
    del correo **en ese mismo computador**.
+
+## Dar acceso a sus aliados con usuario y contraseña
+
+Necesita la aplicación publicada en internet (ver "Publicar en Vercel"). Para cada aliado:
+
+1. **Créele el usuario en Supabase**: **Authentication → Users → Add user → Create new user**.
+   Escriba su correo y una contraseña provisional (mínimo 8 caracteres), deje marcada
+   **Auto Confirm User** y haga clic en **Create user**.
+2. **Regístrelo en la aplicación** como persona, con **el mismo correo**, y vincúlelo o
+   desígnelo en el organismo (pestañas Gerencia, Sistema de gestión, Directores técnicos o
+   Inspectores). La base de datos enlaza su usuario con su cédula por el correo.
+   Sin vinculación vigente, el aliado entra pero no ve ningún organismo.
+3. Envíele la dirección de la aplicación, su correo y la contraseña provisional por un
+   medio privado. Al entrar, que la cambie en **Mi cuenta** (arriba a la derecha).
+
+Lo que cada aliado puede hacer depende de su designación: la gerencia, el responsable del
+SG y la dirección técnica administran el organismo; los inspectores solo consultan.
+
+## Publicar en Vercel (gratis)
+
+1. Entre a <https://vercel.com> → **Sign Up** → plan **Hobby** → **Continue with GitHub**.
+2. **Add New… → Project** → busque `delta_retie` → **Import** (si no aparece, use
+   *Adjust GitHub App Permissions* y dé acceso a ese repositorio).
+3. Antes de **Deploy**, abra **Environment Variables** y agregue las dos variables del
+   archivo `.env.local` (mismo nombre y valor). Luego **Deploy**.
+4. Al terminar, Vercel muestra la dirección, por ejemplo `https://delta-retie.vercel.app`.
+5. En Supabase: **Authentication → URL Configuration**:
+   - **Site URL**: la dirección de Vercel → **Save changes**.
+   - **Redirect URLs → Add URL**: `https://delta-retie.vercel.app/**` y también
+     `http://localhost:3000/**` (para seguir probando en su computador).
+
+Vercel publica la rama `main`. Debe contener la aplicación web (no la de Flutter).

@@ -3,6 +3,7 @@
  * Protege las rutas (con Supabase, todo exige sesión salvo /ingresar),
  * muestra el usuario y el aviso de errores de la base de datos.
  */
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { mostrarError, useErrorGlobal } from "@/lib/organismo/almacen";
@@ -42,6 +43,7 @@ export function BarraUsuario() {
       <span className="suave hidden sm:inline" title={sesion.esAdminPlataforma ? "Administrador de la plataforma" : undefined}>
         {sesion.correo}{sesion.esAdminPlataforma && " · admin"}
       </span>
+      <Link href="/cuenta" className="underline">Mi cuenta</Link>
       <button className="underline" onClick={async () => { await cerrarSesion(); router.replace("/ingresar"); }}>Salir</button>
     </div>
   );

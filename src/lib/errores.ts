@@ -65,6 +65,10 @@ export function mensajeError(e: unknown): string {
 /** Errores de Supabase Auth (vienen en inglés). */
 export function mensajeAuth(msg: string): string {
   const m: [RegExp, string][] = [
+    [/invalid login credentials/i, "Correo o contraseña incorrectos"],
+    [/password should be at least (\d+)/i, "La contraseña es muy corta (mínimo 8 caracteres)"],
+    [/new password should be different/i, "La contraseña nueva debe ser distinta de la actual"],
+    [/weak|pwned|leaked/i, "La contraseña es muy débil o conocida públicamente. Use otra"],
     [/rate limit|too many|over_email_send_rate_limit/i, "Se enviaron demasiados correos. Espere unos minutos (Supabase limita los envíos por hora) e intente de nuevo"],
     [/For security purposes, you can only request this after (\d+) seconds?/i, "Por seguridad, espere unos segundos antes de pedir otro correo"],
     [/expired|invalid.*(token|otp)|otp_expired|token.*invalid/i, "El código o enlace es inválido o ya venció. Pida uno nuevo"],

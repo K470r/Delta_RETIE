@@ -24,6 +24,8 @@ function Formulario() {
   const volver = useSearchParams().get("volver") || "/organismos";
   const [correo, setCorreo] = useState("");
   const [codigo, setCodigo] = useState("");
+  const [clave, setClave] = useState("");
+  const [modo, setModo] = useState<"clave" | "enlace">("clave");
   const [enviado, setEnviado] = useState(false);
   const [ocupado, setOcupado] = useState(false);
   const [errores, setErrores] = useState<string[]>([]);
@@ -54,6 +56,16 @@ function Formulario() {
     setEnviado(true);
   };
 
+  const conClave = async () => {
+    const c = correo.trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c)) return setErrores(["Escriba un correo válido"]);
+    if (!clave) return setErrores(["Escriba su contraseña"]);
+    setOcupado(true); setErrores([]);
+    const { error } = await supabase().auth.signInWithPassword({ email: c, password: clave });
+    setOcupado(false);
+    if (error) setErrores([mensajeAuth(error.message)]);
+  };
+
   const verificar = async () => {
     const t = codigo.replace(/\s/g, "");
     if (!/^\d{6,10}$/.test(t)) return setErrores(["El código son los números que llegaron en el correo"]);
@@ -66,13 +78,30 @@ function Formulario() {
   return (
     <div className="mx-auto max-w-md space-y-4">
       <h1 className="text-2xl font-bold">Ingresar</h1>
-      {!enviado ? (
+      {modo === "clave" ? (
+        <form className="tarjeta space-y-3 p-4" onSubmit={(e) => { e.preventDefault(); conClave(); }}>
+          <Campo etiqueta="Correo electrónico">
+            <Entrada type="email" autoComplete="email" value={correo} onChange={(e) => setCorreo(e.target.value)} placeholder="nombre@empresa.com" autoFocus />
+          </Campo>
+          <Campo etiqueta="Contraseña">
+            <Entrada type="password" autoComplete="current-password" value={clave} onChange={(e) => setClave(e.target.value)} />
+          </Campo>
+          <Errores errores={errores} />
+          <div className="flex flex-wrap items-center gap-3">
+            <Boton type="submit" disabled={ocupado}>{ocupado ? "Ingresando…" : "Ingresar"}</Boton>
+            <button type="button" className="suave text-sm underline" onClick={() => { setModo("enlace"); setErrores([]); }}>
+              No tengo contraseña: enviarme un enlace al correo
+            </button>
+          </div>
+        </form>
+      ) : !enviado ? (
         <form className="tarjeta space-y-3 p-4" onSubmit={(e) => { e.preventDefault(); enviar(); }}>
           <p className="suave text-sm">Sin contraseña: le enviaremos un enlace a su correo.</p>
           <Campo etiqueta="Correo electrónico">
             <Entrada type="email" autoComplete="email" value={correo} onChange={(e) => setCorreo(e.target.value)} placeholder="nombre@empresa.com" autoFocus />
           </Campo>
           <Errores errores={errores} />
+          <button type="button" className="suave block text-sm underline" onClick={() => { setModo("clave"); setErrores([]); }}>Ingresar con contraseña</button>
           <Boton type="submit" disabled={ocupado}>{ocupado ? "Enviando…" : "Enviarme el enlace"}</Boton>
         </form>
       ) : (
