@@ -68,7 +68,7 @@ function Formulario() {
       <h1 className="text-2xl font-bold">Ingresar</h1>
       {!enviado ? (
         <form className="tarjeta space-y-3 p-4" onSubmit={(e) => { e.preventDefault(); enviar(); }}>
-          <p className="suave text-sm">Sin contraseña: le enviaremos un enlace (y un código) a su correo.</p>
+          <p className="suave text-sm">Sin contraseña: le enviaremos un enlace a su correo.</p>
           <Campo etiqueta="Correo electrónico">
             <Entrada type="email" autoComplete="email" value={correo} onChange={(e) => setCorreo(e.target.value)} placeholder="nombre@empresa.com" autoFocus />
           </Campo>
@@ -78,18 +78,22 @@ function Formulario() {
       ) : (
         <form className="tarjeta space-y-3 p-4" onSubmit={(e) => { e.preventDefault(); verificar(); }}>
           <p className="text-sm">Enviamos un correo a <b>{correo}</b>.</p>
-          <ol className="suave list-decimal space-y-1 pl-5 text-sm">
-            <li>Abra el correo (revise también <i>spam</i> o <i>promociones</i>).</li>
-            <li>Haga clic en el enlace <b>en este mismo equipo</b>, o escriba aquí el código si el correo lo trae.</li>
+          <ol className="list-decimal space-y-1 pl-5 text-sm">
+            <li>Abra el correo <b>en este mismo equipo y navegador</b> (revise también <i>spam</i> o <i>promociones</i>).</li>
+            <li>Haga clic en el enlace. Entrará automáticamente; puede cerrar esta pestaña.</li>
           </ol>
-          <Campo etiqueta="Código del correo">
-            <Entrada inputMode="numeric" autoComplete="one-time-code" value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="123456" />
-          </Campo>
+          <p className="suave text-xs">Cada enlace sirve una sola vez y vence en una hora: use siempre el correo más reciente.</p>
+          <details className="text-sm">
+            <summary className="suave cursor-pointer">¿El correo trae un código de números?</summary>
+            <div className="mt-2 space-y-2">
+              <Campo etiqueta="Código del correo">
+                <Entrada inputMode="numeric" autoComplete="one-time-code" value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="123456" />
+              </Campo>
+              <Boton type="submit" disabled={ocupado}>{ocupado ? "Verificando…" : "Ingresar con el código"}</Boton>
+            </div>
+          </details>
           <Errores errores={errores} />
-          <div className="flex flex-wrap gap-2">
-            <Boton type="submit" disabled={ocupado}>{ocupado ? "Verificando…" : "Ingresar con el código"}</Boton>
-            <Boton variante="secundario" onClick={() => { setEnviado(false); setCodigo(""); setErrores([]); }}>Usar otro correo</Boton>
-          </div>
+          <Boton variante="secundario" onClick={() => { setEnviado(false); setCodigo(""); setErrores([]); }}>Usar otro correo</Boton>
         </form>
       )}
     </div>
