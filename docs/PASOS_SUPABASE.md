@@ -65,3 +65,32 @@ Mientras tanto, el valor por defecto `http://localhost:3000` sirve para las prue
 `supabase/limpiar_datos_prueba.sql` borra los organismos con NIT que empieza por `PRUEBA`
 y las personas con documento que empieza por `PRUEBA`. La bitácora se conserva.
 Péguelo en el SQL Editor y haga clic en **Run**; al final debe mostrar `0` y `0`.
+
+## Probar la aplicación en su propio computador (Windows)
+
+Se hace una sola vez la instalación (pasos 1 a 4); después, cada vez que quiera usarla,
+solo los pasos 5 y 6.
+
+1. **Instale Node.js**: entre a <https://nodejs.org>, descargue la versión **LTS** e
+   instálela con todas las opciones por defecto (Siguiente, Siguiente, Instalar).
+2. **Descargue el programa**: en GitHub abra el repositorio `k470r/delta_retie`, cambie la
+   rama (botón que dice `main`) a `claude/dreamy-hypatia-a2u57a`, haga clic en el botón
+   verde **Code** → **Download ZIP**. Descomprímalo (clic derecho → *Extraer todo*), por
+   ejemplo en `C:\DeltaRETIE`.
+3. **Cree el archivo de conexión** dentro de la carpeta descomprimida (donde está `package.json`):
+   1. Abra el Bloc de notas y escriba estas dos líneas, con sus datos de Supabase
+      (**Project Settings → API**, o el botón **Connect**: *Project URL* y la clave
+      *publishable* / *anon*; **nunca** la clave *secret* / *service_role*):
+      ```
+      NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxx.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_xxxxxxxx
+      ```
+   2. **Archivo → Guardar como**, en *Tipo* elija **Todos los archivos (\*.\*)** y en
+      *Nombre* escriba exactamente `.env.local`
+4. **Instale las dependencias**: abra la carpeta, haga clic en la barra de direcciones del
+   Explorador, escriba `cmd` y pulse Enter. En la ventana negra escriba
+   `npm install` y pulse Enter (tarda unos minutos).
+5. **Arranque la aplicación**: en esa misma ventana escriba `npm run dev` y pulse Enter.
+   Déjela abierta mientras use la aplicación (para apagarla: Ctrl+C).
+6. Abra el navegador en <http://localhost:3000>, escriba su correo y abra el enlace
+   del correo **en ese mismo computador**.
