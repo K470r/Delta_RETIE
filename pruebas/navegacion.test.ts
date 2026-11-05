@@ -31,3 +31,18 @@ test("el inspector no ve las secciones de la gerencia; el administrador ve Plata
   const admin = rolesMenu({ local: false, esAdminPlataforma: true, base: VACIA });
   assert.ok(ver(admin).includes("plataforma"));
 });
+
+test("sin organismo, cada sección se ilumina ella misma (no Plataforma)", () => {
+  for (const s of SECCIONES) {
+    const r = rutaSeccion(s, undefined);
+    assert.equal(seccionActual(r.split("?")[0], null)?.id, s.id, `${s.id} → ${r}`);
+  }
+});
+
+test("con organismo, cada sección se ilumina ella misma", () => {
+  for (const s of SECCIONES) {
+    const r = rutaSeccion(s, ORG);
+    const [ruta, q] = r.split("?p=");
+    assert.equal(seccionActual(ruta, q ?? null)?.id, s.id, `${s.id} → ${r}`);
+  }
+});
