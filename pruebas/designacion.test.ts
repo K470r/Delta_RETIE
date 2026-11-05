@@ -22,3 +22,12 @@ test("pero no se le autoriza una actividad si no cumple los requisitos", () => {
   assert.equal(e.length, 1);
   assert.match(e[0], /Uso final|básicas/i);
 });
+
+test("una misma persona (una sola cédula) puede ser director técnico e inspector, o inspector y suplente del DT", () => {
+  const conDT: BaseOrganismos = { ...base, designaciones: [{ id: "d1", organismoId: "o", personaId: "p", rol: "director_tecnico", desde: "2026-01-01", actividades: [] }] };
+  assert.deepEqual(validarDesignacion(conDT, { organismoId: "o", personaId: "p", rol: "inspector", desde: "2026-01-01", actividades: [] }), []);
+  const conInsp: BaseOrganismos = { ...base, designaciones: [{ id: "d2", organismoId: "o", personaId: "p", rol: "inspector", desde: "2026-01-01", actividades: [] }] };
+  assert.deepEqual(validarDesignacion(conInsp, { organismoId: "o", personaId: "p", rol: "director_tecnico_suplente", desde: "2026-01-01", actividades: [] }), []);
+  // Lo que sí se impide: el mismo rol dos veces al mismo tiempo.
+  assert.equal(validarDesignacion(conInsp, { organismoId: "o", personaId: "p", rol: "inspector", desde: "2026-02-01", actividades: [] }).length, 1);
+});

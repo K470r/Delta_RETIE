@@ -76,6 +76,7 @@ export async function cargarBase(): Promise<BaseOrganismos> {
     alcance: alcance.filter((a) => a.organismo_id === o.id).map((a): LineaAlcance => ({
       actividad: a.actividad_codigo as string, estado: a.estado as LineaAlcance["estado"],
       fechaEstado: a.fecha_estado as string, observacion: u(a.observacion as string),
+      estadoPor: u(a.estado_por as string), estadoEnCalidad: u(a.estado_en_calidad as string),
     })),
   }));
 

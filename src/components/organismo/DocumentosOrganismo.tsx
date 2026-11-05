@@ -12,6 +12,7 @@ import { actualizar, mostrarError, nuevoId } from "@/lib/organismo/almacen";
 import { designacionesVigentes, hoyISO, nombrePersona } from "@/lib/organismo/reglas";
 import type { BaseOrganismos, DocumentoOrganismo, Organismo, TipoDocumentoOrganismo } from "@/lib/organismo/tipos";
 import { CON_SUPABASE } from "@/lib/supabase";
+import { usePermisosOrganismo } from "@/lib/organismo/permisos";
 
 const TIPOS: { tipo: TipoDocumentoOrganismo; titulo: string; icono: NombreIcono; ayuda: string }[] = [
   { tipo: "acreditacion", titulo: "Certificado de acreditación ONAC", icono: "dictamenes", ayuda: "Con su anexo de alcance. Cargue una versión nueva cuando ONAC renueve, amplíe, reduzca o actualice la acreditación. Lo ve todo el personal." },
@@ -23,22 +24,24 @@ const fecha = (iso?: string) => (iso ? new Date(iso).toLocaleDateString("es-CO",
 
 export function DocumentosOrganismo({ base, o }: { base: BaseOrganismos; o: Organismo }) {
   const docs = (base.documentos ?? []).filter((d) => d.organismoId === o.id);
+  const { gestion } = usePermisosOrganismo(base, o.id);
   return (
     <div className="space-y-4">
+      {!gestion && <p className="tarjeta p-3 text-sm">Los documentos del organismo los cargan la gerencia y el responsable del SG.</p>}
       <p className="suave text-sm">
         Cada documento conserva su historial: al cargar una versión nueva, la anterior queda <b>reemplazada</b> con su PDF, quién la cargó y cuándo.
         Las fechas de la versión vigente actualizan los datos del organismo y el tablero avisa antes de que venzan.
       </p>
       {TIPOS.map((t) => (
         <Tarjeta key={t.tipo} base={base} o={o} t={t}
-          versiones={docs.filter((d) => d.tipo === t.tipo).sort((a, b) => b.cargado.localeCompare(a.cargado))} />
+          versiones={docs.filter((d) => d.tipo === t.tipo).sort((a, b) => b.cargado.localeCompare(a.cargado))} puede={gestion} />
       ))}
     </div>
   );
 }
 
-function Tarjeta({ base, o, t, versiones }: {
-  base: BaseOrganismos; o: Organismo; t: (typeof TIPOS)[number]; versiones: DocumentoOrganismo[];
+function Tarjeta({ base, o, t, versiones, puede }: {
+  base: BaseOrganismos; o: Organismo; t: (typeof TIPOS)[number]; versiones: DocumentoOrganismo[]; puede: boolean;
 }) {
   const [cargando, setCargando] = useState(false);
   const [historial, setHistorial] = useState(false);
@@ -56,7 +59,7 @@ function Tarjeta({ base, o, t, versiones }: {
           <h3 className="font-titulo text-base font-extrabold">{t.titulo}</h3>
           <p className="suave text-xs">{t.ayuda}</p>
         </div>
-        {!cargando && <Boton variante="secundario" onClick={() => setCargando(true)}>{vigente ? "Cargar nueva versión" : "Cargar"}</Boton>}
+        {puede && !cargando && <Boton variante="secundario" onClick={() => setCargando(true)}>{vigente ? "Cargar nueva versión" : "Cargar"}</Boton>}
       </div>
 
       {vigente ? (

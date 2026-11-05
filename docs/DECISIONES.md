@@ -174,6 +174,23 @@ que vencen en minutos; la base de datos solo los entrega si el rol lo permite. N
   del reglamento; ahí también "Cambiar estado" y "Quitar (registrada por error)".
 - "Agregar actividad" solo muestra las que aún no están en el alcance.
 
+## Quién hace qué en el organismo (`0009_permisos_alcance.sql`)
+
+| Acción | Quién |
+|---|---|
+| Todo, mientras nadie esté designado (arranque) | El creador del organismo |
+| Cambiar el estado de una actividad del alcance (acreditada, en trámite, suspendida, retirada) | Solo la gerencia |
+| Agregar actividades (quedan en trámite) y quitarlas por error | La gerencia y el responsable del SG |
+| Datos, logos y documentos del organismo | La gerencia y el responsable del SG |
+| Documentos de cada alcance (procedimientos y formatos, cuando existan) | El director técnico, el responsable del SG y la gerencia |
+
+- "Gerencia" = representante legal, gerente y miembros de la gerencia.
+- **Los suplentes pueden lo mismo que el titular**, y queda indicado que actuó el suplente: la
+  bitácora guarda en qué calidad actuó cada persona; el alcance muestra quién fijó el estado y
+  como qué.
+- "Retirar" un documento = marcarlo obsoleto (se conserva); "modificar" = cargar versión nueva.
+- La bitácora de un organismo la lee solo quien lo administra.
+
 ## Correcciones
 
 - Nada se borra (17020 §8.4). Excepción: **"Quitar (registrada por error)"** para una actividad
