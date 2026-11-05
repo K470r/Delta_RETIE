@@ -21,7 +21,7 @@ function errorEnDireccion(): string | null {
 function Formulario() {
   const sesion = useSesion();
   const router = useRouter();
-  const volver = useSearchParams().get("volver") || "/organismos";
+  const volver = useSearchParams().get("volver") || "/inicio";
   const [correo, setCorreo] = useState("");
   const [codigo, setCodigo] = useState("");
   const [clave, setClave] = useState("");
@@ -36,7 +36,7 @@ function Formulario() {
   }, []);
 
   useEffect(() => {
-    if (sesion.estado === "con_sesion" || sesion.estado === "local") router.replace(volver.startsWith("/") ? volver : "/organismos");
+    if (sesion.estado === "con_sesion" || sesion.estado === "local") router.replace(volver.startsWith("/") ? volver : "/inicio");
   }, [sesion.estado, router, volver]);
 
   if (!CON_SUPABASE) return <p className="suave">Modo local: no se requiere iniciar sesión.</p>;

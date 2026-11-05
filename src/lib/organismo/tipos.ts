@@ -54,6 +54,10 @@ export type Organismo = {
   creado: string;
   /** Usuario que lo creó (Supabase). Lo asigna la base de datos. */
   creadoPor?: string;
+  /** Logo del organismo: ruta en el almacenamiento (Supabase) o imagen en línea (modo local). */
+  logoRuta?: string;
+  /** Símbolo de acreditado ONAC: solo en el informe de no conformidades y en el dictamen. */
+  simboloOnacRuta?: string;
 };
 
 /** Certificado de competencias (ISO/IEC 17024) por categorías del reglamento. */

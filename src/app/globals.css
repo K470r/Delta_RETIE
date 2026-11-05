@@ -1,34 +1,67 @@
 @import "tailwindcss";
 
 :root {
-  --fondo: #f6f7f9;
+  /* Paleta aprobada (docs/DECISIONES.md): electricidad, iluminación y energías limpias. */
+  --fondo: #f3f6f5;
   --tarjeta: #ffffff;
-  --texto: #1b1f24;
-  --suave: #5b6470;
-  --borde: #e2e5ea;
-  --marca: #0b5cad;
+  --texto: #12262e;
+  --suave: #4d6870;
+  --borde: #dde6e4;
+  --marca: #0f6e8c;      /* azul agua: datos y acciones */
+  --panel: #0d2b35;      /* azul petróleo: panel lateral */
+  --panel-texto: #d7e4e8;
+  --panel-suave: #9fb9c1;
+  --ambar: #f5b800;      /* electricidad e iluminación: sección activa */
+  --verde: #1e9e74;      /* cumple, sostenibilidad */
+  --naranja: #e8772e;    /* alertas */
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --fondo: #0f1216;
-    --tarjeta: #171b21;
-    --texto: #e7eaee;
-    --suave: #9aa3ae;
-    --borde: #2a3038;
-    --marca: #5aa2ec;
+    --fondo: #0b1d23;
+    --tarjeta: #12272f;
+    --texto: #e6eef0;
+    --suave: #9fb9c1;
+    --borde: #23404a;
+    --marca: #4fb3d1;
+    --panel: #081c23;
   }
 }
 
 body {
   background: var(--fondo);
   color: var(--texto);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 .tarjeta {
   background: var(--tarjeta);
   border: 1px solid var(--borde);
-  border-radius: 0.75rem;
+  border-radius: 1rem;
 }
 .suave { color: var(--suave); }
 .marca { color: var(--marca); }
+
+h1, h2, h3, .font-titulo { font-family: Manrope, Inter, ui-sans-serif, system-ui, sans-serif; }
+
+/* Panel lateral */
+.panel { background: var(--panel); color: var(--panel-texto); }
+.elemento-panel {
+  display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; margin: 2px 0;
+  border-radius: 10px; font-size: 14px; font-weight: 500; color: var(--panel-texto);
+}
+.elemento-panel:hover { background: rgba(255, 255, 255, 0.06); }
+.elemento-panel.activo {
+  background: rgba(245, 184, 0, 0.14); color: #ffd24d; font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--ambar);
+}
+.chip-numeral {
+  font-size: 12px; font-weight: 600; color: var(--marca); border-radius: 6px; padding: 2px 8px;
+  background: color-mix(in srgb, var(--marca) 14%, transparent);
+}
+
+/* Menú inferior del celular */
+.elemento-inferior {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  min-height: 56px; border-radius: 12px; font-size: 11px; color: var(--suave);
+}
+.elemento-inferior.activo { color: var(--texto); font-weight: 700; background: rgba(245, 184, 0, 0.18); }

@@ -9,6 +9,7 @@ const TABLAS: Record<string, string> = {
   certificados_competencia: "certificados de competencias", certificado_categorias: "categorías del certificado",
   formacion: "formación", experiencias: "experiencia", vinculaciones: "vinculaciones", designaciones: "designaciones",
   designacion_actividades: "actividades autorizadas", declaraciones: "declaraciones", revisiones_sg: "revisiones del SG",
+  objects: "los logos del organismo (solo la gerencia o el responsable del SG)",
 };
 
 const RESTRICCIONES: [RegExp, string][] = [
@@ -53,6 +54,8 @@ export function mensajeError(e: unknown): string {
       return `No tiene permiso para registrar o modificar ${t ? TABLAS[t] ?? t : "este dato"}. ` +
         "Solo la gerencia, el responsable del SG o la dirección técnica vigentes del organismo pueden hacerlo (o el administrador de la plataforma al crear el organismo)";
     }
+    case "42703": case "PGRST204":
+      return "La base de datos no tiene una migración reciente (por ejemplo 0004_logos.sql). Ejecútela en el SQL Editor de Supabase";
     case "PGRST202": case "42883":
       return "La base de datos no tiene la migración 0003_autenticacion.sql. Ejecútela en el SQL Editor de Supabase";
     case "PGRST301": case "PGRST303":

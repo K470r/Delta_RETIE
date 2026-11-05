@@ -21,6 +21,9 @@ export default async function Ordenes() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Órdenes de servicio</h1>
+      <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+        Demostración con datos de ejemplo guardados en este navegador. Las órdenes reales se construyen en la fase 2.
+      </p>
       <div className="grid gap-3">
         {d.ordenes.map((o) => {
           const etapa = ETAPAS.findIndex((e) => e.estado === o.estado);
