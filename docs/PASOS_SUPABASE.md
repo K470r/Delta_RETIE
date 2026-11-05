@@ -20,6 +20,13 @@ envíela en el chat.
 
 > **No** vuelva a ejecutar `instalar_todo.sql`: ya lo hizo y fallaría porque las tablas ya existen.
 
+## Paso 1b — Ejecutar la migración 0004 (logos del organismo)
+
+Igual que el paso 1, con el archivo `supabase/migrations/0004_logos.sql`. Abajo debe aparecer
+`Migración 0004 aplicada: logos del organismo`. Crea el lugar donde se guardan el logo del
+organismo y el símbolo de acreditado ONAC (máximo 2 MB, PNG, JPG o WEBP). Solo la gerencia
+o el responsable del SG pueden cargarlos.
+
 ## Paso 2 (opcional, más adelante) — Que el correo traiga también un código
 
 Supabase solo deja editar las plantillas de correo si se configura un servidor de correo

@@ -56,6 +56,8 @@ export async function cargarBase(): Promise<BaseOrganismos> {
     polizaRCVence: u(o.poliza_rc_vence as string),
     creado: o.creado as string,
     creadoPor: u(o.creado_por as string),
+    logoRuta: u(o.logo_ruta as string),
+    simboloOnacRuta: u(o.simbolo_onac_ruta as string),
     sedes: sedes.filter((s) => s.organismo_id === o.id).map((s): Sede => ({
       id: s.id as string, nombre: s.nombre as string, direccion: u(s.direccion as string), ciudad: u(s.ciudad as string), principal: !!s.principal,
     })),
@@ -154,6 +156,7 @@ const filaOrganismo = (o: Organismo): Fila => ({
   codigo_acreditacion: n(o.codigoAcreditacion), acreditacion_otorgada: n(o.acreditacionOtorgada), acreditacion_vence: n(o.acreditacionVence),
   direccion: n(o.direccion), ciudad: n(o.ciudad), telefono: n(o.telefono), correo: n(o.correo),
   declaracion_independencia: n(o.declaracionIndependencia), poliza_rc_numero: n(o.polizaRCNumero), poliza_rc_vence: n(o.polizaRCVence),
+  logo_ruta: n(o.logoRuta), simbolo_onac_ruta: n(o.simboloOnacRuta),
 });
 const filaSede = (org: string, s: Sede): Fila => ({
   id: s.id, organismo_id: org, nombre: s.nombre, direccion: n(s.direccion), ciudad: n(s.ciudad), principal: s.principal,
@@ -218,7 +221,8 @@ function comparar<T>(tabla: string, antes: T[], despues: T[], fila: (x: T) => Fi
   for (const x of despues) {
     const f = fila(x);
     const prev = previas.get(id(f));
-    if (!prev) ops.push({ tipo: "insertar", tabla, fila: f });
+    // Al insertar se omiten los campos vacíos: la base pone sus valores por defecto.
+    if (!prev) ops.push({ tipo: "insertar", tabla, fila: Object.fromEntries(Object.entries(f).filter(([, v]) => v !== null)) });
     else {
       const c = cambios(prev, f);
       if (c) ops.push({ tipo: "modificar", tabla, clave: claveDe(f), cambios: c });

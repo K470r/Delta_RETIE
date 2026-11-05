@@ -18,7 +18,7 @@ test("crear un organismo inserta organismo, sede y alcance en ese orden", () => 
   const ops = operaciones(VACIA, d);
   assert.deepEqual(ops.map((o) => `${o.tipo}:${o.tabla}`), ["insertar:organismos", "insertar:sedes", "insertar:alcance_acreditado"]);
   const org = ops[0] as { fila: Record<string, unknown> };
-  assert.equal(org.fila.sigla, null);
+  assert.ok(!("sigla" in org.fila), "los campos vacíos no se envían al insertar");
   assert.ok(!("creado_por" in org.fila), "creado_por lo asigna la base de datos");
 });
 

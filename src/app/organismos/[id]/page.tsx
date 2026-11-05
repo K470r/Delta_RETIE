@@ -14,16 +14,10 @@ import { actualizar, nuevoId, useBase, usePersonaActual } from "@/lib/organismo/
 import { useSesion } from "@/lib/sesion";
 import { designacionesVigentes, evaluarOrganismo, hoyISO, nombrePersona, vigenteEn } from "@/lib/organismo/reglas";
 import type { BaseOrganismos, EstadoLinea, Organismo, RolOEC } from "@/lib/organismo/tipos";
+import { Icono, type NombreIcono } from "@/components/Icono";
+import { LogosOrganismo } from "@/components/organismo/LogosOrganismo";
+import { NOMBRE_PESTANA, seccionActual } from "@/lib/navegacion";
 
-const PESTANAS = [
-  { id: "resumen", texto: "Cumplimiento" },
-  { id: "alcance", texto: "Datos y alcance" },
-  { id: "gerencia", texto: "Gerencia" },
-  { id: "sg", texto: "Sistema de gestión" },
-  { id: "dt", texto: "Directores técnicos" },
-  { id: "inspectores", texto: "Inspectores" },
-  { id: "onac", texto: "Personal (ONAC)" },
-] as const;
 
 export default function PaginaOrganismo() {
   return <Suspense><Contenido /></Suspense>;
@@ -39,24 +33,30 @@ function Contenido() {
   const o = base.organismos.find((x) => x.id === id);
   if (!o) return <p>Organismo no encontrado. <Link href="/organismos" className="underline">Volver</Link></p>;
 
+  // Pestañas de la sección del menú en la que se está (el menú lateral elige la sección).
+  const pestanas = seccionActual(`/organismos/${o.id}`, pestana)?.pestanas ?? [];
+
   return (
-    <div className="space-y-4">
-      <div>
-        <Link href="/organismos" className="suave text-sm hover:underline">← Organismos</Link>
-        <h1 className="text-2xl font-bold">{o.razonSocial}</h1>
-        <p className="suave text-sm">
-          NIT {o.nit} · Organismo de inspección tipo A{o.codigoAcreditacion && ` · Acreditación ${o.codigoAcreditacion}`}
-          {o.acreditacionVence && ` · vence ${o.acreditacionVence}`}
-        </p>
-      </div>
-      <nav className="-mx-4 flex gap-1 overflow-x-auto border-b px-4" style={{ borderColor: "var(--borde)" }}>
-        {PESTANAS.map((p) => (
-          <button key={p.id} onClick={() => router.replace(`/organismos/${o.id}?p=${p.id}`, { scroll: false })}
-            className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm ${pestana === p.id ? "border-[var(--marca)] font-semibold marca" : "border-transparent suave"}`}>
-            {p.texto}
-          </button>
-        ))}
-      </nav>
+    <div className="space-y-5">
+      <p className="suave text-sm">
+        {o.razonSocial} · NIT {o.nit} · Organismo de inspección tipo A{o.codigoAcreditacion && ` · Acreditación ${o.codigoAcreditacion}`}
+        {o.acreditacionVence && ` · vence ${o.acreditacionVence}`}
+      </p>
+      {pestanas.length > 1 && (
+        <nav className="flex gap-1 overflow-x-auto rounded-xl border p-1" style={{ borderColor: "var(--borde)", background: "var(--tarjeta)" }}>
+          {pestanas.map((p) => (
+            <button key={p} onClick={() => router.replace(`/organismos/${o.id}?p=${p}`, { scroll: false })}
+              aria-current={pestana === p ? "page" : undefined}
+              className={`min-h-10 whitespace-nowrap rounded-lg px-4 text-sm ${pestana === p ? "font-semibold text-white" : "suave"}`}
+              style={pestana === p ? { background: "var(--marca)" } : undefined}>
+              {NOMBRE_PESTANA[p]}
+            </button>
+          ))}
+          {pestanas.includes("dt") && (
+            <Link href="/personas" className="suave flex min-h-10 items-center whitespace-nowrap rounded-lg px-4 text-sm">Directorio de personas</Link>
+          )}
+        </nav>
+      )}
 
       <Arranque base={base} o={o} irA={(p) => router.replace(`/organismos/${o.id}?p=${p}`, { scroll: false })} />
       {pestana === "resumen" && <Resumen base={base} o={o} />}
@@ -139,11 +139,20 @@ function Resumen({ base, o }: { base: BaseOrganismos; o: Organismo }) {
   const cuenta = (e: string) => controles.filter((c) => c.estado === e).length;
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-3">
-        {[["Cumplen", cuenta("cumple"), "text-emerald-600"], ["En alerta", cuenta("alerta"), "text-amber-600"], ["Incumplen", cuenta("incumple"), "text-red-600"]].map(([t, v, c]) => (
-          <div key={t as string} className="tarjeta p-4">
-            <div className="suave text-xs uppercase">{t}</div>
-            <div className={`text-3xl font-bold tabular-nums ${c}`}>{v}</div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {([
+          ["Controles que cumplen", cuenta("cumple"), "dictamenes", "#16795A", "#DCF2E9"],
+          ["En alerta", cuenta("alerta"), "alerta", "#B4590F", "#FBE9D8"],
+          ["Incumplen", cuenta("incumple"), "alerta", "#B42318", "#FBE2E0"],
+        ] as [string, number, NombreIcono, string, string][]).map(([t, v, ic, color, fondo]) => (
+          <div key={t} className="tarjeta flex items-center gap-4 p-4">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl" style={{ background: fondo }}>
+              <Icono nombre={ic} color={color} tamano={24} grosor={2} />
+            </span>
+            <div>
+              <div className="font-titulo text-3xl font-extrabold tabular-nums" style={{ color }}>{v}</div>
+              <div className="suave text-sm">{t}</div>
+            </div>
           </div>
         ))}
       </div>
@@ -187,6 +196,7 @@ function Alcance({ base, o }: { base: BaseOrganismos; o: Organismo }) {
 
   return (
     <div className="space-y-6">
+      <LogosOrganismo o={o} />
       <section className="tarjeta space-y-2 p-4 text-sm">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold">Datos generales</h2>
