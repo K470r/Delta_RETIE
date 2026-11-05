@@ -67,7 +67,8 @@ export function validarDesignacion(b: BaseOrganismos, d: Omit<Designacion, "id">
   if (mismo) errores.push(`La persona ya tiene una designación vigente como ${NOMBRE_ROL[d.rol].toLowerCase()}`);
 
   if (ROLES_CON_ACTIVIDADES.includes(d.rol)) {
-    if (!d.actividades.length) errores.push("Seleccione al menos una actividad autorizada (17020 §6.1.6)");
+    // Se puede designar sin actividades: quedan "pendientes de autorizar" hasta que otra persona
+    // verifique los soportes. Mientras tanto no puede ejercer (lo controla la base de datos).
     const fecha = d.desde > hoyISO() ? d.desde : hoyISO();
     for (const a of d.actividades) {
       const m = motivoNoPuedeEjercer(b, o, p, a, fecha, rolTecnico(d.rol));

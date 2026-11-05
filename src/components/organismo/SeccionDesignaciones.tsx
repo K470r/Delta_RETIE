@@ -112,6 +112,12 @@ function TarjetaDesignacion({ base, organismo, d, onFinalizar }: {
         <Indicador ok={!!decl("imparcialidad")} texto={`Imparcialidad ${decl("imparcialidad") ?? "sin firmar"}`} />
         <Indicador ok={!!decl("confidencialidad")} texto={`Confidencialidad ${decl("confidencialidad") ?? "sin firmar"}`} />
       </div>
+      {ROLES_CON_ACTIVIDADES.includes(d.rol) && d.actividades.length === 0 && (
+        <p className="rounded-lg px-3 py-2 text-sm font-semibold" style={{ background: "#FBE9D8", color: "#8A4209" }}>
+          Actividades pendientes de autorizar: aún no puede ejercer (17020 §6.1.6)
+        </p>
+      )}
+      {onFinalizar && ROLES_CON_ACTIVIDADES.includes(d.rol) && <AutorizarActividades base={base} organismo={organismo} d={d} />}
       {d.actividades.length > 0 && (
         <ul className="space-y-1 text-sm">
           {d.actividades.map((a) => <FilaActividad key={a} base={base} organismo={organismo} d={d} actividad={a} />)}
@@ -150,6 +156,45 @@ function Indicador({ ok, texto }: { ok: boolean; texto: string }) {
     <span className={`rounded-full px-2 py-0.5 ${ok
       ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
       : "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"}`}>{texto}</span>
+  );
+}
+
+/** Autoriza actividades a una designación ya hecha (cuando se verifican los soportes). */
+function AutorizarActividades({ base, organismo, d }: { base: BaseOrganismos; organismo: Organismo; d: Designacion }) {
+  const [abierto, setAbierto] = useState(false);
+  const [acts, setActs] = useState<string[]>([]);
+  const [errores, setErrores] = useState<string[]>([]);
+  const [guardando, setGuardando] = useState(false);
+  const p = base.personas.find((x) => x.id === d.personaId)!;
+  const disponibles = lineasAcreditadas(organismo).filter((c) => !d.actividades.includes(c)).map((c) => actividad(c)!).filter(Boolean);
+  if (!disponibles.length) return null;
+  if (!abierto) {
+    return <button className="text-sm font-semibold underline marca" onClick={() => setAbierto(true)}>+ Autorizar actividades</button>;
+  }
+  const guardar = async () => {
+    if (!acts.length) return setErrores(["Marque las actividades que va a autorizar"]);
+    setGuardando(true);
+    const error = await actualizar((b) => ({
+      ...b, designaciones: b.designaciones.map((x) => (x.id === d.id ? { ...x, actividades: [...x.actividades, ...acts] } : x)),
+    }), { mostrarError: false });
+    setGuardando(false);
+    if (error) return setErrores([error]);
+    setActs([]); setErrores([]); setAbierto(false);
+  };
+  return (
+    <div className="space-y-3 rounded-lg border p-3" style={{ borderColor: "var(--marca)" }}>
+      <p className="suave text-sm">
+        Solo se pueden autorizar actividades del alcance acreditado para las que {nombrePersona(p)} cumple los requisitos
+        del reglamento como {rolTecnico(d.rol) === "inspector" ? "inspector" : "director técnico"}, con su experiencia verificada por otra persona.
+      </p>
+      <SelectorActividades actividades={disponibles} seleccion={acts} onCambio={setActs}
+        bloqueo={(c) => motivoNoPuedeEjercer(base, organismo, p, c, hoyISO(), rolTecnico(d.rol))} />
+      <Errores errores={errores} />
+      <div className="flex gap-2">
+        <Boton onClick={guardar} disabled={guardando}>{guardando ? "Guardando…" : "Autorizar"}</Boton>
+        <Boton variante="secundario" onClick={() => { setAbierto(false); setActs([]); setErrores([]); }}>Cancelar</Boton>
+      </div>
+    </div>
   );
 }
 
@@ -306,6 +351,10 @@ function FormularioDesignacion({ base, organismo, roles, onTerminar }: {
           {conActividades && (
             <div className="space-y-2">
               <h3 className="font-semibold">4. Actividades autorizadas (17020 §6.1.6)</h3>
+              <p className="text-sm">
+                Puede dejarlas <b>pendientes</b> y autorizarlas después con <b>+ Autorizar actividades</b>, cuando otra persona del organismo
+                haya verificado los soportes. Mientras tanto la persona no puede ejercer.
+              </p>
               <p className="suave text-sm">
                 Solo se pueden autorizar actividades del alcance acreditado para las que la persona cumple los requisitos del reglamento
                 como {rol === "inspector" ? "inspector" : "director técnico"}: matrícula, formación, experiencia verificada y certificado de competencias vigente con seguimiento.
