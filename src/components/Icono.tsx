@@ -14,6 +14,7 @@ export const ICONOS = {
   gestion: "M3 6a1 1 0 0 1 1-1h5l2 2h9a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z",
   configuracion: "M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1",
   rayo: "M13 2 4 14h7l-1 8 9-12h-7z",
+  bombillo: "M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z",
   alerta: "M12 3 2 20h20zM12 10v4M12 17h.01",
   campana: "M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10 21h4",
   subir: "M12 16V4M7 9l5-5 5 5M4 20h16",

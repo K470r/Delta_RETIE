@@ -40,6 +40,9 @@ export type Organismo = {
   tipo: "A";
   codigoAcreditacion?: string;
   acreditacionOtorgada?: string;
+  /** Última renovación y última actualización publicada por ONAC (del certificado vigente). */
+  acreditacionRenovada?: string;
+  acreditacionActualizada?: string;
   acreditacionVence?: string;
   direccion?: string;
   ciudad?: string;
@@ -172,6 +175,27 @@ export type RevisionSG = {
   requiereAccion: boolean;
 };
 
+/** Documento del organismo con historial: cada carga es una versión; la anterior queda reemplazada. */
+export type TipoDocumentoOrganismo = "acreditacion" | "poliza_rc" | "independencia";
+export type DocumentoOrganismo = {
+  id: string;
+  organismoId: string;
+  tipo: TipoDocumentoOrganismo;
+  archivoRuta: string;
+  numero?: string;        // código de acreditación o número de póliza
+  emisor?: string;        // ONAC o aseguradora
+  valor?: number;         // valor asegurado
+  fecha?: string;         // otorgamiento o firma
+  renovacion?: string;
+  actualizacion?: string;
+  desde?: string;
+  hasta?: string;         // vencimiento
+  firmadoPor?: string;
+  observacion?: string;
+  cargado: string;
+  reemplazadoEn?: string;
+};
+
 export type BaseOrganismos = {
   organismos: Organismo[];
   personas: Persona[];
@@ -179,6 +203,8 @@ export type BaseOrganismos = {
   designaciones: Designacion[];
   declaraciones: Declaracion[];
   revisionesSG: RevisionSG[];
+  /** Documentos del organismo (0008). Opcional para datos guardados antes. */
+  documentos?: DocumentoOrganismo[];
 };
 
 export type Plazos = { vigenciaDeclaraciones: number; revisionResponsableSG: number; alertaAnticipada: number; alertaAcreditacion: number };
