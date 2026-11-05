@@ -6,7 +6,7 @@
 import { useEffect, useState } from "react";
 import { CON_SUPABASE, supabase } from "./supabase";
 
-export type Carpeta = "logos" | "soportes";
+export type Carpeta = "logos" | "soportes" | "documentos";
 const DURACION = 300; // segundos que dura un enlace
 const cache = new Map<string, { url: string; vence: number }>();
 
@@ -66,5 +66,7 @@ export async function cargarArchivo(carpeta: Carpeta, ruta: string, archivo: Fil
 }
 
 export const extension = (archivo: File) => (archivo.type.split("/")[1] ?? "bin").replace("jpeg", "jpg");
+
+export const REGLAS_DOCUMENTO: Reglas = { tipos: ["application/pdf"], maximo: 15 * 1024 * 1024, nombreTipos: "PDF", maximoLocal: 2 * 1024 * 1024 };
 
 export const REGLAS_SOPORTE: Reglas = { tipos: ["application/pdf", "image/png", "image/jpeg"], maximo: 10 * 1024 * 1024, nombreTipos: "PDF, JPG o PNG" };

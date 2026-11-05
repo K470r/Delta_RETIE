@@ -23,6 +23,7 @@ const RESTRICCIONES: [RegExp, string][] = [
   [/designaciones_organismo_id_rol/, "Ya hay otra persona vigente en ese rol en esas fechas: solo puede haber un representante legal y un responsable del SG a la vez (17020 §5.2 / §8). Finalice primero la designación actual"],
   [/vinculaciones_organismo_id_persona_id/, "La persona ya tiene una vinculación con el organismo que se cruza con esas fechas"],
   [/alcance_acreditado_pkey/, "Esa actividad ya está en el alcance del organismo"],
+  [/documentos_organismo_check/, "Faltan datos del documento: revise el número, las fechas y la vigencia (el vencimiento debe ser posterior al inicio)"],
   [/designacion_actividades_pkey/, "Esa actividad ya está autorizada"],
   [/certificado_categorias_pkey/, "Esa categoría ya está en el certificado"],
 ];

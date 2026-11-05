@@ -8,7 +8,7 @@
 import { supabase } from "../supabase";
 import { mensajeError } from "../errores";
 import type {
-  BaseOrganismos, CertificadoCompetencia, Declaracion, Designacion, Experiencia, Formacion,
+  BaseOrganismos, CertificadoCompetencia, Declaracion, Designacion, DocumentoOrganismo, Experiencia, Formacion,
   LineaAlcance, Organismo, Persona, RevisionSG, Sede, Vinculacion,
 } from "./tipos";
 
@@ -35,6 +35,16 @@ export async function cargarBase(): Promise<BaseOrganismos> {
   ]);
   const err = [org, sed, alc, per, cer, form, exp, vin, des, dec, rev].find((r) => r.error)?.error;
   if (err) throw err;
+  // Documentos del organismo (0008): si la migración aún no está, se sigue sin ellos.
+  const docs = await sb.from("documentos_organismo").select("*").order("cargado");
+  const documentos: DocumentoOrganismo[] = (docs.error ? [] : docs.data ?? []).map((d: Fila) => ({
+    id: d.id as string, organismoId: d.organismo_id as string, tipo: d.tipo as DocumentoOrganismo["tipo"],
+    archivoRuta: d.archivo_ruta as string, numero: u(d.numero as string), emisor: u(d.emisor as string),
+    valor: d.valor === null || d.valor === undefined ? undefined : Number(d.valor),
+    fecha: u(d.fecha as string), renovacion: u(d.renovacion as string), actualizacion: u(d.actualizacion as string),
+    desde: u(d.desde as string), hasta: u(d.hasta as string), firmadoPor: u(d.firmado_por as string),
+    observacion: u(d.observacion as string), cargado: d.cargado as string, reemplazadoEn: u(d.reemplazado_en as string),
+  }));
 
   const sedes = (sed.data ?? []) as Fila[];
   const alcance = (alc.data ?? []) as Fila[];
@@ -46,6 +56,8 @@ export async function cargarBase(): Promise<BaseOrganismos> {
     tipo: "A",
     codigoAcreditacion: u(o.codigo_acreditacion as string),
     acreditacionOtorgada: u(o.acreditacion_otorgada as string),
+    acreditacionRenovada: u(o.acreditacion_renovada as string),
+    acreditacionActualizada: u(o.acreditacion_actualizada as string),
     acreditacionVence: u(o.acreditacion_vence as string),
     direccion: u(o.direccion as string),
     ciudad: u(o.ciudad as string),
@@ -131,6 +143,7 @@ export async function cargarBase(): Promise<BaseOrganismos> {
   return {
     organismos,
     personas,
+    documentos,
     vinculaciones: (vin.data ?? []).map((v: Fila): Vinculacion => ({
       id: v.id as string, organismoId: v.organismo_id as string, personaId: v.persona_id as string,
       sedeId: u(v.sede_id as string), tipo: v.tipo as Vinculacion["tipo"], cargo: v.cargo as string,
@@ -157,6 +170,8 @@ export async function cargarBase(): Promise<BaseOrganismos> {
 const filaOrganismo = (o: Organismo): Fila => ({
   id: o.id, razon_social: o.razonSocial, sigla: n(o.sigla), nit: o.nit.trim(), tipo: o.tipo,
   codigo_acreditacion: n(o.codigoAcreditacion), acreditacion_otorgada: n(o.acreditacionOtorgada), acreditacion_vence: n(o.acreditacionVence),
+  ...(o.acreditacionRenovada !== undefined ? { acreditacion_renovada: o.acreditacionRenovada } : {}),
+  ...(o.acreditacionActualizada !== undefined ? { acreditacion_actualizada: o.acreditacionActualizada } : {}),
   direccion: n(o.direccion), ciudad: n(o.ciudad), telefono: n(o.telefono), correo: n(o.correo),
   declaracion_independencia: n(o.declaracionIndependencia), poliza_rc_numero: n(o.polizaRCNumero), poliza_rc_vence: n(o.polizaRCVence),
   logo_ruta: n(o.logoRuta), simbolo_onac_ruta: n(o.simboloOnacRuta),
@@ -196,6 +211,11 @@ const filaDesignacion = (d: Designacion): Fila => ({
 });
 const filaDeclaracion = (d: Declaracion): Fila => ({
   id: d.id, organismo_id: d.organismoId, persona_id: d.personaId, tipo: d.tipo, fecha: d.fecha,
+});
+const filaDocumento = (d: DocumentoOrganismo): Fila => ({
+  id: d.id, organismo_id: d.organismoId, tipo: d.tipo, archivo_ruta: d.archivoRuta, numero: n(d.numero), emisor: n(d.emisor),
+  valor: d.valor ?? null, fecha: n(d.fecha), renovacion: n(d.renovacion), actualizacion: n(d.actualizacion),
+  desde: n(d.desde), hasta: n(d.hasta), firmado_por: n(d.firmadoPor), observacion: n(d.observacion),
 });
 const filaRevision = (r: RevisionSG): Fila => ({
   id: r.id, organismo_id: r.organismoId, persona_id: r.personaId, fecha: r.fecha, aspectos: r.aspectos,
@@ -272,6 +292,9 @@ export function operaciones(a: BaseOrganismos, d: BaseOrganismos): Operacion[] {
     ...compararRelacion("designacion_actividades", acts(a), acts(d)),
     ...comparar("declaraciones", a.declaraciones, d.declaraciones, filaDeclaracion, porId),
     ...comparar("revisiones_sg", a.revisionesSG, d.revisionesSG, filaRevision, porId),
+    // Documentos: solo se agregan versiones nuevas (la base reemplaza la anterior y actualiza el organismo).
+    ...comparar("documentos_organismo", (a.documentos ?? []).filter((x) => d.documentos?.some((y) => y.id === x.id)),
+      d.documentos ?? [], filaDocumento, porId).filter((op) => op.tipo === "insertar"),
   ];
 }
 

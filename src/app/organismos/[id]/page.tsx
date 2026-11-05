@@ -8,7 +8,7 @@ import { FormularioPersona } from "@/components/organismo/FormularioPersona";
 import { SeccionDesignaciones } from "@/components/organismo/SeccionDesignaciones";
 import { SelectorActividades } from "@/components/SelectorActividades";
 import { EtiquetaEstado } from "@/components/Estado";
-import { ACTIVIDADES, actividad, agrupar } from "@/lib/catalogo";
+import { ACTIVIDADES, actividad, agrupar, nombreCorto } from "@/lib/catalogo";
 import { NUMERALES_17020 } from "@/lib/iso17020";
 import { actualizar, nuevoId, pedirMotivo, quitarAlcancePorError, useBase, usePersonaActual } from "@/lib/organismo/almacen";
 import { useSesion } from "@/lib/sesion";
@@ -16,6 +16,7 @@ import { designacionesVigentes, evaluarOrganismo, hoyISO, nombrePersona, vigente
 import type { BaseOrganismos, EstadoLinea, Organismo, RolOEC } from "@/lib/organismo/tipos";
 import { Icono, type NombreIcono } from "@/components/Icono";
 import { LogosOrganismo } from "@/components/organismo/LogosOrganismo";
+import { DocumentosOrganismo } from "@/components/organismo/DocumentosOrganismo";
 import { NOMBRE_PESTANA, rolesMenu, seccionActual } from "@/lib/navegacion";
 import { HojaDeVida, MatrizHabilitacion } from "@/components/organismo/HojaDeVida";
 import { NOMBRE_ROL } from "@/lib/organismo/tipos";
@@ -76,6 +77,7 @@ function Contenido() {
       <Arranque base={base} o={o} irA={(p) => router.replace(`/organismos/${o.id}?p=${p}`, { scroll: false })} />
       {pestana === "resumen" && <Resumen base={base} o={o} />}
       {pestana === "alcance" && <Alcance base={base} o={o} />}
+      {pestana === "documentos" && <DocumentosOrganismo base={base} o={o} />}
       {pestana === "gerencia" && (
         <SeccionDesignaciones base={base} organismo={o} roles={["representante_legal", "gerente", "miembro_gerencia"]}
           titulo="Gerencia del organismo"
@@ -111,7 +113,7 @@ function VistaPersonal({ base, o, pestana }: { base: BaseOrganismos; o: Organism
   if (!yo) return <p className="tarjeta p-4 text-sm">Su usuario aún no está enlazado a una persona de este organismo.</p>;
   const mias = designacionesVigentes(base, o.id, Object.keys(NOMBRE_ROL) as RolOEC[]).filter((d) => d.personaId === yo.id);
   const enPersonal = ["dt", "inspectores", "onac"].includes(pestana);
-  const deGerencia = ["alcance", "gerencia", "sg"].includes(pestana);
+  const deGerencia = ["alcance", "documentos", "gerencia", "sg"].includes(pestana);
   if (deGerencia) return <p className="tarjeta p-4 text-sm">Esta sección la administran la gerencia y el responsable del sistema de gestión.</p>;
   return (
     <div className="space-y-5">
@@ -254,7 +256,8 @@ function Alcance({ base, o }: { base: BaseOrganismos; o: Organismo }) {
           {[
             ["Dirección", [o.direccion, o.ciudad].filter(Boolean).join(", ")],
             ["Contacto", [o.telefono, o.correo].filter(Boolean).join(" · ")],
-            ["Acreditación", [o.codigoAcreditacion, o.acreditacionOtorgada && `otorgada ${o.acreditacionOtorgada}`, o.acreditacionVence && `vence ${o.acreditacionVence}`].filter(Boolean).join(" · ")],
+            ["Acreditación", [o.codigoAcreditacion, o.acreditacionOtorgada && `otorgada ${o.acreditacionOtorgada}`, o.acreditacionRenovada && `renovada ${o.acreditacionRenovada}`,
+              o.acreditacionActualizada && `actualizada ${o.acreditacionActualizada}`, o.acreditacionVence && `vence ${o.acreditacionVence}`].filter(Boolean).join(" · ")],
             ["Póliza RC", [o.polizaRCNumero, o.polizaRCVence && `vence ${o.polizaRCVence}`].filter(Boolean).join(" · ")],
             ["Declaración de independencia", o.declaracionIndependencia],
             ["Sedes", o.sedes.map((s) => s.nombre).join(", ")],
@@ -266,52 +269,133 @@ function Alcance({ base, o }: { base: BaseOrganismos; o: Organismo }) {
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-semibold">Alcance acreditado</h2>
+          <div>
+            <h2 className="font-semibold">Alcance acreditado</h2>
+            <p className="suave text-xs">Toque una actividad para ver su detalle.</p>
+          </div>
           {!agregando && disponibles.length > 0 && <Boton variante="secundario" onClick={() => setAgregando(true)}>+ Agregar actividad</Boton>}
         </div>
         {agregando && (
           <div className="tarjeta space-y-3 p-4">
-            <p className="suave text-sm">Las actividades nuevas quedan <b>en trámite</b> hasta que ONAC otorgue la ampliación; entonces cámbielas a <b>acreditada</b>.</p>
+            <p className="suave text-sm">
+              Aquí solo aparecen las actividades que aún no están en el alcance (ya tiene <b>{o.alcance.length}</b>).
+              Las nuevas quedan <b>en trámite</b> hasta que ONAC otorgue la ampliación; entonces cámbielas a <b>acreditada</b>.
+            </p>
             <SelectorActividades actividades={disponibles} seleccion={nuevas} onCambio={setNuevas} />
             <div className="flex gap-2"><Boton onClick={agregar} disabled={!nuevas.length}>Agregar</Boton><Boton variante="secundario" onClick={() => setAgregando(false)}>Cancelar</Boton></div>
           </div>
         )}
-        {agrupar(o.alcance.map((l) => actividad(l.actividad)!).filter(Boolean)).map(({ reglamento, grupos }) => (
-          <div key={reglamento.id} className="tarjeta p-4">
-            <h3 className="font-semibold">{reglamento.nombre}</h3>
-            <p className="suave mb-3 text-xs">{reglamento.acto}</p>
-            {grupos.map(([grupo, acts]) => (
-              <div key={grupo} className="mb-3">
-                <div className="suave text-xs font-semibold uppercase tracking-wide">{grupo}</div>
-                <ul className="divide-y" style={{ borderColor: "var(--borde)" }}>
-                  {acts.map((a) => {
+        <AlcanceDosColumnas base={base} o={o} cambiarEstado={cambiarEstado} />
+      </section>
+    </div>
+  );
+}
+
+// ───────────────────────── Alcance en dos columnas (diseño aprobado) ─────────────────────────
+const COLUMNAS = [
+  { prefijo: "RETIE", titulo: "RETIE 2024", acto: "Resolución 40117 de 2024 · Instalaciones eléctricas", color: "#0F6E8C", icono: "rayo" as NombreIcono },
+  { prefijo: "RETILAP", titulo: "RETILAP 2024", acto: "Resolución 40150 de 2024 · Iluminación y alumbrado público", color: "#B98A00", icono: "bombillo" as NombreIcono },
+];
+const COLOR_ESTADO: Record<EstadoLinea, [string, string]> = {
+  acreditada: ["#16795A", "#DCF2E9"], en_tramite: ["#0B4F64", "#DDEFF3"], suspendida: ["#8A4209", "#FBE9D8"], retirada: ["#B42318", "#FBE2E0"],
+};
+
+function AlcanceDosColumnas({ base, o, cambiarEstado }: { base: BaseOrganismos; o: Organismo; cambiarEstado: (c: string, e: EstadoLinea) => void }) {
+  const [abierta, setAbierta] = useState<string | null>(null);
+  const acts = o.alcance.map((l) => actividad(l.actividad)!).filter(Boolean);
+  if (!acts.length) return <p className="tarjeta suave p-4 text-sm">Aún no hay actividades en el alcance.</p>;
+  return (
+    <div className="grid items-start gap-5 lg:grid-cols-2">
+      {COLUMNAS.map((c) => {
+        const grupos = agrupar(acts.filter((a) => a.reglamento.startsWith(c.prefijo)))[0]?.grupos ?? [];
+        const total = grupos.reduce((n, [, xs]) => n + xs.length, 0);
+        return (
+          <section key={c.prefijo} className="tarjeta overflow-hidden">
+            <header className="flex items-center gap-3 border-b p-4" style={{ borderColor: "var(--borde)" }}>
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" style={{ background: c.color }}>
+                <Icono nombre={c.icono} color="#FFFFFF" tamano={22} grosor={2.1} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="font-titulo text-xl font-extrabold">{c.titulo}</div>
+                <div className="suave text-xs">{c.acto}</div>
+              </div>
+              <span className="whitespace-nowrap rounded-full border px-3 py-1 text-sm font-bold" style={{ borderColor: "var(--borde)" }}>{total} en el alcance</span>
+            </header>
+            <div className="px-4 pb-4">
+              {!grupos.length && <p className="suave pt-4 text-sm">Sin actividades de este reglamento.</p>}
+              {grupos.map(([grupo, xs]) => (
+                <div key={grupo} className="pt-4">
+                  <div className="suave pb-1.5 text-[11px] font-bold uppercase tracking-[0.1em]">{grupo}</div>
+                  {xs.map((a) => {
                     const l = o.alcance.find((x) => x.actividad === a.codigo)!;
+                    const [color, fondo] = COLOR_ESTADO[l.estado];
+                    const abiertaAqui = abierta === a.codigo;
+                    const autorizadas = base.designaciones.filter((d) => d.organismoId === o.id && d.actividades.includes(a.codigo) && vigenteEn(d, hoyISO()));
+                    const nombres = (roles: string[]) => autorizadas.filter((d) => roles.includes(d.rol))
+                      .map((d) => nombrePersona(base.personas.find((p) => p.id === d.personaId))).join(", ") || "Nadie todavía";
                     return (
-                      <li key={a.codigo} className="flex flex-wrap items-start justify-between gap-2 py-2 text-sm" style={{ borderColor: "var(--borde)" }}>
-                        <details className="min-w-0 flex-1">
-                          <summary className="cursor-pointer">{a.nombre}</summary>
-                          <ul className="suave mt-1 list-disc pl-5 text-xs">{a.referencias.map((r) => <li key={r}>{r}</li>)}</ul>
-                        </details>
-                        <div className="text-right">
-                          <Selector value={l.estado} onChange={(e) => cambiarEstado(a.codigo, e.target.value as EstadoLinea)} className="w-auto py-1 text-xs">
-                            {Object.entries(ESTADOS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                          </Selector>
-                          <div className="suave text-xs">desde {l.fechaEstado}{l.observacion && ` · ${l.observacion}`}</div>
-                          {!base.designaciones.some((d) => d.organismoId === o.id && d.actividades.includes(a.codigo)) && (
-                            <button className="text-xs text-red-700 underline" onClick={() => {
-                              const m = pedirMotivo(a.nombre); if (m) quitarAlcancePorError(o.id, a.codigo, m);
-                            }}>Quitar (registrada por error)</button>
-                          )}
-                        </div>
-                      </li>
+                      <div key={a.codigo}>
+                        <button className="flex w-full items-start gap-3 border-t py-3 text-left" style={{ borderColor: "var(--borde)" }}
+                          aria-expanded={abiertaAqui} onClick={() => setAbierta(abiertaAqui ? null : a.codigo)}>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-base font-bold uppercase leading-snug">{nombreCorto(a.codigo)}</span>
+                            <span className="suave mt-1 block text-justify text-xs" style={{ hyphens: "auto" }}>{a.nombre}</span>
+                          </span>
+                          <span className="shrink-0 text-right">
+                            <span className="inline-block rounded-full px-2.5 py-1 text-xs font-bold" style={{ color, background: fondo }}>{ESTADOS[l.estado]}</span>
+                            <span className="suave mt-1 block text-[11px]">desde {l.fechaEstado}</span>
+                          </span>
+                        </button>
+                        {abiertaAqui && (
+                          <div className="mb-3 space-y-3 rounded-xl border p-3" style={{ borderColor: "var(--borde)", background: "var(--fondo)" }}>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <Dato icono="gestion" titulo="Procedimientos de inspección" texto="Se construirá con el control documental (fase 4)." />
+                              <Dato icono="cotizaciones" titulo="Formatos de inspección" texto="Se construirá con la inspección en sitio (fase 2)." />
+                              <Dato icono="dictamenes" titulo="Directores técnicos autorizados" texto={nombres(["director_tecnico", "director_tecnico_suplente"])} />
+                              <Dato icono="personal" titulo="Inspectores autorizados" texto={nombres(["inspector"])} />
+                              <Dato icono="equipos" titulo="Equipos de medición" texto="Se construirá con equipos y calibraciones (fase 2)." />
+                              <Dato icono="ordenes" titulo="Referencias del reglamento" texto={`${a.referencias.length} referencias del anexo de ONAC`} />
+                            </div>
+                            <ul className="suave list-disc pl-5 text-xs">{a.referencias.map((r) => <li key={r}>{r}</li>)}</ul>
+                            {l.observacion && <p className="text-xs"><b>Observación del estado:</b> {l.observacion}</p>}
+                            <div className="flex flex-wrap items-center gap-4 border-t pt-3 text-sm" style={{ borderColor: "var(--borde)" }}>
+                              <label className="flex items-center gap-2">
+                                <span className="suave text-xs">Cambiar estado</span>
+                                <Selector value={l.estado} onChange={(e) => cambiarEstado(a.codigo, e.target.value as EstadoLinea)} className="w-auto py-1 text-xs">
+                                  {Object.entries(ESTADOS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                                </Selector>
+                              </label>
+                              {!base.designaciones.some((d) => d.organismoId === o.id && d.actividades.includes(a.codigo)) && (
+                                <button className="text-xs text-red-700 underline" onClick={() => {
+                                  const m = pedirMotivo(a.nombre); if (m) quitarAlcancePorError(o.id, a.codigo, m);
+                                }}>Quitar (registrada por error)</button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
-                </ul>
-              </div>
-            ))}
-          </div>
-        ))}
-      </section>
+                </div>
+              ))}
+            </div>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+function Dato({ icono, titulo, texto }: { icono: NombreIcono; titulo: string; texto: string }) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border" style={{ borderColor: "var(--borde)" }}>
+        <Icono nombre={icono} tamano={16} color="var(--marca)" />
+      </span>
+      <span>
+        <span className="block text-[13px] font-bold">{titulo}</span>
+        <span className="suave block text-xs">{texto}</span>
+      </span>
     </div>
   );
 }

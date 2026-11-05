@@ -155,6 +155,25 @@ que vencen en minutos; la base de datos solo los entrega si el rol lo permite. N
   antes de designarse carga logos, póliza y declaración de independencia (después solo la
   gerencia o el SG modifican el organismo); luego designa a la gerente.
 
+## Documentos del organismo (con historial)
+
+- Certificado de acreditación ONAC (con su anexo), póliza de responsabilidad civil y
+  declaración de independencia del organismo tipo A (Anexo A.1), en PDF
+  (`0008_documentos_organismo.sql`).
+- Cada carga es una versión nueva; la anterior queda **reemplazada** y se conserva con su PDF,
+  quién y cuándo (no se modifica ni se borra). La versión vigente actualiza los datos del
+  organismo (fechas de acreditación, renovación, última actualización, póliza, declaración).
+- Los cargan la gerencia y el responsable del SG. El certificado lo ve todo el personal; la póliza
+  y la declaración, la gerencia, el SG y la dirección técnica.
+
+## Alcance acreditado (diseño aprobado)
+
+- Dos columnas, RETIE y RETILAP; títulos de cada actividad en mayúsculas y nombre completo
+  justificado debajo. Al tocar una actividad se abre su detalle: procedimientos y formatos de
+  inspección, directores técnicos e inspectores autorizados, equipos de medición y referencias
+  del reglamento; ahí también "Cambiar estado" y "Quitar (registrada por error)".
+- "Agregar actividad" solo muestra las que aún no están en el alcance.
+
 ## Correcciones
 
 - Nada se borra (17020 §8.4). Excepción: **"Quitar (registrada por error)"** para una actividad

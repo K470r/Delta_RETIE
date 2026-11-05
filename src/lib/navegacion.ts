@@ -43,7 +43,7 @@ export const GRUPOS: { titulo: string; secciones: Seccion[] }[] = [
   { titulo: "Sistema 17020", secciones: [
     { id: "imparcialidad", nombre: "Imparcialidad y confidencialidad", icono: "imparcialidad", numeral: "§4", roles: TODOS,
       pendiente: "Análisis de riesgos a la imparcialidad, declaraciones del personal y conflictos de interés. Hoy las declaraciones se registran al designar a cada persona." },
-    { id: "organismo", nombre: "Organismo y alcance acreditado", icono: "organismo", numeral: "§5", roles: ["gerencia", "admin"], pestanas: ["alcance", "gerencia"] },
+    { id: "organismo", nombre: "Organismo y alcance acreditado", icono: "organismo", numeral: "§5", roles: ["gerencia", "admin"], pestanas: ["alcance", "documentos", "gerencia"] },
     { id: "personal", nombre: "Personal y competencia", icono: "personal", numeral: "§6.1", roles: TODOS, pestanas: ["dt", "inspectores", "onac"], rutas: ["/personas"] },
     { id: "equipos", nombre: "Equipos y calibraciones", icono: "equipos", numeral: "§6.2", roles: ["inspector", "gerencia", "admin"],
       pendiente: "Inventario de equipos de medición, calibraciones y verificaciones intermedias." },
@@ -58,7 +58,7 @@ export const SECCIONES = GRUPOS.flatMap((g) => g.secciones.map((s) => ({ ...s, g
 
 /** Nombres de las pestañas de la página del organismo. */
 export const NOMBRE_PESTANA: Record<string, string> = {
-  resumen: "Cumplimiento", alcance: "Datos, logos y alcance", gerencia: "Gerencia", sg: "Responsable del SG",
+  resumen: "Cumplimiento", alcance: "Datos, logos y alcance", documentos: "Documentos", gerencia: "Gerencia", sg: "Responsable del SG",
   dt: "Directores técnicos", inspectores: "Inspectores", onac: "Personal (formato ONAC)",
 };
 
