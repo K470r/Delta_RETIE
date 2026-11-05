@@ -11,7 +11,7 @@ import { Icono } from "@/components/Icono";
 import { GRUPOS, rolesMenu, rutaSeccion, seccionActual, visible, type Seccion } from "@/lib/navegacion";
 import { mostrarError, useBase, useErrorGlobal, usePersonaActual } from "@/lib/organismo/almacen";
 import { useOrganismoActual } from "@/lib/organismo/actual";
-import { urlLogo } from "@/lib/organismo/logos";
+import { useEnlace } from "@/lib/archivos";
 import { NOMBRE_PRODUCTO } from "@/lib/producto";
 import { cerrarSesion, useSesion } from "@/lib/sesion";
 
@@ -42,6 +42,7 @@ function Marco({ children }: { children: ReactNode }) {
   const organismo = useOrganismoActual(base, idEnRuta);
   const yo = usePersonaActual(base);
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const logo = useEnlace("logos", organismo?.logoRuta);
   useEffect(() => setMenuAbierto(false), [ruta, pestana]);
 
   const roles = rolesMenu({
@@ -58,9 +59,9 @@ function Marco({ children }: { children: ReactNode }) {
   const panel = (
     <nav aria-label="Menú principal" className="flex h-full flex-col overflow-y-auto">
       <Link href={organismo ? rutaSeccion(GRUPOS[0].secciones[0], organismo.id) : "/organismos"} className="flex items-center gap-3 px-5 pb-4 pt-5">
-        {organismo?.logoRuta ? (
+        {logo ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={urlLogo(organismo.logoRuta)} alt="" className="h-11 w-11 shrink-0 rounded-lg bg-white object-contain p-1" />
+          <img src={logo} alt="" className="h-11 w-11 shrink-0 rounded-lg bg-white object-contain p-1" />
         ) : (
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg" style={{ background: "var(--ambar)" }}>
             <Icono nombre="rayo" color="var(--panel)" grosor={2.2} tamano={22} />

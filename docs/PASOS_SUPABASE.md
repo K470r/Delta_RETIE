@@ -27,6 +27,18 @@ Igual que el paso 1, con el archivo `supabase/migrations/0004_logos.sql`. Abajo 
 organismo y el símbolo de acreditado ONAC (máximo 2 MB, PNG, JPG o WEBP). Solo la gerencia
 o el responsable del SG pueden cargarlos.
 
+## Paso 1c — Ejecutar la migración 0005 (acceso por rol y archivos privados)
+
+Igual que el paso 1, con `supabase/migrations/0005_acceso_por_rol.sql`. Abajo debe aparecer
+`Migración 0005 aplicada: acceso por rol y archivos privados`.
+
+## Paso 1d — Que nadie pueda crearse una cuenta por su cuenta
+
+**Authentication → Sign In / Providers** (en algunas versiones **Providers** o **Settings**):
+desactive **Allow new users to sign up** y guarde. Los usuarios se crean en
+**Authentication → Users → Add user → Create new user** (correo, contraseña provisional y
+**Auto Confirm User** marcado).
+
 ## Paso 2 (opcional, más adelante) — Que el correo traiga también un código
 
 Supabase solo deja editar las plantillas de correo si se configura un servidor de correo

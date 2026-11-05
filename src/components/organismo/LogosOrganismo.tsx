@@ -7,7 +7,8 @@ import { useState } from "react";
 import { Icono } from "@/components/Icono";
 import { Errores } from "@/components/Formulario";
 import { actualizar } from "@/lib/organismo/almacen";
-import { cargarLogo, urlLogo } from "@/lib/organismo/logos";
+import { useEnlace } from "@/lib/archivos";
+import { cargarLogo } from "@/lib/organismo/logos";
 import type { Organismo } from "@/lib/organismo/tipos";
 
 export function LogosOrganismo({ o }: { o: Organismo }) {
@@ -25,8 +26,8 @@ export function LogosOrganismo({ o }: { o: Organismo }) {
     if (e) setErrores([e]);
   };
 
-  const logo = urlLogo(o.logoRuta);
-  const simbolo = urlLogo(o.simboloOnacRuta);
+  const logo = useEnlace("logos", o.logoRuta);
+  const simbolo = useEnlace("logos", o.simboloOnacRuta);
 
   return (
     <section className="space-y-3">

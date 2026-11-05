@@ -48,7 +48,7 @@ function Formulario() {
     setOcupado(true); setErrores([]);
     const { error } = await supabase().auth.signInWithOtp({
       email: c,
-      options: { emailRedirectTo: `${window.location.origin}/ingresar?volver=${encodeURIComponent(volver)}`, shouldCreateUser: true },
+      options: { emailRedirectTo: `${window.location.origin}/ingresar?volver=${encodeURIComponent(volver)}`, shouldCreateUser: false },
     });
     setOcupado(false);
     if (error) return setErrores([mensajeAuth(error.message)]);

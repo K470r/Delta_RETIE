@@ -98,6 +98,7 @@ export async function cargarBase(): Promise<BaseOrganismos> {
         observacion: u(c.seguimiento_observacion as string),
       } : undefined,
       anulado: !!c.anulado,
+      soporteRuta: u(c.soporte_ruta as string),
     })),
     formacion: forms.filter((f) => f.persona_id === p.id).map((f): Formacion => ({
       id: f.id as string,
@@ -109,6 +110,7 @@ export async function cargarBase(): Promise<BaseOrganismos> {
       areasIluminacion: (f.areas_iluminacion ?? []) as string[],
       verificada: !!f.verificada,
       verificadaPor: u(f.verificada_por as string),
+      soporteRuta: u(f.soporte_ruta as string),
     })),
     experiencias: exps.filter((e) => e.persona_id === p.id).map((e): Experiencia => ({
       id: e.id as string,
@@ -122,6 +124,7 @@ export async function cargarBase(): Promise<BaseOrganismos> {
       descripcion: u(e.descripcion as string),
       verificada: !!e.verificada,
       verificadaPor: u(e.verificada_por as string),
+      soporteRuta: u(e.soporte_ruta as string),
     })),
   }));
 
@@ -173,17 +176,17 @@ const filaCertificado = (persona: string, c: CertificadoCompetencia): Fila => ({
   id: c.id, persona_id: persona, reglamento_id: c.reglamento, numero: c.numero, certificador: c.certificador,
   fecha_emision: c.fechaEmision, fecha_vencimiento: c.fechaVencimiento,
   seguimiento_fecha: n(c.seguimiento?.fecha), seguimiento_resultado: n(c.seguimiento?.resultado),
-  seguimiento_observacion: n(c.seguimiento?.observacion), anulado: c.anulado,
+  seguimiento_observacion: n(c.seguimiento?.observacion), anulado: c.anulado, soporte_ruta: n(c.soporteRuta),
 });
 const filaFormacion = (persona: string, f: Formacion): Fila => ({
   id: f.id, persona_id: persona, tipo: f.tipo, titulo: f.titulo, institucion: f.institucion, fecha: f.fecha,
   en_iluminacion: f.enIluminacion, areas_iluminacion: f.areasIluminacion, verificada: f.verificada,
-  verificada_por: f.verificada ? n(f.verificadaPor) : null,
+  verificada_por: f.verificada ? n(f.verificadaPor) : null, soporte_ruta: n(f.soporteRuta),
 });
 const filaExperiencia = (persona: string, e: Experiencia): Fila => ({
   id: e.id, persona_id: persona, empresa: e.empresa, cargo: e.cargo, desde: e.desde, hasta: n(e.hasta),
   reglamento_id: e.reglamento, categorias: e.categorias, tipos: e.tipos, descripcion: n(e.descripcion),
-  verificada: e.verificada, verificada_por: e.verificada ? n(e.verificadaPor) : null,
+  verificada: e.verificada, verificada_por: e.verificada ? n(e.verificadaPor) : null, soporte_ruta: n(e.soporteRuta),
 });
 const filaVinculacion = (v: Vinculacion): Fila => ({
   id: v.id, organismo_id: v.organismoId, persona_id: v.personaId, sede_id: n(v.sedeId), tipo: v.tipo, cargo: v.cargo, desde: v.desde, hasta: n(v.hasta),
