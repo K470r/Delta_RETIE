@@ -148,16 +148,20 @@ function Arranque({ base, o, irA }: { base: BaseOrganismos; o: Organismo; irA: (
         solo usted puede administrarlo y <b>solo puede vincularse y designarse a sí mismo</b>. Después podrá designar a las demás personas.
       </p>
       <ol className="list-decimal space-y-2 pl-5 text-sm">
+        <li>
+          <b>Antes de designarse</b>, complete los datos del organismo: logo, símbolo ONAC, póliza RC y declaración de independencia
+          (en <b>Datos, logos y alcance</b>). Después de designarse, esos datos solo los modifican la gerencia o el responsable del SG.
+        </li>
         <li className={yo ? "suave line-through" : ""}>
           Regístrese como persona con su cédula y su correo de ingreso ({sesion.correo}).
           {yo && <span className="no-underline"> ✓ {nombrePersona(yo)}</span>}
         </li>
         <li>
-          Desígnese en la <b>gerencia</b> (por ejemplo, gerente) o como <b>responsable del sistema de gestión</b>. La vinculación y las
-          declaraciones se registran en el mismo formulario.
+          Desígnese en su rol real: director técnico, gerencia o responsable del SG. La vinculación y las declaraciones se registran
+          en el mismo formulario.
           <span className="suave block text-xs">
-            La designación como director técnico exige actividades autorizadas, y para eso su experiencia debe estar verificada por
-            <b> otra persona</b> del organismo (no se permite la autoverificación). Hágala después, cuando haya designado a esa persona.
+            Como director técnico puede dejar las actividades <b>pendientes</b>: se autorizan después, cuando <b>otra persona</b> del
+            organismo haya verificado sus soportes (no se permite la autoverificación).
           </span>
         </li>
       </ol>
@@ -167,7 +171,9 @@ function Arranque({ base, o, irA }: { base: BaseOrganismos; o: Organismo; irA: (
         </div>
       ) : (
         <div className="flex flex-wrap gap-2">
-          <Boton onClick={() => irA("gerencia")}>Designarme en la gerencia</Boton>
+          <Boton onClick={() => irA("alcance")}>Completar datos y logos</Boton>
+          <Boton variante="secundario" onClick={() => irA("dt")}>Designarme director técnico</Boton>
+          <Boton variante="secundario" onClick={() => irA("gerencia")}>Designarme en la gerencia</Boton>
           <Boton variante="secundario" onClick={() => irA("sg")}>Designarme responsable del SG</Boton>
         </div>
       )}

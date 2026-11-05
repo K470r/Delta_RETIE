@@ -11,6 +11,13 @@ organismo de inspección). Antes de cambiar algo de esta lista, se propone y se 
 - Los cambios de base de datos se entregan como archivo SQL en `supabase/migrations/` para
   pegar en el SQL Editor de Supabase. Nunca se piden contraseñas ni claves secretas en el chat.
 
+## Etapa actual: prueba
+
+- Estamos iniciando: se va a repetir y ajustar mucho. **Los datos que se cargan ahora son de
+  prueba**, aunque se tomen de los reales.
+- **Antes de la operación real se borra todo** y el sistema arranca limpio (pendiente: un
+  script de reinicio total, probado antes de usarlo).
+
 ## Producto
 
 - **"Delta RETIE" es el nombre código.** El nombre comercial se definirá después; el nombre
@@ -123,6 +130,22 @@ que vencen en minutos; la base de datos solo los entrega si el rol lo permite. N
   personal vinculado al organismo.
 - Hecho en `0005_acceso_por_rol.sql`: hoja de vida y soportes, logos privados. Las demás filas
   se aplican al construir cada módulo.
+
+## Competencia del personal (cómo trabaja GC&I)
+
+- El usuario es **director técnico e inspector**. Cuando él inspecciona, la revisión técnica la
+  hace el **director técnico suplente** (la base de datos impide que el revisor sea el inspector, §7.4).
+- **Evalúan y califican a los inspectores** el director técnico y el suplente; pueden **delegar**
+  en un inspector experimentado que trabaja bajo su tutela (supervisión y seguimientos).
+  *Pendiente:* la delegación en la aplicación (hoy solo verifican soportes la gerencia, el SG y la
+  dirección técnica).
+- **La gerente revisa los soportes y autoriza las actividades** del inspector.
+- Se puede designar director técnico, suplente o inspector **con las actividades pendientes**; se
+  autorizan después con "+ Autorizar actividades", cuando otra persona haya verificado los soportes.
+  Mientras tanto la persona no puede ejercer.
+- Arranque de GC&I: el director técnico (el usuario) se designa con las actividades pendientes;
+  antes de designarse carga logos, póliza y declaración de independencia (después solo la
+  gerencia o el SG modifican el organismo); luego designa a la gerente.
 
 ## Datos personales (Ley 1581 de 2012)
 
