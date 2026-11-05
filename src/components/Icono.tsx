@@ -22,6 +22,12 @@ export const ICONOS = {
   cerrar: "M6 6l12 12M18 6 6 18",
   salir: "M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 17l5-5-5-5M15 12H3",
   usuario: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0",
+  mas: "M12 5v14M5 12h14",
+  ojo: "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z",
+  documento: "M6 2h9l5 5v15H6zM14 2v6h6M9 13h6M9 17h6",
+  firma: "M3 17c3-1 4-6 6-6s0 6 2 6 3-4 5-4 2 3 5 3M3 21h18",
+  imprimir: "M6 9V3h12v6M6 18H4v-7h16v7h-2M8 14h8v7H8z",
+  calendario: "M4 5h16v16H4zM4 10h16M8 3v4M16 3v4M9 15l2 2 4-4",
   construccion: "M2 20h20M6 20V10l6-6 6 6v10M10 20v-5h4v5",
 } as const;
 

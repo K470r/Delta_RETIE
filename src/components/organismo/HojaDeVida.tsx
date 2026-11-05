@@ -6,14 +6,14 @@
 import { useState } from "react";
 import { actualizar, nuevoId, useBase, usePersonaActual } from "@/lib/organismo/almacen";
 import {
-  aniosExperiencia, estadoCertificado, evaluarCompetencia, fechaSeguimiento, sumarAnios,
+  aniosExperiencia, estadoCertificado, estadoSeguimiento, evaluarCompetencia, fechaSeguimiento, sumarAnios,
 } from "@/lib/organismo/competencia";
 import { hoyISO, nombrePersona } from "@/lib/organismo/reglas";
 import type { CertificadoCompetencia, Experiencia, Formacion, Persona, RolTecnico } from "@/lib/organismo/tipos";
 import {
   AREAS_ILUMINACION, NOMBRE_TIPO_EXPERIENCIA, REQUISITOS, etiquetaCategoria, requisitosDe, type TipoExperiencia,
 } from "@/lib/requisitos";
-import { Boton, Campo, Entrada, Errores, Grupo, Selector } from "../Formulario";
+import { Boton, Campo, Entrada, Errores, Grupo, Selector, claseBoton } from "../Formulario";
 import { Icono } from "../Icono";
 import { abrirArchivo, cargarArchivo, extension, REGLAS_SOPORTE } from "@/lib/archivos";
 import { aceptarMatricula, mostrarError } from "@/lib/organismo/almacen";
@@ -48,15 +48,15 @@ function Soporte({ persona, lista, id, ruta }: { persona: Persona; lista: Lista;
     setOcupado(false);
   };
   return (
-    <span className="flex flex-wrap items-center gap-3 text-xs">
+    <span className="flex flex-wrap items-center gap-2">
       {ruta && (
-        <button type="button" className="flex items-center gap-1 font-semibold marca underline"
+        <button type="button" className={claseBoton("contorno", "pequeno")}
           onClick={async () => { const e = await abrirArchivo("soportes", ruta); if (e) mostrarError(e); }}>
-          <Icono nombre="gestion" tamano={14} /> Ver soporte
+          <Icono nombre="ojo" tamano={15} /> Ver soporte
         </button>
       )}
-      <label className="flex cursor-pointer items-center gap-1 suave underline">
-        <Icono nombre="subir" tamano={14} /> {ocupado ? "Cargando…" : ruta ? "Cambiar soporte" : "Cargar soporte (PDF)"}
+      <label className={`cursor-pointer ${claseBoton(ruta ? "contorno" : "primario", "pequeno")}`}>
+        <Icono nombre="subir" tamano={15} /> {ocupado ? "Cargando…" : ruta ? "Cambiar soporte" : "Cargar soporte (PDF)"}
         <input type="file" accept="application/pdf,image/png,image/jpeg" className="sr-only" disabled={ocupado}
           onChange={(e) => { cargar(e.target.files?.[0]); e.target.value = ""; }} />
       </label>
@@ -108,7 +108,7 @@ function Matricula({ persona }: { persona: Persona }) {
         <span>{datos || "—"}</span>
         <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ color, background: fondo }}>{texto}</span>
         {puedeAceptar && (
-          <button className="text-xs font-semibold underline marca" onClick={() => {
+          <button className={claseBoton("contorno", "pequeno")} onClick={() => {
             const m = prompt(`Aceptar la matrícula de ${persona.nombres} ${persona.apellidos} expedida por "${persona.matriculaEntidad}".\n\nQueda registrado con su nombre y la fecha.\nMotivo (obligatorio; por ejemplo, la ley que faculta a ese consejo):`);
             if (m === null) return;
             if (!m.trim()) return alert("Debe escribir el motivo.");
@@ -139,7 +139,6 @@ function Certificados({ persona }: { persona: Persona }) {
       {persona.certificados.length === 0 && <p className="suave text-sm">Sin certificados registrados.</p>}
       {persona.certificados.map((c) => {
         const e = estadoCertificado(c, hoy);
-        const seg = fechaSeguimiento(c);
         return (
           <div key={c.id} className={`rounded-lg border p-3 text-sm ${c.anulado ? "opacity-50" : ""}`} style={{ borderColor: "var(--borde)" }}>
             <div className="flex flex-wrap items-start justify-between gap-2">
@@ -147,34 +146,74 @@ function Certificados({ persona }: { persona: Persona }) {
                 <b>N.° {c.numero}</b> · {c.certificador} · {NOMBRE_REG(c.reglamento)}
                 <div className="text-xs">Categorías: <b>{c.categorias.map((k) => etiquetaCategoria(c.reglamento, k)).join(", ")}</b></div>
                 <div className="suave text-xs">Emitido {c.fechaEmision} · vence {c.fechaVencimiento}</div>
-                <div className="text-xs">
-                  Seguimiento mes 30 (límite {seg}):{" "}
-                  {c.seguimiento
-                    ? <b className={c.seguimiento.resultado === "conforme" ? "text-emerald-600" : "text-red-600"}>{c.seguimiento.resultado} el {c.seguimiento.fecha}</b>
-                    : <span className={hoy > seg ? "font-semibold text-red-600" : "suave"}>pendiente</span>}
-                </div>
                 <div className={`text-xs font-semibold ${e.vigente ? "text-emerald-600" : "text-red-600"}`}>
                   {e.vigente ? "Vigente" : e.motivo}{e.alertas.length > 0 && <span className="text-amber-600"> · {e.alertas.join(" · ")}</span>}
                 </div>
-                <div className="mt-1"><Soporte persona={persona} lista="certificados" id={c.id} ruta={c.soporteRuta} /></div>
+                <div className="mt-2"><Soporte persona={persona} lista="certificados" id={c.id} ruta={c.soporteRuta} /></div>
               </div>
               {!c.anulado && (
-                <div className="flex flex-col items-end gap-1 text-xs">
-                  {!c.seguimiento && <button className="underline marca" onClick={() => setSeguimiento(c.id)}>Registrar seguimiento</button>}
-                  <button className="text-red-600 underline" onClick={() => {
-                    if (confirm(`¿Anular el certificado ${c.numero}? Quedará en el historial.`))
-                      modificarPersona(persona.id, (p) => ({ ...p, certificados: p.certificados.map((x) => (x.id === c.id ? { ...x, anulado: true } : x)) }));
-                  }}>Anular</button>
-                </div>
+                <Boton variante="discreto" onClick={() => {
+                  if (confirm(`¿Anular el certificado ${c.numero}? Quedará en el historial.`))
+                    modificarPersona(persona.id, (p) => ({ ...p, certificados: p.certificados.map((x) => (x.id === c.id ? { ...x, anulado: true } : x)) }));
+                }}>Anular</Boton>
               )}
             </div>
+            {!c.anulado && <AvisoSeguimiento cert={c} abierto={seguimiento === c.id} onRegistrar={() => setSeguimiento(c.id)} />}
             {seguimiento === c.id && <FormularioSeguimiento persona={persona} cert={c} onTerminar={() => setSeguimiento(null)} />}
           </div>
         );
       })}
       {nuevo ? <FormularioCertificado persona={persona} onTerminar={() => setNuevo(false)} />
-        : <button className="text-sm underline marca" onClick={() => setNuevo(true)}>+ Agregar certificado</button>}
+        : <Boton onClick={() => setNuevo(true)}><Icono nombre="mas" tamano={16} /> Agregar certificado</Boton>}
     </section>
+  );
+}
+
+/** Seguimiento del mes 30: aviso según lo que falta, con el botón para registrarlo (0011). */
+function AvisoSeguimiento({ cert, abierto, onRegistrar }: { cert: CertificadoCompetencia; abierto: boolean; onRegistrar: () => void }) {
+  const { nivel, limite, dias, periodo } = estadoSeguimiento(cert, hoyISO());
+  const boton = (estilo?: React.CSSProperties) => !abierto && (
+    <Boton onClick={onRegistrar} style={estilo} className={estilo ? "!shadow-none" : ""}><Icono nombre="calendario" tamano={16} /> Registrar seguimiento</Boton>
+  );
+  if (nivel === "hecho") {
+    return (
+      <div className="mt-2 space-y-1 text-xs">
+        <div>Seguimiento del mes 30: <b className={cert.seguimiento!.resultado === "conforme" ? "text-emerald-600" : "text-red-600"}>
+          {cert.seguimiento!.resultado === "conforme" ? "conforme" : "no conforme"} el {cert.seguimiento!.fecha}</b> (límite {limite})</div>
+        {periodo && (
+          <div className="alerta-naranja rounded-lg px-3 py-2 font-semibold">
+            Registrado tarde: del {periodo.desde} al {periodo.hasta} no pudo ejercer con este certificado. Queda así en el registro.
+          </div>
+        )}
+      </div>
+    );
+  }
+  if (nivel === "pendiente") {
+    return (
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm">
+        <span>Seguimiento del mes 30: a más tardar el <b>{limite}</b></span>
+        {!abierto && <Boton variante="contorno" tamano="pequeno" onClick={onRegistrar}><Icono nombre="calendario" tamano={15} /> Registrar seguimiento</Boton>}
+      </div>
+    );
+  }
+  const vencido = nivel === "vencido";
+  return (
+    <div className={`mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl px-4 py-3 ${vencido ? "alerta-roja" : "alerta-naranja"}`}>
+      <div className="flex items-start gap-3">
+        <Icono nombre="alerta" tamano={26} />
+        <div>
+          <div className="text-base font-extrabold">
+            {vencido ? `Seguimiento del mes 30 vencido desde el ${periodo?.desde}` : `Faltan ${dias} ${dias === 1 ? "día" : "días"} para el seguimiento del mes 30`}
+          </div>
+          <div className="text-sm">
+            {vencido
+              ? "NO puede ejercer las actividades de este certificado hasta registrarlo. Puede registrarlo ahora, pero el periodo sin seguimiento quedará como no habilitado."
+              : `Fecha máxima: ${limite}. Si no lo registra a tiempo, no podrá ejercer desde el día siguiente.`}
+          </div>
+        </div>
+      </div>
+      {boton({ background: vencido ? "#d92d20" : "#e8772e" })}
+    </div>
   );
 }
 
@@ -245,20 +284,38 @@ function FormularioSeguimiento({ persona, cert, onTerminar }: { persona: Persona
   const [fecha, setFecha] = useState(hoyISO());
   const [resultado, setResultado] = useState<"conforme" | "no_conforme">("conforme");
   const [obs, setObs] = useState("");
+  const [errores, setErrores] = useState<string[]>([]);
+  const limite = fechaSeguimiento(cert);
+  const tarde = hoyISO() > limite;
+  const guardar = async () => {
+    if (!fecha || fecha > hoyISO()) return setErrores(["La fecha del seguimiento no puede ser futura"]);
+    if (fecha < cert.fechaEmision) return setErrores(["La fecha del seguimiento no puede ser anterior a la emisión"]);
+    // En Supabase la fecha de registro la pone la base de datos; en modo local, el navegador.
+    const registradoEn = new Date().toISOString();
+    const error = await modificarPersona(persona.id, (p) => ({ ...p, certificados: p.certificados.map((x) => (x.id === cert.id ? { ...x, seguimiento: { fecha, resultado, observacion: obs || undefined, registradoEn } } : x)) }), false);
+    if (error) return setErrores([error]);
+    onTerminar();
+  };
   return (
-    <div className="mt-2 grid gap-3 rounded-lg border p-3 sm:grid-cols-4" style={{ borderColor: "var(--borde)" }}>
-      <Campo etiqueta="Fecha del seguimiento"><Entrada type="date" value={fecha} max={hoyISO()} onChange={(e) => setFecha(e.target.value)} /></Campo>
-      <Campo etiqueta="Resultado">
-        <Selector value={resultado} onChange={(e) => setResultado(e.target.value as "conforme" | "no_conforme")}>
-          <option value="conforme">Conforme</option><option value="no_conforme">No conforme</option>
-        </Selector>
-      </Campo>
-      <Campo etiqueta="Observación / soporte"><Entrada value={obs} onChange={(e) => setObs(e.target.value)} /></Campo>
-      <div className="flex items-end gap-2">
-        <Boton onClick={async () => {
-          const error = await modificarPersona(persona.id, (p) => ({ ...p, certificados: p.certificados.map((x) => (x.id === cert.id ? { ...x, seguimiento: { fecha, resultado, observacion: obs || undefined } } : x)) }));
-          if (!error) onTerminar();
-        }}>Guardar</Boton>
+    <div className="mt-2 space-y-3 rounded-lg border-2 p-3" style={{ borderColor: "var(--marca)" }}>
+      {tarde && (
+        <p className="alerta-naranja rounded-lg px-3 py-2 text-sm font-semibold">
+          Se registra después de la fecha máxima ({limite}): el certificado vuelve a contar desde hoy y el periodo
+          del día siguiente al límite hasta ayer queda como no habilitado.
+        </p>
+      )}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Campo etiqueta="Fecha del seguimiento"><Entrada type="date" value={fecha} max={hoyISO()} min={cert.fechaEmision} onChange={(e) => setFecha(e.target.value)} /></Campo>
+        <Campo etiqueta="Resultado">
+          <Selector value={resultado} onChange={(e) => setResultado(e.target.value as "conforme" | "no_conforme")}>
+            <option value="conforme">Conforme</option><option value="no_conforme">No conforme</option>
+          </Selector>
+        </Campo>
+        <Campo etiqueta="Observación / soporte"><Entrada value={obs} onChange={(e) => setObs(e.target.value)} /></Campo>
+      </div>
+      <Errores errores={errores} />
+      <div className="flex gap-2">
+        <Boton onClick={guardar}>Guardar seguimiento</Boton>
         <Boton variante="secundario" onClick={onTerminar}>Cancelar</Boton>
       </div>
     </div>
@@ -300,7 +357,7 @@ function Experiencias({ persona }: { persona: Persona }) {
         </div>
       ))}
       {nueva ? <FormularioExperiencia persona={persona} onTerminar={() => setNueva(false)} />
-        : <button className="text-sm underline marca" onClick={() => setNueva(true)}>+ Agregar experiencia</button>}
+        : <Boton onClick={() => setNueva(true)}><Icono nombre="mas" tamano={16} /> Agregar experiencia</Boton>}
     </section>
   );
 }
@@ -403,7 +460,7 @@ function Formaciones({ persona }: { persona: Persona }) {
         </div>
       ))}
       {nueva ? <FormularioFormacion persona={persona} onTerminar={() => setNueva(false)} />
-        : <button className="text-sm underline marca" onClick={() => setNueva(true)}>+ Agregar formación</button>}
+        : <Boton onClick={() => setNueva(true)}><Icono nombre="mas" tamano={16} /> Agregar formación</Boton>}
     </section>
   );
 }

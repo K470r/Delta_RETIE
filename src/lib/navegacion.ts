@@ -59,7 +59,7 @@ export const SECCIONES = GRUPOS.flatMap((g) => g.secciones.map((s) => ({ ...s, g
 /** Nombres de las pestañas de la página del organismo. */
 export const NOMBRE_PESTANA: Record<string, string> = {
   resumen: "Cumplimiento", alcance: "Datos, logos y alcance", documentos: "Documentos", gerencia: "Gerencia", sg: "Responsable del SG",
-  dt: "Directores técnicos", inspectores: "Inspectores", onac: "Personal (formato ONAC)",
+  dt: "Dirección técnica", inspectores: "Inspectores", onac: "Personal (formato ONAC)",
 };
 
 /** Ruta de una sección para el organismo actual. */
@@ -102,7 +102,7 @@ export function rolesMenu(opciones: {
   const hoy = hoyISO();
   const mias = base.designaciones.filter((d) => d.organismoId === organismoId && d.personaId === personaId && vigenteEn(d, hoy));
   for (const d of mias) {
-    if (d.rol === "inspector") r.add("inspector");
+    if (d.rol === "inspector" || d.rol === "asistente_direccion_tecnica") r.add("inspector");
     if (ADMINISTRACION.includes(d.rol)) r.add("gerencia");
     if (d.rol === "director_tecnico" || d.rol === "director_tecnico_suplente") r.add("revisor");
   }

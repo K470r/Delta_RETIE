@@ -4,6 +4,7 @@
  */
 import retie from "@datos/requisitos/retie_2024.json";
 import retilap from "@datos/requisitos/retilap_2024.json";
+import { esVarianteBT } from "./catalogo";
 
 export type TipoExperiencia =
   | "diseno" | "construccion" | "operacion" | "mantenimiento" | "interventoria" | "inspeccion"
@@ -53,6 +54,11 @@ export const REQUISITOS: RequisitosReglamento[] = [retie as RequisitosReglamento
 export const requisitosDe = (reglamento: string) => REQUISITOS.find((r) => r.reglamento === reglamento);
 
 export function categoriaDeActividad(actividad: string): { req: RequisitosReglamento; cat: Categoria } | undefined {
+  // Generación hasta 1.000 V AC y 1.500 V DC: la atiende personal de uso final (categoría g), 0012.
+  if (esVarianteBT(actividad)) {
+    const req = REQUISITOS.find((r) => r.reglamento === "RETIE-2024")!;
+    return { req, cat: req.categorias.find((c) => c.codigo === "g")! };
+  }
   for (const req of REQUISITOS) {
     const cat = req.categorias.find((c) => c.actividades.includes(actividad));
     if (cat) return { req, cat };

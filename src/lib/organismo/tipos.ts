@@ -8,6 +8,7 @@ export type RolOEC =
   | "suplente_sg"
   | "director_tecnico"
   | "director_tecnico_suplente"
+  | "asistente_direccion_tecnica"
   | "inspector";
 
 export const NOMBRE_ROL: Record<RolOEC, string> = {
@@ -18,6 +19,7 @@ export const NOMBRE_ROL: Record<RolOEC, string> = {
   suplente_sg: "Suplente del responsable del SG",
   director_tecnico: "Director técnico",
   director_tecnico_suplente: "Director técnico suplente",
+  asistente_direccion_tecnica: "Asistente de dirección técnica",
   inspector: "Inspector",
 };
 
@@ -77,7 +79,12 @@ export type CertificadoCompetencia = {
   fechaEmision: string;
   fechaVencimiento: string;    // por defecto emisión + 5 años
   /** Seguimiento obligatorio al mes 30 (RETIE §4.4.2.6 / RETILAP §4.5.2.6). */
-  seguimiento?: { fecha: string; resultado: "conforme" | "no_conforme"; observacion?: string };
+  seguimiento?: {
+    fecha: string; resultado: "conforme" | "no_conforme"; observacion?: string;
+    /** Cuándo se registró en la plataforma (lo pone la base de datos, 0011). Si fue después
+     *  de la fecha límite, el certificado vuelve a contar solo desde ese día. */
+    registradoEn?: string;
+  };
   anulado: boolean;
   /** Archivo de soporte (PDF o imagen) en la carpeta privada de la persona. */
   soporteRuta?: string;
@@ -204,6 +211,35 @@ export type DocumentoOrganismo = {
   reemplazadoEn?: string;
 };
 
+/** Documentos de designación y autorización del personal, con firma (0013). */
+export type TipoDocumentoPersonal =
+  | "designacion_gerente" | "designacion_responsable_sg" | "autorizacion_director_tecnico"
+  | "autorizacion_director_tecnico_suplente" | "autorizacion_inspector" | "designacion_asistente_direccion_tecnica";
+export type CalidadFirma = "designado" | "gerente" | "director_tecnico" | "evaluador";
+export type FirmaDocumento = {
+  enCalidad: CalidadFirma; personaId: string; firmadoEn: string; correo?: string;
+  autenticadoEn?: string; agente?: string; ip?: string; huella: string;
+};
+export type DocumentoPersonal = {
+  id: string;
+  organismoId: string;
+  designacionId: string;
+  tipo: TipoDocumentoPersonal;
+  titulo: string;
+  /** Texto exacto que se firma. */
+  contenido: string;
+  /** SHA-256 del contenido (la calcula la base de datos). */
+  huella: string;
+  actividades: string[];
+  evaluadorId?: string;
+  creadoEn: string;
+  reemplazadoEn?: string;
+  firmadoAManoRuta?: string;
+  firmadoAManoPor?: string;
+  firmadoAManoEn?: string;
+  firmas: FirmaDocumento[];
+};
+
 export type BaseOrganismos = {
   organismos: Organismo[];
   personas: Persona[];
@@ -213,6 +249,8 @@ export type BaseOrganismos = {
   revisionesSG: RevisionSG[];
   /** Documentos del organismo (0008). Opcional para datos guardados antes. */
   documentos?: DocumentoOrganismo[];
+  /** Documentos del personal con firma (0013). Opcional para datos guardados antes. */
+  documentosPersonal?: DocumentoPersonal[];
 };
 
 export type Plazos = { vigenciaDeclaraciones: number; revisionResponsableSG: number; alertaAnticipada: number; alertaAcreditacion: number };

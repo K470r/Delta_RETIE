@@ -5,7 +5,7 @@
  * Cada carga es una versión nueva; la anterior queda reemplazada y se conserva.
  */
 import { useState } from "react";
-import { Boton, Campo, Entrada, Errores } from "@/components/Formulario";
+import { Boton, Campo, Entrada, Errores, claseBoton } from "@/components/Formulario";
 import { Icono, type NombreIcono } from "@/components/Icono";
 import { abrirArchivo, cargarArchivo, REGLAS_DOCUMENTO } from "@/lib/archivos";
 import { actualizar, mostrarError, nuevoId } from "@/lib/organismo/almacen";
@@ -59,7 +59,7 @@ function Tarjeta({ base, o, t, versiones, puede }: {
           <h3 className="font-titulo text-base font-extrabold">{t.titulo}</h3>
           <p className="suave text-xs">{t.ayuda}</p>
         </div>
-        {puede && !cargando && <Boton variante="secundario" onClick={() => setCargando(true)}>{vigente ? "Cargar nueva versión" : "Cargar"}</Boton>}
+        {puede && !cargando && <Boton variante="contorno" onClick={() => setCargando(true)}><Icono nombre="subir" tamano={16} /> {vigente ? "Cargar nueva versión" : "Cargar"}</Boton>}
       </div>
 
       {vigente ? (
@@ -117,9 +117,9 @@ function detalle(d: DocumentoOrganismo) {
 
 function VerPdf({ ruta }: { ruta: string }) {
   return (
-    <button className="flex items-center gap-1.5 text-sm font-semibold underline marca"
+    <button className={claseBoton("contorno", "pequeno")}
       onClick={async () => { const e = await abrirArchivo("documentos", ruta); if (e) mostrarError(e); }}>
-      <Icono nombre="gestion" tamano={16} /> Ver PDF
+      <Icono nombre="ojo" tamano={16} /> Ver PDF
     </button>
   );
 }

@@ -29,6 +29,42 @@ export function fechaSeguimiento(c: Pick<CertificadoCompetencia, "fechaEmision" 
 
 export type EstadoCertificado = { vigente: boolean; motivo?: string; alertas: string[] };
 
+/** Fecha (en Colombia) de un instante ISO. */
+export const fechaColombia = (instante: string) => new Date(instante).toLocaleDateString("en-CA", { timeZone: "America/Bogota" });
+const sumarDias = (fecha: string, n: number) => {
+  const d = new Date(fecha + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + n);
+  return iso(d);
+};
+
+/**
+ * Desde cuándo vuelve a contar el certificado después del seguimiento: la fecha del seguimiento
+ * o la de su registro en la plataforma, la que sea posterior (0011).
+ */
+export function seguimientoEfectivo(c: CertificadoCompetencia): string | undefined {
+  if (!c.seguimiento) return undefined;
+  const reg = c.seguimiento.registradoEn ? fechaColombia(c.seguimiento.registradoEn) : c.seguimiento.fecha;
+  return reg > c.seguimiento.fecha ? reg : c.seguimiento.fecha;
+}
+
+/** Periodo en que no pudo ejercer con el certificado por no tener el seguimiento registrado a tiempo. */
+export function periodoSinSeguimiento(c: CertificadoCompetencia, hoy: string): { desde: string; hasta?: string } | undefined {
+  if (c.anulado || c.seguimiento?.resultado === "no_conforme") return undefined;
+  const limite = fechaSeguimiento(c);
+  if (!c.seguimiento) return hoy > limite ? { desde: sumarDias(limite, 1) } : undefined;
+  const ef = seguimientoEfectivo(c)!;
+  return ef > sumarDias(limite, 1) ? { desde: sumarDias(limite, 1), hasta: sumarDias(ef, -1) } : undefined;
+}
+
+export type NivelSeguimiento = "hecho" | "pendiente" | "proximo" | "vencido";
+/** Estado del seguimiento del mes 30 para mostrarlo en pantalla. */
+export function estadoSeguimiento(c: CertificadoCompetencia, hoy: string, anticipacion = 60) {
+  const limite = fechaSeguimiento(c);
+  const dias = diasEntre(hoy, limite);
+  const nivel: NivelSeguimiento = c.seguimiento ? "hecho" : hoy > limite ? "vencido" : dias <= anticipacion ? "proximo" : "pendiente";
+  return { nivel, limite, dias, periodo: periodoSinSeguimiento(c, hoy) };
+}
+
 export function estadoCertificado(c: CertificadoCompetencia, fecha: string, anticipacion = 60): EstadoCertificado {
   const alertas: string[] = [];
   if (c.anulado) return { vigente: false, motivo: `Certificado ${c.numero} anulado`, alertas };
@@ -37,8 +73,13 @@ export function estadoCertificado(c: CertificadoCompetencia, fecha: string, anti
   const seg = fechaSeguimiento(c);
   if (c.seguimiento?.resultado === "no_conforme")
     return { vigente: false, motivo: `Certificado ${c.numero} con seguimiento no conforme (${c.seguimiento.fecha})`, alertas };
-  if (!c.seguimiento && fecha > seg)
-    return { vigente: false, motivo: `Certificado ${c.numero}: seguimiento del mes 30 no registrado (límite ${seg})`, alertas };
+  if (fecha > seg) {
+    if (!c.seguimiento)
+      return { vigente: false, motivo: `Certificado ${c.numero}: seguimiento del mes 30 vencido desde el ${sumarDias(seg, 1)}; no puede ejercer hasta registrarlo`, alertas };
+    const ef = seguimientoEfectivo(c)!;
+    if (fecha < ef)
+      return { vigente: false, motivo: `Certificado ${c.numero}: sin habilitación del ${sumarDias(seg, 1)} al ${sumarDias(ef, -1)} (seguimiento registrado tarde)`, alertas };
+  }
   if (!c.seguimiento && diasEntre(fecha, seg) <= anticipacion)
     alertas.push(`Certificado ${c.numero}: seguimiento del mes 30 antes del ${seg}`);
   if (diasEntre(fecha, c.fechaVencimiento) <= anticipacion)

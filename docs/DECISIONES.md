@@ -211,6 +211,78 @@ que vencen en minutos; la base de datos solo los entrega si el rol lo permite. N
 - **Otra entidad** (un consejo poco común): solo cuenta si la **gerencia la acepta a mano**, con
   motivo; nadie acepta la suya; si cambian la entidad o el número, la aceptación se pierde.
 
+## Botones
+
+- **Principal** (relleno, color de la aplicación): agregar certificado, experiencia o formación,
+  autorizar actividades, registrar seguimiento, generar documento, firmar, guardar.
+- **Contorno** (borde de color, fondo claro): ver soporte, cambiar soporte, aceptar matrícula,
+  ver documento, editar.
+- **Pequeños en rojo**: anular, finalizar, quitar por error (se mantienen discretos).
+
+## Seguimiento del mes 30 (`0011_seguimiento_y_asistente.sql`)
+
+- A 60 días o menos de la fecha máxima: **franja naranja** con los días que faltan y el botón
+  grande "Registrar seguimiento". También aparece arriba de todas las páginas para la persona.
+- Vencida la fecha sin registrarlo: **franja roja**; el certificado no cuenta y la persona **no
+  puede ejercer** sus actividades.
+- Se puede registrar después, pero el certificado vuelve a contar **solo desde el día del
+  registro** (o de la fecha del seguimiento, la que sea posterior). El periodo intermedio queda
+  como **no habilitado**, para siempre. La fecha de registro la pone la base de datos.
+- El seguimiento no puede tener fecha futura ni anterior a la emisión.
+
+## Generación según la tensión (`0012_generacion_por_tension.sql`)
+
+Para generación con FNCE, AGPE y GD y generación con varias fuentes:
+
+| Instalación | Se inspecciona como | Competencia del inspector y del director técnico |
+|---|---|---|
+| Conectada a la red, más de 1.000 V AC o más de 1.500 V DC | Generación | Categoría **a** |
+| Conectada a la red, hasta 1.000 V AC y 1.500 V DC (incluidos) | Generación | Categoría **g** |
+| No conectada a la red, hasta 1.000 V AC y 1.500 V DC | Uso final (autogeneración) | Categoría **g** |
+| No conectada a la red, más de 1.000 V AC o 1.500 V DC | Generación | Categoría **a** |
+
+- Al autorizar al personal, cada una de esas actividades aparece **dos veces**: "más de
+  1.000 V AC o 1.500 V DC" (categoría a) y "hasta 1.000 V AC y 1.500 V DC" (categoría g).
+  La segunda no se acredita aparte: la cubre la misma línea del alcance.
+- En la fase 2, al registrar la inspección se pedirán la tensión AC y DC y si está conectada a la
+  red, y solo se podrá asignar personal con la competencia que corresponde.
+
+## Documentos del personal con firma (`0013_documentos_personal.sql`)
+
+| Documento | Firman |
+|---|---|
+| Designación de gerente | El gerente designado (autodesignación). Si lo designó una junta de socios, se indica en el acto y se carga el acta firmada a mano |
+| Designación de responsable del SG | El gerente (puede designarse a sí mismo) |
+| Autorización del director técnico principal | El gerente |
+| Autorización del director técnico suplente | El gerente y el director técnico principal |
+| Autorización de inspector | El gerente y el director técnico (principal o suplente) que lo evaluó |
+| Designación de asistente de dirección técnica | El gerente |
+
+- La junta directiva o de socios no es un rol del sistema: el rol es el gerente.
+- **Firma electrónica en la aplicación** (opción b): el firmante lee el documento, confirma su
+  contraseña (vale 10 minutos) y firma. Queda la fecha y hora, el usuario, el correo, el navegador,
+  la IP y la huella SHA-256 del texto (si el texto cambiara, la firma no valdría). Ley 527 de 1999
+  y Decreto 2364 de 2012 (compilado en el Decreto 1074 de 2015).
+- **Respaldo** (opción a): imprimir, firmar a mano, escanear y cargar el PDF. Lo carga la gerencia
+  o el SG y queda quién y cuándo.
+- Para firmar, el firmante debe tener su propia designación firmada (el gerente firma primero la
+  suya). Nadie firma su propia autorización como director técnico ni se evalúa a sí mismo.
+- **Sin el documento firmado, el director técnico o el inspector no puede ejercer** (no se le
+  asignan servicios) y el tablero lo marca. Si se le autorizan más actividades, se genera un
+  documento actualizado; los firmados se conservan y siguen valiendo para sus actividades.
+- Los textos son **provisionales**: se adecuarán a los formatos del organismo cuando lleguen.
+
+## Asistente de dirección técnica
+
+- Pide las evidencias de las inspecciones y revisa que estén completas antes de pasarlas al
+  director técnico (parte de lo que hará la revisión con IA, fase 3).
+- Hace seguimiento a que las inspecciones se realicen.
+- Atiende a los inspectores: formatos, procedimientos, dónde encontrar algo en el sistema.
+- Hace el control metrológico; documentos, tablas y decisiones los aprueba un director técnico.
+- Acompaña a los inspectores como personal de apoyo cuando se requiera.
+- Por ahora ve lo mismo que un inspector (su hoja de vida y su documento); sus permisos sobre
+  inspecciones, evidencias y equipos se definen con las fases 2 y 3.
+
 ## Datos personales (Ley 1581 de 2012)
 
 - El personal del organismo ya autorizó el tratamiento de sus datos.

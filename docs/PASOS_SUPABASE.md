@@ -32,6 +32,18 @@ o el responsable del SG pueden cargarlos.
 Igual que el paso 1, con `supabase/migrations/0005_acceso_por_rol.sql`. Abajo debe aparecer
 `Migración 0005 aplicada: acceso por rol y archivos privados`.
 
+## Paso 1c bis — Migraciones 0011, 0012 y 0013 (una por una, en orden)
+
+Igual que el paso 1, **cada archivo en una consulta aparte** y en este orden (la 0011 crea un rol
+que la 0013 necesita ya guardado):
+
+1. `supabase/migrations/0011_seguimiento_y_asistente.sql` → `Migración 0011 aplicada: …`
+2. `supabase/migrations/0012_generacion_por_tension.sql` → `Migración 0012 aplicada: …`
+3. `supabase/migrations/0013_documentos_personal.sql` → `Migración 0013 aplicada: …`
+
+Para firmar documentos en la aplicación, cada firmante necesita **contraseña** (la confirma al
+firmar). Quien entra solo con el enlace del correo puede ponerse una en **Mi cuenta**.
+
 ## Paso 1d — Que nadie pueda crearse una cuenta por su cuenta
 
 **Authentication → Sign In / Providers** (en algunas versiones **Providers** o **Settings**):

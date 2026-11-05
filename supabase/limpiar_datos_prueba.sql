@@ -15,16 +15,29 @@ declare
   des  uuid[];
   cer  uuid[];
   t    text;
-  tablas text[] := array['designacion_actividades','designaciones','declaraciones','revisiones_sg','vinculaciones',
+  tablas text[] := array['firmas_documento','documentos_personal','documentos_organismo','accesos_revision','designacion_actividades','designaciones','declaraciones','revisiones_sg','vinculaciones',
                          'certificado_categorias','certificados_competencia','experiencias','formacion',
                          'alcance_acreditado','sedes','organismos','personas'];
 begin
+  -- Solo las tablas que existen (según las migraciones ejecutadas).
+  tablas := array(select x from unnest(tablas) x where to_regclass('public.' || x) is not null);
   foreach t in array tablas loop
     execute format('alter table %I disable trigger user', t);
   end loop;
   des := array(select id from designaciones where organismo_id = any(orgs) or persona_id = any(pers));
   cer := array(select id from certificados_competencia where persona_id = any(pers));
 
+  if 'firmas_documento' = any(tablas) then
+    execute 'delete from firmas_documento where organismo_id = any($1) or persona_id = any($2)' using orgs, pers;
+    execute 'update documentos_personal set firmado_a_mano_por = null where firmado_a_mano_por = any($1)' using pers;
+    execute 'delete from documentos_personal where organismo_id = any($1) or designacion_id = any($2) or evaluador_id = any($3)' using orgs, des, pers;
+  end if;
+  if 'documentos_organismo' = any(tablas) then
+    execute 'delete from documentos_organismo where organismo_id = any($1)' using orgs;
+  end if;
+  if 'accesos_revision' = any(tablas) then
+    execute 'delete from accesos_revision where organismo_id = any($1)' using orgs;
+  end if;
   delete from designacion_actividades where designacion_id = any(des);
   delete from designaciones where id = any(des);
   delete from declaraciones where organismo_id = any(orgs) or persona_id = any(pers);

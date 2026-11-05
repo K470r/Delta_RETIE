@@ -12,6 +12,7 @@ import { GRUPOS, rolesMenu, rutaSeccion, seccionActual, visible, type Seccion } 
 import { mostrarError, useBase, useErrorGlobal, usePersonaActual } from "@/lib/organismo/almacen";
 import { useOrganismoActual } from "@/lib/organismo/actual";
 import { useEnlace } from "@/lib/archivos";
+import { AvisosPersonales } from "@/components/organismo/AvisosPersonales";
 import { NOMBRE_PRODUCTO } from "@/lib/producto";
 import { cerrarSesion, useSesion } from "@/lib/sesion";
 
@@ -111,7 +112,7 @@ function Marco({ children }: { children: ReactNode }) {
   return (
     <div className="lg:flex lg:h-screen">
       {/* Escritorio: panel fijo */}
-      <aside className="panel hidden w-[272px] shrink-0 lg:block">{panel}</aside>
+      <aside className="panel no-imprimir hidden w-[272px] shrink-0 lg:block">{panel}</aside>
 
       {/* Celular y tableta: menú desplegable */}
       {menuAbierto && (
@@ -122,7 +123,7 @@ function Marco({ children }: { children: ReactNode }) {
       )}
 
       <div className="min-w-0 flex-1 lg:overflow-y-auto">
-        <header className="sticky top-0 z-30 flex items-center gap-3 border-b px-4 py-3 backdrop-blur lg:px-8" style={{ borderColor: "var(--borde)", background: "color-mix(in srgb, var(--fondo) 92%, transparent)" }}>
+        <header className="no-imprimir sticky top-0 z-30 flex items-center gap-3 border-b px-4 py-3 backdrop-blur lg:px-8" style={{ borderColor: "var(--borde)", background: "color-mix(in srgb, var(--fondo) 92%, transparent)" }}>
           <button className="flex h-11 w-11 items-center justify-center rounded-xl border lg:hidden" style={{ borderColor: "var(--borde)", background: "var(--tarjeta)" }}
             aria-label="Abrir menú" onClick={() => setMenuAbierto(true)}>
             <Icono nombre="menu" />
@@ -137,6 +138,7 @@ function Marco({ children }: { children: ReactNode }) {
         </header>
         <main className="mx-auto max-w-6xl px-4 pb-28 pt-6 lg:px-8 lg:pb-12">
           <AvisoError />
+          <AvisosPersonales />
           {sesion.estado === "con_sesion" && organismo && sesion.revision.find((x) => x.organismoId === organismo.id) && (
             <p className="mb-4 flex items-center gap-2 rounded-lg border p-3 text-sm" style={{ borderColor: "#B9D9E3", background: "#E6F3F7", color: "#0B4F64" }}>
               <Icono nombre="dictamenes" tamano={18} />
@@ -152,7 +154,7 @@ function Marco({ children }: { children: ReactNode }) {
       </div>
 
       {/* Celular: menú inferior */}
-      <nav aria-label="Menú rápido" className="fixed inset-x-0 bottom-0 z-30 grid border-t px-1 pb-[max(env(safe-area-inset-bottom),8px)] pt-1 lg:hidden"
+      <nav aria-label="Menú rápido" className="no-imprimir fixed inset-x-0 bottom-0 z-30 grid border-t px-1 pb-[max(env(safe-area-inset-bottom),8px)] pt-1 lg:hidden"
         style={{ borderColor: "var(--borde)", background: "var(--tarjeta)", gridTemplateColumns: `repeat(${inferior.length + 1}, minmax(0, 1fr))` }}>
         {inferior.map((s) => {
           const activa = actual?.id === s.id;
