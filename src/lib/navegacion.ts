@@ -64,7 +64,8 @@ export const NOMBRE_PESTANA: Record<string, string> = {
 
 /** Ruta de una sección para el organismo actual. */
 export function rutaSeccion(s: Seccion, organismoId?: string): string {
-  if (s.pestanas) return organismoId ? `/organismos/${organismoId}?p=${s.pestanas[0]}` : "/organismos";
+  // Sin organismo todavía, la sección muestra cómo empezar (y se ilumina ella, no Plataforma).
+  if (s.pestanas) return organismoId ? `/organismos/${organismoId}?p=${s.pestanas[0]}` : `/seccion/${s.id}`;
   if (s.pendiente) return `/seccion/${s.id}`;   // aún en construcción (sus "rutas" solo marcan la sección activa)
   if (s.rutas) return s.rutas[0];
   return `/seccion/${s.id}`;

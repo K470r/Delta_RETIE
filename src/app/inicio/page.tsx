@@ -11,7 +11,7 @@ export default function Inicio() {
   const router = useRouter();
   useEffect(() => {
     if (!base) return;
-    router.replace(organismo ? `/organismos/${organismo.id}?p=resumen` : "/organismos");
+    router.replace(organismo ? `/organismos/${organismo.id}?p=resumen` : "/seccion/inicio");
   }, [base, organismo, router]);
   return <p className="suave">Cargando…</p>;
 }
