@@ -38,9 +38,9 @@ let b1: BaseOrganismos = { ...V, organismos: [{
 sql(V, b1, "crear organismo (sede y alcance)");
 
 const yo: Persona = { id: "22222222-0000-0000-0000-000000000001", tipoDocumento: "CC", documento: "79000001", nombres: "Director", apellidos: "Técnico",
-  correo: "DirectorTecnico.gceisas@gmail.com", matriculaNumero: "CN-1", formacion: [], experiencias: [], certificados: [], creado: "" };
+  correo: "DirectorTecnico.gceisas@gmail.com", matriculaNumero: "CN-1", matriculaEntidad: "COPNIA", formacion: [], experiencias: [], certificados: [], creado: "" };
 const insp: Persona = { id: "22222222-0000-0000-0000-000000000002", tipoDocumento: "CC", documento: "79000002", nombres: "Laura", apellidos: "Inspectora",
-  correo: "laura@example.com", matriculaNumero: "CN-2", formacion: [], experiencias: [], certificados: [], creado: "" };
+  correo: "laura@example.com", matriculaNumero: "CN-2", matriculaEntidad: "CPNIEMPA", formacion: [], experiencias: [], certificados: [], creado: "" };
 const b2 = { ...b1, personas: [yo] };
 sql(b1, b2, "registrarse como persona");
 const b3: BaseOrganismos = { ...b2,

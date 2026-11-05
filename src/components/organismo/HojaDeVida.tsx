@@ -16,7 +16,10 @@ import {
 import { Boton, Campo, Entrada, Errores, Grupo, Selector } from "../Formulario";
 import { Icono } from "../Icono";
 import { abrirArchivo, cargarArchivo, extension, REGLAS_SOPORTE } from "@/lib/archivos";
-import { mostrarError } from "@/lib/organismo/almacen";
+import { aceptarMatricula, mostrarError } from "@/lib/organismo/almacen";
+import { entidadMatricula, estadoMatricula } from "@/lib/organismo/matricula";
+import { useOrganismoActual } from "@/lib/organismo/actual";
+import { usePermisosOrganismo } from "@/lib/organismo/permisos";
 
 const modificarPersona = (id: string, f: (p: Persona) => Persona, mostrarError = true) =>
   actualizar((b) => ({ ...b, personas: b.personas.map((p) => (p.id === id ? f(p) : p)) }), { mostrarError });
@@ -72,11 +75,56 @@ const NOMBRE_REG = (r: string) => (r.startsWith("RETILAP") ? "RETILAP 2024" : "R
 export function HojaDeVida({ persona }: { persona: Persona }) {
   return (
     <div className="space-y-5">
+      <Matricula persona={persona} />
       <Certificados persona={persona} />
       <Experiencias persona={persona} />
       <Formaciones persona={persona} />
       <MatrizHabilitacion persona={persona} />
     </div>
+  );
+}
+
+// ───────────────────────────── Matrícula profesional ─────────────────────────────
+/** Matrícula de ingeniero (CPNIEMPA o COPNIA); otra entidad requiere aceptación de la gerencia (0010). */
+function Matricula({ persona }: { persona: Persona }) {
+  const base = useBase();
+  const organismo = useOrganismoActual(base);
+  const { gerencia } = usePermisosOrganismo(base, organismo?.id);
+  const { yo, nombre } = useVerificador();
+  const e = estadoMatricula(persona);
+  const datos = [persona.matriculaNumero, entidadMatricula(persona.matriculaEntidad), persona.matriculaEspecialidad].filter(Boolean).join(" · ");
+  const [texto, color, fondo] = {
+    sin_matricula: ["Sin matrícula registrada", "#B42318", "#FBE2E0"],
+    ingeniero: ["Matrícula de ingeniero", "#16795A", "#DCF2E9"],
+    aceptada: ["Otra entidad, aceptada por la gerencia", "#16795A", "#DCF2E9"],
+    conte: ["CONTE: matricula técnicos, no sirve para director técnico ni inspector", "#B42318", "#FBE2E0"],
+    por_aceptar: ["Otra entidad: requiere aceptación de la gerencia", "#8A4209", "#FBE9D8"],
+  }[e];
+  const puedeAceptar = e === "por_aceptar" && gerencia && persona.id !== yo;
+  return (
+    <section className="space-y-1">
+      <h3 className="text-sm font-semibold">Matrícula profesional</h3>
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <span>{datos || "—"}</span>
+        <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ color, background: fondo }}>{texto}</span>
+        {puedeAceptar && (
+          <button className="text-xs font-semibold underline marca" onClick={() => {
+            const m = prompt(`Aceptar la matrícula de ${persona.nombres} ${persona.apellidos} expedida por "${persona.matriculaEntidad}".\n\nQueda registrado con su nombre y la fecha.\nMotivo (obligatorio; por ejemplo, la ley que faculta a ese consejo):`);
+            if (m === null) return;
+            if (!m.trim()) return alert("Debe escribir el motivo.");
+            aceptarMatricula(persona.id, m.trim());
+          }}>Aceptar matrícula</button>
+        )}
+      </div>
+      {e === "aceptada" && (
+        <p className="suave text-xs">
+          Aceptada{persona.matriculaAceptadaPor && ` por ${nombre(persona.matriculaAceptadaPor)}`}
+          {persona.matriculaAceptadaEn && ` el ${new Date(persona.matriculaAceptadaEn).toLocaleDateString("es-CO")}`}
+          {persona.matriculaAceptadaMotivo && `: ${persona.matriculaAceptadaMotivo}`}
+        </p>
+      )}
+      {e === "por_aceptar" && !puedeAceptar && <p className="suave text-xs">La acepta la gerencia del organismo (nadie acepta la suya).</p>}
+    </section>
   );
 }
 

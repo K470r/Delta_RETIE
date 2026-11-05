@@ -201,6 +201,15 @@ que vencen en minutos; la base de datos solo los entrega si el rol lo permite. N
   el organismo, con motivo obligatorio, y queda en la bitácora (`0007_quitar_por_error.sql`).
 - Lo que sí se usó no se quita: se cambia de estado (actividad retirada) o se finaliza la designación.
 
+## Matrícula profesional (`0010_matricula_ingeniero.sql`)
+
+- Director técnico e inspector exigen matrícula de **ingeniero**: **CPNIEMPA** (Consejo Profesional
+  Nacional de Ingenierías Eléctrica, Mecánica y Profesiones Afines, Ley 51 de 1986), el más
+  frecuente, o **COPNIA** (Ley 842 de 2003).
+- El **CONTE** matricula técnicos: no sirve para esos cargos y no se puede aceptar a mano.
+- **Otra entidad** (un consejo poco común): solo cuenta si la **gerencia la acepta a mano**, con
+  motivo; nadie acepta la suya; si cambian la entidad o el número, la aceptación se pierde.
+
 ## Datos personales (Ley 1581 de 2012)
 
 - El personal del organismo ya autorizó el tratamiento de sus datos.

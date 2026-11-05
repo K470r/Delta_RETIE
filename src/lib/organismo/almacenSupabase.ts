@@ -96,6 +96,9 @@ export async function cargarBase(): Promise<BaseOrganismos> {
     matriculaNumero: u(p.matricula_numero as string),
     matriculaEntidad: u(p.matricula_entidad as string),
     matriculaEspecialidad: u(p.matricula_especialidad as string),
+    matriculaAceptadaPor: u(p.matricula_aceptada_por as string),
+    matriculaAceptadaEn: u(p.matricula_aceptada_en as string),
+    matriculaAceptadaMotivo: u(p.matricula_aceptada_motivo as string),
     creado: p.creado as string,
     certificados: certs.filter((c) => c.persona_id === p.id).map((c): CertificadoCompetencia => ({
       id: c.id as string,

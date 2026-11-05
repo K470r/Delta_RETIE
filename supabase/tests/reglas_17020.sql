@@ -20,10 +20,10 @@ insert into alcance_acreditado (organismo_id, actividad_codigo) values (:org, 'R
 \echo '── Personas ──'
 \echo '2) cédula con puntos → debe FALLAR'
 insert into personas (documento, nombres, apellidos) values ('1.002.003', 'X', 'Y');
-insert into personas (id, documento, nombres, apellidos, matricula_numero) values
-  (:dt, '1001', 'Ana', 'Directora', 'CN-1'), (:insp, '1002', 'Luis', 'Inspector', 'CN-2'),
-  (:sg, '1003', 'Marta', 'Calidad', null), (:sg2, '1004', 'Pedro', 'Calidad', null),
-  (:ilum, '1005', 'Sara', 'Luminotecnia', 'CN-5');
+insert into personas (id, documento, nombres, apellidos, matricula_numero, matricula_entidad) values
+  (:dt, '1001', 'Ana', 'Directora', 'CN-1', 'COPNIA'), (:insp, '1002', 'Luis', 'Inspector', 'CN-2', 'CPNIEMPA'),
+  (:sg, '1003', 'Marta', 'Calidad', null, null), (:sg2, '1004', 'Pedro', 'Calidad', null, null),
+  (:ilum, '1005', 'Sara', 'Luminotecnia', 'CN-5', 'COPNIA');
 
 \echo '── Certificados ──'
 \echo '3) vigencia mayor a 5 años → debe FALLAR'
