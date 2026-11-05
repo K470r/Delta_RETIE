@@ -19,6 +19,7 @@ import {
 } from "@/lib/organismo/tipos";
 import { Boton, Campo, Entrada, Errores, Selector, claseBoton } from "../Formulario";
 import { Icono } from "../Icono";
+import { EnlaceMotivo } from "./EnlaceMotivo";
 import { SelectorActividades } from "../SelectorActividades";
 import { FormularioPersona } from "./FormularioPersona";
 import { HojaDeVida, ListaRequisitos } from "./HojaDeVida";
@@ -42,12 +43,13 @@ export function SeccionDesignaciones({ base, organismo, roles, titulo, descripci
   const historicas = todas.filter((d) => !vigentes.includes(d));
 
   const finalizar = (d: Designacion) => {
-    const motivo = prompt(`Finalizar la designación de ${nombrePersona(base.personas.find((p) => p.id === d.personaId))} como ${NOMBRE_ROL[d.rol].toLowerCase()}.\n\nMotivo (queda en el registro):`);
+    const motivo = prompt(`DESVINCULAR DEL OEC a ${nombrePersona(base.personas.find((p) => p.id === d.personaId))} como ${NOMBRE_ROL[d.rol].toLowerCase()}.\n\nDeja de tener este rol desde hoy y ya no puede ejercerlo. No se puede deshacer (habría que designarla de nuevo).\nSi solo quiere terminar de cargar documentos, haga clic en Cancelar: todo se guarda solo.\n\nMotivo (obligatorio, queda en el registro):`);
     if (motivo === null) return;
+    if (!motivo.trim()) return alert("Debe escribir el motivo.");
     actualizar((b) => ({
       ...b,
       designaciones: b.designaciones.map((x) => (x.id === d.id
-        ? { ...x, hasta: hoy, acto: [x.acto, `Finalizada ${hoy}: ${motivo || "sin motivo"}`].filter(Boolean).join(" · ") } : x)),
+        ? { ...x, hasta: hoy, acto: [x.acto, `Desvinculada del OEC ${hoy}: ${motivo.trim()}`].filter(Boolean).join(" · ") } : x)),
     }));
   };
 
@@ -113,7 +115,7 @@ function TarjetaDesignacion({ base, organismo, d, onFinalizar }: {
             Desde {d.desde}{d.hasta ? ` hasta ${d.hasta}` : ""}{d.acto ? ` · ${d.acto}` : ""}
           </div>
         </div>
-        {onFinalizar && <Boton variante="peligro" tamano="pequeno" onClick={onFinalizar}>Finalizar</Boton>}
+        {onFinalizar && <Boton variante="peligro" tamano="pequeno" onClick={onFinalizar}>DESVINCULAR DEL OEC</Boton>}
       </div>
       <div className="flex flex-wrap gap-2 text-xs">
         <Indicador ok={!!decl("imparcialidad")} texto={`Imparcialidad ${decl("imparcialidad") ?? "sin firmar"}`} />
@@ -149,7 +151,7 @@ function FilaActividad({ base, organismo, d, actividad: a, corregible }: { base:
         <span>
           {nombreAutorizacion(a)} <span className="suave text-xs">({h.categoria})</span>
           <span className={`block text-xs ${motivo ? "text-red-600" : "suave"}`}>
-            {motivo ?? (cert ? `Certificado ${cert.detalle}` : "Cumple los requisitos")}
+            {motivo ? <EnlaceMotivo personaId={p.id} texto={motivo} /> : (cert ? `Certificado ${cert.detalle}` : "Cumple los requisitos")}
             {h.alertas.length > 0 && <span className="text-amber-600"> · {h.alertas.join(" · ")}</span>}
           </span>
         </span>
@@ -205,7 +207,7 @@ function AutorizarActividades({ base, organismo, d }: { base: BaseOrganismos; or
         del reglamento como {rolTecnico(d.rol) === "inspector" ? "inspector" : "director técnico"}, con su experiencia verificada por otra persona.
       </p>
       <SelectorActividades actividades={disponibles} seleccion={acts} onCambio={setActs}
-        bloqueo={(c) => motivoNoPuedeEjercer(base, organismo, p, c, hoyISO(), rolTecnico(d.rol))} />
+        bloqueo={(c) => motivoNoPuedeEjercer(base, organismo, p, c, hoyISO(), rolTecnico(d.rol))} personaId={p.id} />
       <Errores errores={errores} />
       <div className="flex gap-2">
         <Boton onClick={guardar} disabled={guardando}>{guardando ? "Guardando…" : "Autorizar"}</Boton>
@@ -388,7 +390,7 @@ function FormularioDesignacion({ base, organismo, roles, onTerminar }: {
               </div>
               {verHoja && <div className="rounded-lg border p-3" style={{ borderColor: "var(--borde)" }}><HojaDeVida persona={persona} /></div>}
               <SelectorActividades actividades={lineas} seleccion={acts} onCambio={setActs}
-                bloqueo={(c) => motivoNoPuedeEjercer(baseTentativa, organismo, persona, c, fechaEval, rolTecnico(rol))} />
+                bloqueo={(c) => motivoNoPuedeEjercer(baseTentativa, organismo, persona, c, fechaEval, rolTecnico(rol))} personaId={persona.id} />
             </div>
           )}
 

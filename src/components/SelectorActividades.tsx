@@ -1,15 +1,18 @@
 "use client";
 import { agrupar, type Actividad } from "@/lib/catalogo";
+import { EnlaceMotivo } from "./organismo/EnlaceMotivo";
 
 /**
  * Lista de actividades agrupada por reglamento y grupo, con casillas.
  * `bloqueo(codigo)` devuelve un motivo cuando la actividad no se puede marcar.
  */
-export function SelectorActividades({ actividades, seleccion, onCambio, bloqueo }: {
+export function SelectorActividades({ actividades, seleccion, onCambio, bloqueo, personaId }: {
   actividades: Actividad[];
   seleccion: string[];
   onCambio: (s: string[]) => void;
   bloqueo?: (codigo: string) => string | null;
+  /** Si se indica, el motivo del bloqueo lleva a la hoja de vida de la persona. */
+  personaId?: string;
 }) {
   const alternar = (c: string) => onCambio(seleccion.includes(c) ? seleccion.filter((x) => x !== c) : [...seleccion, c]);
   if (!actividades.length) return <p className="suave text-sm">No hay actividades disponibles.</p>;
@@ -41,7 +44,7 @@ export function SelectorActividades({ actividades, seleccion, onCambio, bloqueo 
                           checked={seleccion.includes(a.codigo)} onChange={() => alternar(a.codigo)} />
                         <span>
                           {a.nombre}
-                          {motivo && <span className="block text-xs text-red-600">{motivo}</span>}
+                          {motivo && <EnlaceMotivo personaId={personaId} texto={motivo} className="block text-xs text-red-600" />}
                         </span>
                       </label>
                     );
