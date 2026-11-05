@@ -68,6 +68,14 @@ organismo de inspección). Antes de cambiar algo de esta lista, se propone y se 
   entrega de resultados: el informe de no conformidades y el dictamen**. En todo lo demás va
   únicamente el logo del organismo. Su uso debe seguir las reglas de ONAC para el uso del
   símbolo de acreditado.
+- **En el informe de no conformidades y en el dictamen van juntos**: símbolo ONAC a la
+  izquierda y logo del organismo a la derecha, alineados arriba, separados exactamente **el
+  diámetro de la "O" de la palabra ONAC** (en el archivo del usuario: símbolo de 759×312 px y
+  separación de 84 px, es decir, 11 % del ancho del símbolo). El símbolo va con el texto
+  "ISO/IEC 17020:2012" y el código de acreditación debajo, y se usa la versión **sin fondo
+  blanco** porque la hoja del dictamen es blanca.
+- Corrección pendiente en el archivo del usuario: el texto dice `17-0IN-032` (con cero); el
+  código del certificado es `17-OIN-032` (con la letra O).
 
 ## Prueba de concepto (por fases)
 
