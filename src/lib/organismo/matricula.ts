@@ -1,7 +1,8 @@
 /**
  * Matrícula profesional de ingeniero (0010_matricula_ingeniero.sql; la base de datos aplica la misma regla).
  * CPNIEMPA (Ley 51 de 1986) o COPNIA (Ley 842 de 2003). Otra entidad solo cuenta si la gerencia la acepta.
- * El CONTE matricula técnicos electricistas: no sirve para director técnico ni inspector.
+ * El CONTE (técnicos electricistas) y el CONALTEL (tecnólogos, Ley 1264 de 2008) no sirven para
+ * director técnico ni inspector, y no se pueden aceptar.
  */
 import type { Persona } from "./tipos";
 
@@ -18,7 +19,7 @@ export function entidadMatricula(e?: string): string | undefined {
   return e.trim();
 }
 
-export const esConte = (e?: string) => !!e && /CONTE|T[ÉE]CNICOS ELECTRICISTAS/i.test(e);
+export const esConte = (e?: string) => !!e && /CONTE|CONALTEL|T[ÉE]CNICOS ELECTRICISTAS|TECN[ÓO]LOGOS/i.test(e);
 
 export type EstadoMatricula = "sin_matricula" | "ingeniero" | "aceptada" | "conte" | "por_aceptar";
 
@@ -26,7 +27,7 @@ export function estadoMatricula(p: Persona): EstadoMatricula {
   if (!p.matriculaNumero?.trim()) return "sin_matricula";
   const e = entidadMatricula(p.matriculaEntidad);
   if (e === "CPNIEMPA" || e === "COPNIA") return "ingeniero";
-  if (p.matriculaAceptadaEn) return "aceptada";
   if (esConte(e)) return "conte";
+  if (p.matriculaAceptadaEn) return "aceptada";
   return "por_aceptar";
 }

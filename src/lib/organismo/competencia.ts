@@ -91,7 +91,7 @@ export function evaluarCompetencia(p: Persona, actividad: string, rol: RolTecnic
     const datos = `${p.matriculaNumero ?? ""} ${entidadMatricula(p.matriculaEntidad) ?? ""}${p.matriculaEspecialidad ? ` · ${p.matriculaEspecialidad}` : ""}`.trim();
     add("Matrícula profesional de ingeniero", e === "ingeniero" || e === "aceptada",
       e === "sin_matricula" ? "Sin matrícula registrada (Leyes 842 de 2003 y 51 de 1986)"
-        : e === "conte" ? `${datos}: el CONTE matricula técnicos; se requiere matrícula de ingeniero (CPNIEMPA o COPNIA)`
+        : e === "conte" ? `${datos}: consejo de técnicos o tecnólogos (CONTE, CONALTEL); se requiere matrícula de ingeniero (CPNIEMPA o COPNIA)`
         : e === "por_aceptar" ? `${datos}: otra entidad; requiere aceptación de la gerencia`
         : e === "aceptada" ? `${datos} (aceptada por la gerencia)` : datos);
   }

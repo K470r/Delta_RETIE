@@ -97,7 +97,7 @@ function Matricula({ persona }: { persona: Persona }) {
     sin_matricula: ["Sin matrícula registrada", "#B42318", "#FBE2E0"],
     ingeniero: ["Matrícula de ingeniero", "#16795A", "#DCF2E9"],
     aceptada: ["Otra entidad, aceptada por la gerencia", "#16795A", "#DCF2E9"],
-    conte: ["CONTE: matricula técnicos, no sirve para director técnico ni inspector", "#B42318", "#FBE2E0"],
+    conte: ["Consejo de técnicos o tecnólogos (CONTE, CONALTEL): no sirve para director técnico ni inspector", "#B42318", "#FBE2E0"],
     por_aceptar: ["Otra entidad: requiere aceptación de la gerencia", "#8A4209", "#FBE9D8"],
   }[e];
   const puedeAceptar = e === "por_aceptar" && gerencia && persona.id !== yo;

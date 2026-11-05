@@ -60,6 +60,8 @@ test("matrícula de ingeniero: CPNIEMPA o COPNIA; el CONTE no; otra entidad solo
   assert.equal(ok(persona({ ...base, matriculaEntidad: "copnia" }), UF), true, "COPNIA en minúsculas");
   assert.equal(ok(persona({ ...base, matriculaEntidad: "Consejo Profesional Nacional de Ingenierías Eléctrica, Mecánica y Profesiones Afines" }), UF), true, "nombre completo");
   assert.equal(ok(persona({ ...base, matriculaEntidad: "CONTE" }), UF), false, "CONTE: técnicos");
+  assert.equal(ok(persona({ ...base, matriculaEntidad: "CONALTEL" }), UF), false, "CONALTEL: tecnólogos");
+  assert.equal(ok(persona({ ...base, matriculaEntidad: "CONALTEL", matriculaAceptadaEn: "2026-11-05" }), UF), false, "CONALTEL no vale aunque diga aceptada");
   assert.equal(ok(persona({ ...base, matriculaEntidad: undefined }), UF), false, "sin entidad");
   assert.equal(ok(persona({ ...base, matriculaEntidad: "Consejo poco común" }), UF), false, "otra sin aceptar");
   assert.equal(ok(persona({ ...base, matriculaEntidad: "Consejo poco común", matriculaAceptadaEn: "2026-11-05" }), UF), true, "otra aceptada");

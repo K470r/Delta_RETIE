@@ -7,7 +7,11 @@
 --   COPNIA   — Consejo Profesional Nacional de Ingeniería (Ley 842 de 2003)
 -- Otra entidad (por ejemplo un consejo poco común) solo cuenta si la gerencia la
 -- acepta a mano, con motivo; nadie acepta la suya. Si cambian la entidad o el
--- número de la matrícula, la aceptación se pierde. El CONTE (técnicos) no cuenta.
+-- número de la matrícula, la aceptación se pierde.
+-- Los consejos de técnicos y tecnólogos no cuentan ni se pueden aceptar:
+--   CONTE    — Consejo Nacional de Técnicos Electricistas
+--   CONALTEL — Consejo Profesional Nacional de Tecnólogos en Electricidad,
+--              Electromecánica, Electrónica y Afines (Ley 1264 de 2008)
 --
 -- Se puede ejecutar más de una vez sin dañar nada.
 -- ============================================================================
@@ -26,11 +30,18 @@ language sql immutable as $$
     else trim(e) end
 $$;
 
+-- ¿Es un consejo de técnicos o tecnólogos (no de ingenieros)?
+create or replace function consejo_no_ingenieros(e text) returns boolean
+language sql immutable as $$
+  select upper(coalesce(e, '')) ~ '(CONTE|CONALTEL|T[ÉE]CNICOS ELECTRICISTAS|TECN[ÓO]LOGOS)'
+$$;
+
 -- ¿La matrícula sirve para director técnico o inspector?
 create or replace function matricula_de_ingeniero(p personas) returns boolean
 language sql stable as $$
   select coalesce(trim(p.matricula_numero), '') <> ''
-     and (coalesce(entidad_matricula(p.matricula_entidad), '') in ('CPNIEMPA', 'COPNIA') or p.matricula_aceptada_en is not null)
+     and (coalesce(entidad_matricula(p.matricula_entidad), '') in ('CPNIEMPA', 'COPNIA')
+          or (p.matricula_aceptada_en is not null and not consejo_no_ingenieros(p.matricula_entidad)))
 $$;
 
 -- La aceptación no se escribe a mano: solo con la función de abajo. Y se pierde si cambia la matrícula.
@@ -73,8 +84,8 @@ begin
   if coalesce(entidad_matricula(p.matricula_entidad), '') in ('CPNIEMPA', 'COPNIA') then
     raise exception 'Las matrículas del CPNIEMPA y del COPNIA no necesitan aceptación';
   end if;
-  if upper(coalesce(p.matricula_entidad, '')) like '%CONTE%' or upper(coalesce(p.matricula_entidad, '')) like '%TÉCNICOS ELECTRICISTAS%' then
-    raise exception 'El CONTE matricula técnicos electricistas: no sirve para director técnico ni inspector';
+  if consejo_no_ingenieros(p.matricula_entidad) then
+    raise exception 'El CONTE y el CONALTEL matriculan técnicos y tecnólogos: no sirven para director técnico ni inspector';
   end if;
   perform set_config('delta.aceptacion', 'on', true);
   update personas set matricula_aceptada_por = persona_actual(), matricula_aceptada_en = now(), matricula_aceptada_motivo = trim(p_motivo)

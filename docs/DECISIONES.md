@@ -206,7 +206,8 @@ que vencen en minutos; la base de datos solo los entrega si el rol lo permite. N
 - Director técnico e inspector exigen matrícula de **ingeniero**: **CPNIEMPA** (Consejo Profesional
   Nacional de Ingenierías Eléctrica, Mecánica y Profesiones Afines, Ley 51 de 1986), el más
   frecuente, o **COPNIA** (Ley 842 de 2003).
-- El **CONTE** matricula técnicos: no sirve para esos cargos y no se puede aceptar a mano.
+- El **CONTE** (técnicos electricistas) y el **CONALTEL** (tecnólogos, Ley 1264 de 2008) no sirven
+  para esos cargos: no cumplen de inmediato y no se pueden aceptar a mano.
 - **Otra entidad** (un consejo poco común): solo cuenta si la **gerencia la acepta a mano**, con
   motivo; nadie acepta la suya; si cambian la entidad o el número, la aceptación se pierde.
 

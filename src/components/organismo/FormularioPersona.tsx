@@ -76,7 +76,7 @@ export function FormularioPersona({ base, persona, correoFijo, onGuardado, onCan
         </div>
         {!ENTIDADES_MATRICULA.some((x) => x.codigo === d.matriculaEntidad) && (
           <Campo etiqueta="Nombre de la otra entidad"
-            ayuda={esConte(d.matriculaEntidad) ? "El CONTE matricula técnicos: no sirve para director técnico ni inspector."
+            ayuda={esConte(d.matriculaEntidad) ? "El CONTE y el CONALTEL matriculan técnicos y tecnólogos: no sirven para director técnico ni inspector."
               : "Una matrícula de otra entidad solo sirve para director técnico o inspector si la acepta la gerencia."}>
             <Entrada value={d.matriculaEntidad ?? ""} onChange={set("matriculaEntidad")} placeholder="Nombre completo del consejo y la ley" />
           </Campo>

@@ -24,7 +24,13 @@ reset role;
 select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001"}', false);
 set role authenticated;
 select prueba.debe_fallar('el CONTE no se puede aceptar',
-  $q$select aceptar_matricula('dddddddd-0000-0000-0000-000000000002', 'x')$q$, 'CONTE matricula técnicos');
+  $q$select aceptar_matricula('dddddddd-0000-0000-0000-000000000002', 'x')$q$, 'CONTE y el CONALTEL');
+select prueba.debe_pasar('registra una matrícula del CONALTEL',
+  $q$update personas set matricula_entidad = 'CONALTEL' where id = 'dddddddd-0000-0000-0000-000000000002'$q$);
+select prueba.debe_ser('con el CONALTEL no cumple de inmediato',
+  $q$select (motivo_competencia('dddddddd-0000-0000-0000-000000000002', 'RETIE24-UF-BASICAS', 'inspector') like '%matrícula profesional de ingeniero%')::text$q$, 'true');
+select prueba.debe_fallar('y el CONALTEL tampoco se puede aceptar',
+  $q$select aceptar_matricula('dddddddd-0000-0000-0000-000000000002', 'x')$q$, 'CONALTEL');
 select prueba.debe_pasar('la inspectora cambia a otra entidad (consejo poco común)',
   $q$update personas set matricula_entidad = 'Consejo Profesional de Ingeniería de Ejemplo (Ley X)' where id = 'dddddddd-0000-0000-0000-000000000002'$q$);
 select prueba.debe_fallar('exige motivo', $q$select aceptar_matricula('dddddddd-0000-0000-0000-000000000002', ' ')$q$, 'motivo');
