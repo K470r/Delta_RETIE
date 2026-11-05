@@ -76,7 +76,7 @@ Supabase permite pocos correos por hora con su servidor de correo gratuito. Si a
 ## Más adelante — Al publicar la aplicación en internet
 
 En **Authentication → URL Configuration** cambie **Site URL** por la dirección pública
-(por ejemplo `https://delta-retie.vercel.app`) y agréguela también en **Redirect URLs**.
+(por ejemplo `https://ultra-retie.vercel.app`) y agréguela también en **Redirect URLs**.
 Mientras tanto, el valor por defecto `http://localhost:3000` sirve para las pruebas.
 
 ## Borrar los datos de prueba
@@ -138,10 +138,10 @@ SG y la dirección técnica administran el organismo; los inspectores solo consu
    *Adjust GitHub App Permissions* y dé acceso a ese repositorio).
 3. Antes de **Deploy**, abra **Environment Variables** y agregue las dos variables del
    archivo `.env.local` (mismo nombre y valor). Luego **Deploy**.
-4. Al terminar, Vercel muestra la dirección, por ejemplo `https://delta-retie.vercel.app`.
+4. Al terminar, Vercel muestra la dirección, por ejemplo `https://ultra-retie.vercel.app`.
 5. En Supabase: **Authentication → URL Configuration**:
    - **Site URL**: la dirección de Vercel → **Save changes**.
-   - **Redirect URLs → Add URL**: `https://delta-retie.vercel.app/**` y también
+   - **Redirect URLs → Add URL**: `https://ultra-retie.vercel.app/**` y también
      `http://localhost:3000/**` (para seguir probando en su computador).
 
 Vercel publica la rama `main`. Debe contener la aplicación web (no la de Flutter).

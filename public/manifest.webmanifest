@@ -1,10 +1,10 @@
 {
-  "name": "Delta RETIE",
-  "short_name": "Delta RETIE",
+  "name": "Ultra RETIE",
+  "short_name": "Ultra RETIE",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f6f7f9",
-  "theme_color": "#0b5cad",
+  "background_color": "#f3f6f5",
+  "theme_color": "#0d2b35",
   "lang": "es-CO",
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },

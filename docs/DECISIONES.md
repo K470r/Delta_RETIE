@@ -20,8 +20,9 @@ organismo de inspección). Antes de cambiar algo de esta lista, se propone y se 
 
 ## Producto
 
-- **"Delta RETIE" es el nombre código.** El nombre comercial se definirá después; el nombre
-  está en un solo lugar del código (`src/lib/producto.ts`).
+- **El producto se llama "Ultra RETIE"** (antes "Delta RETIE", nombre código del proyecto; el
+  repositorio conserva ese nombre). El nombre está en un solo lugar del código
+  (`src/lib/producto.ts`) y en `public/manifest.webmanifest`.
 - Objetivo: la operación del organismo del usuario, y en el futuro **venderlo o donarlo al
   Ministerio de Minas y Energía** para todos los organismos. Por eso:
   - Una sola base de datos multi-organismo con seguridad por filas.
@@ -104,8 +105,9 @@ organismo de inspección). Antes de cambiar algo de esta lista, se propone y se 
 
 ## Acceso
 
-- Aplicación publicada en **https://delta-retie.vercel.app** (Vercel Hobby, equipo GCEI;
-  se publica sola cada vez que cambia `main`).
+- Aplicación publicada en **https://ultra-retie.vercel.app** (Vercel Hobby, equipo GCEI, proyecto
+  `ultra-retie`; se publica sola cada vez que cambia `main`). La dirección anterior,
+  `delta-retie.vercel.app`, se redirige a la nueva.
 - Ingreso con **correo y contraseña** o con **enlace al correo**. Cada persona cambia su
   contraseña en "Mi cuenta".
 - **Nadie puede crearse una cuenta por su cuenta.** Los usuarios los crea el administrador
