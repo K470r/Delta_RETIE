@@ -97,8 +97,8 @@ organismo de inspección). Antes de cambiar algo de esta lista, se propone y se 
   (Supabase → Authentication → Users → Add user). La aplicación no crea usuarios al pedir el
   enlace, y en Supabase está desactivado *Allow new users to sign up*.
 - Revisores de la aplicación (aliados): **opción B**, entran al organismo real con su rol real
-  y firman el acuerdo de confidencialidad al ser designados. Roles: Luisa Giraldo, gerente;
-  Nelson Leguizamón, gerente e inspector; Eimi Pabón, inspectora. El segundo correo del usuario
+  y firman el acuerdo de confidencialidad al ser designados. Roles: Luisa, gerente;
+  Nelson, gerente e inspector; Eimi, inspectora. El segundo correo del usuario
   no se usa. Por ahora solo se crea el usuario de Eimi.
 - **Acceso de revisión temporal** (`0006_acceso_revision.sql`): para que alguien vea todo el
   organismo en solo lectura por un tiempo limitado, sin designaciones falsas. Lo otorga solo el
