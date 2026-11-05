@@ -160,6 +160,10 @@ export const quitarAutorizacionPorError = (designacionId: string, actividad: str
   corregir("quitar_autorizacion_por_error", { p_designacion: designacionId, p_actividad: actividad, p_motivo: motivo },
     (b) => ({ ...b, designaciones: b.designaciones.map((d) => (d.id === designacionId ? { ...d, actividades: d.actividades.filter((a) => a !== actividad) } : d)) }));
 
+export const aceptarMatricula = (personaId: string, motivo: string) =>
+  corregir("aceptar_matricula", { p_persona: personaId, p_motivo: motivo },
+    (b) => ({ ...b, personas: b.personas.map((p) => (p.id === personaId ? { ...p, matriculaAceptadaEn: new Date().toISOString(), matriculaAceptadaMotivo: motivo } : p)) }));
+
 /** Pide el motivo (obligatorio) para quitar algo registrado por error. */
 export function pedirMotivo(que: string): string | null {
   const m = prompt(`Quitar "${que}" porque se registró por error.\n\nQueda en la bitácora con su nombre y la fecha.\nMotivo (obligatorio):`);

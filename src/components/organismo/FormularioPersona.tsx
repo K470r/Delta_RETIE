@@ -2,10 +2,11 @@
 import { useState } from "react";
 import { actualizar, nuevoId } from "@/lib/organismo/almacen";
 import type { BaseOrganismos, Persona } from "@/lib/organismo/tipos";
+import { ENTIDADES_MATRICULA, entidadMatricula, esConte } from "@/lib/organismo/matricula";
 import { Boton, Campo, Entrada, Errores, Selector } from "../Formulario";
 
 type DatosPersona = Omit<Persona, "id" | "certificados" | "creado" | "formacion" | "experiencias">;
-const VACIA: DatosPersona = { tipoDocumento: "CC", documento: "", nombres: "", apellidos: "", correo: "", telefono: "", profesion: "", matriculaNumero: "", matriculaEntidad: "", matriculaEspecialidad: "" };
+const VACIA: DatosPersona = { tipoDocumento: "CC", documento: "", nombres: "", apellidos: "", correo: "", telefono: "", profesion: "", matriculaNumero: "", matriculaEntidad: "CPNIEMPA", matriculaEspecialidad: "" };
 
 /** Crea o edita los datos básicos de una persona. Devuelve el id guardado. */
 export function FormularioPersona({ base, persona, correoFijo, onGuardado, onCancelar }: {
@@ -15,8 +16,9 @@ export function FormularioPersona({ base, persona, correoFijo, onGuardado, onCan
 }) {
   const [d, setD] = useState<DatosPersona>(() => {
     if (!persona) return { ...VACIA, correo: correoFijo ?? "" };
-    const { id: _i, certificados: _c, creado: _r, formacion: _f, experiencias: _e, usuarioId: _u, ...resto } = persona;
-    return resto;
+    const { id: _i, certificados: _c, creado: _r, formacion: _f, experiencias: _e, usuarioId: _u,
+      matriculaAceptadaPor: _ap, matriculaAceptadaEn: _ae, matriculaAceptadaMotivo: _am, ...resto } = persona;
+    return { ...resto, matriculaEntidad: entidadMatricula(resto.matriculaEntidad) ?? "" };
   });
   const [errores, setErrores] = useState<string[]>([]);
   const [guardando, setGuardando] = useState(false);
@@ -64,8 +66,21 @@ export function FormularioPersona({ base, persona, correoFijo, onGuardado, onCan
         <Campo etiqueta="Profesión"><Entrada value={d.profesion} onChange={set("profesion")} placeholder="Ingeniero electricista" /></Campo>
         <div className="grid grid-cols-2 gap-3">
           <Campo etiqueta="Matrícula profesional"><Entrada value={d.matriculaNumero} onChange={set("matriculaNumero")} /></Campo>
-          <Campo etiqueta="Entidad"><Entrada value={d.matriculaEntidad} onChange={set("matriculaEntidad")} placeholder="CONTE / COPNIA" /></Campo>
+          <Campo etiqueta="Entidad que la expidió">
+            <Selector value={ENTIDADES_MATRICULA.some((x) => x.codigo === d.matriculaEntidad) ? d.matriculaEntidad : "otra"}
+              onChange={(e) => setD({ ...d, matriculaEntidad: e.target.value === "otra" ? "" : e.target.value })}>
+              {ENTIDADES_MATRICULA.map((x) => <option key={x.codigo} value={x.codigo}>{x.codigo}</option>)}
+              <option value="otra">Otra (escribirla)</option>
+            </Selector>
+          </Campo>
         </div>
+        {!ENTIDADES_MATRICULA.some((x) => x.codigo === d.matriculaEntidad) && (
+          <Campo etiqueta="Nombre de la otra entidad"
+            ayuda={esConte(d.matriculaEntidad) ? "El CONTE y el CONALTEL matriculan técnicos y tecnólogos: no sirven para director técnico ni inspector."
+              : "Una matrícula de otra entidad solo sirve para director técnico o inspector si la acepta la gerencia."}>
+            <Entrada value={d.matriculaEntidad ?? ""} onChange={set("matriculaEntidad")} placeholder="Nombre completo del consejo y la ley" />
+          </Campo>
+        )}
         <Campo etiqueta="Especialidad de la matrícula" ayuda="La que lo habilita para emitir dictamen pericial (Ley 842 de 2003 / Ley 51 de 1986)">
           <Entrada value={d.matriculaEspecialidad ?? ""} onChange={set("matriculaEspecialidad")} placeholder="Ingeniería eléctrica" />
         </Campo>

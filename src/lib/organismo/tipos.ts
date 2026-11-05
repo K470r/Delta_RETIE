@@ -131,6 +131,10 @@ export type Persona = {
   matriculaEntidad?: string;
   /** Especialidad de ingeniería que figura en la matrícula (Ley 842 de 2003 / Ley 51 de 1986). */
   matriculaEspecialidad?: string;
+  /** Matrícula de otra entidad aceptada por la gerencia (0010). Lo registra la base de datos. */
+  matriculaAceptadaPor?: string;
+  matriculaAceptadaEn?: string;
+  matriculaAceptadaMotivo?: string;
   formacion: Formacion[];
   experiencias: Experiencia[];
   certificados: CertificadoCompetencia[];

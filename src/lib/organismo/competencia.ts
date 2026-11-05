@@ -3,6 +3,7 @@
  * del reglamento (RETIE 2024 §4.4.2.x, RETILAP 2024 §4.5.2.x) y la
  * vigencia de los certificados (5 años con seguimiento al mes 30).
  */
+import { entidadMatricula, estadoMatricula } from "./matricula";
 import { categoriaDeActividad, etiquetaCategoria, requisitosDe, AREAS_ILUMINACION, type RequisitosReglamento } from "../requisitos";
 import type { CertificadoCompetencia, Persona, RolTecnico } from "./tipos";
 
@@ -85,10 +86,15 @@ export function evaluarCompetencia(p: Persona, actividad: string, rol: RolTecnic
 
   // Identificación y matrícula
   add("Cédula", !!p.documento, p.documento ? `${p.tipoDocumento} ${p.documento}` : "Sin documento");
-  if (req.matriculaRequerida)
-    add("Matrícula profesional", !!p.matriculaNumero,
-      p.matriculaNumero ? `${p.matriculaNumero} ${p.matriculaEntidad ?? ""}${p.matriculaEspecialidad ? ` · ${p.matriculaEspecialidad}` : ""}`.trim()
-        : "Sin matrícula registrada (Leyes 842 de 2003 y 51 de 1986)");
+  if (req.matriculaRequerida) {
+    const e = estadoMatricula(p);
+    const datos = `${p.matriculaNumero ?? ""} ${entidadMatricula(p.matriculaEntidad) ?? ""}${p.matriculaEspecialidad ? ` · ${p.matriculaEspecialidad}` : ""}`.trim();
+    add("Matrícula profesional de ingeniero", e === "ingeniero" || e === "aceptada",
+      e === "sin_matricula" ? "Sin matrícula registrada (Leyes 842 de 2003 y 51 de 1986)"
+        : e === "conte" ? `${datos}: consejo de técnicos o tecnólogos (CONTE, CONALTEL); se requiere matrícula de ingeniero (CPNIEMPA o COPNIA)`
+        : e === "por_aceptar" ? `${datos}: otra entidad; requiere aceptación de la gerencia`
+        : e === "aceptada" ? `${datos} (aceptada por la gerencia)` : datos);
+  }
 
   // Formación especializada (RETILAP)
   if (req.formacionEspecializada) {

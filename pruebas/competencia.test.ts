@@ -16,7 +16,7 @@ const exp = (desde: string, hasta: string | undefined, cats: string[], tipos = [
 const cert = (cats: string[], emision: string, extra: Partial<CertificadoCompetencia> = {}): CertificadoCompetencia =>
   ({ id: `c${n++}`, numero: `N${n}`, certificador: "OCP", reglamento: "RETIE-2024", categorias: cats, fechaEmision: emision, fechaVencimiento: sumarAnios(emision, 5), anulado: false, ...extra });
 const persona = (p: Partial<Persona>): Persona => ({
-  id: "p", tipoDocumento: "CC", documento: "123", nombres: "A", apellidos: "B", matriculaNumero: "CN-1",
+  id: "p", tipoDocumento: "CC", documento: "123", nombres: "A", apellidos: "B", matriculaNumero: "CN-1", matriculaEntidad: "COPNIA",
   formacion: [], experiencias: [], certificados: [], creado: "", ...p,
 });
 const ok = (p: Persona, act: string, rol: "inspector" | "director_tecnico" = "inspector") => evaluarCompetencia(p, act, rol, HOY).cumple;
@@ -52,6 +52,19 @@ test("inspector RETIE g: 2 años en la categoría + certificado vigente + matrí
   assert.equal(ok(persona({ ...base, experiencias: [exp("2020-01-01", undefined, ["c"])] }), UF), false, "experiencia de otra categoría");
   assert.equal(ok(persona({ ...base, matriculaNumero: undefined, experiencias: [exp("2020-01-01", undefined, ["g"])] }), UF), false, "sin matrícula");
   assert.equal(ok(persona({ experiencias: [exp("2020-01-01", undefined, ["g"])] }), UF), false, "sin certificado");
+});
+
+test("matrícula de ingeniero: CPNIEMPA o COPNIA; el CONTE no; otra entidad solo si la gerencia la acepta", () => {
+  const base = { certificados: [cert(["g"], "2026-01-01")], experiencias: [exp("2020-01-01", undefined, ["g"])] };
+  assert.equal(ok(persona({ ...base, matriculaEntidad: "CPNIEMPA" }), UF), true, "CPNIEMPA");
+  assert.equal(ok(persona({ ...base, matriculaEntidad: "copnia" }), UF), true, "COPNIA en minúsculas");
+  assert.equal(ok(persona({ ...base, matriculaEntidad: "Consejo Profesional Nacional de Ingenierías Eléctrica, Mecánica y Profesiones Afines" }), UF), true, "nombre completo");
+  assert.equal(ok(persona({ ...base, matriculaEntidad: "CONTE" }), UF), false, "CONTE: técnicos");
+  assert.equal(ok(persona({ ...base, matriculaEntidad: "CONALTEL" }), UF), false, "CONALTEL: tecnólogos");
+  assert.equal(ok(persona({ ...base, matriculaEntidad: "CONALTEL", matriculaAceptadaEn: "2026-11-05" }), UF), false, "CONALTEL no vale aunque diga aceptada");
+  assert.equal(ok(persona({ ...base, matriculaEntidad: undefined }), UF), false, "sin entidad");
+  assert.equal(ok(persona({ ...base, matriculaEntidad: "Consejo poco común" }), UF), false, "otra sin aceptar");
+  assert.equal(ok(persona({ ...base, matriculaEntidad: "Consejo poco común", matriculaAceptadaEn: "2026-11-05" }), UF), true, "otra aceptada");
 });
 
 test("inspector RETIE c: 3 años; certificado g vigente es advertencia, no bloqueo", () => {
