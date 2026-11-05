@@ -26,17 +26,29 @@ export function Texto(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return <textarea {...props} className={`${claseCampo} ${props.className ?? ""}`} style={borde} />;
 }
 
-export function Boton({ variante = "primario", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variante?: "primario" | "secundario" | "peligro" }) {
-  const clases = {
-    primario: "bg-[var(--marca)] text-white border-transparent",
-    secundario: "",
-    peligro: "text-red-600",
-  }[variante];
-  return (
-    <button {...props} type={props.type ?? "button"}
-      className={`rounded-lg border px-3 py-2 text-sm font-semibold disabled:opacity-50 ${clases} ${props.className ?? ""}`}
-      style={variante === "primario" ? undefined : borde} />
-  );
+/**
+ * Botones (docs/DECISIONES.md, "Botones"):
+ *  - primario: relleno con el color de la aplicación (agregar, registrar, guardar, firmar)
+ *  - contorno: borde de color y fondo claro (ver, cargar o cambiar soportes, aceptar, historial)
+ *  - secundario: neutro (cancelar)
+ *  - peligro / discreto: pequeños, en rojo (finalizar, anular, quitar por error)
+ */
+export type VarianteBoton = "primario" | "contorno" | "secundario" | "peligro" | "discreto";
+
+export function claseBoton(variante: VarianteBoton = "primario", tamano: "normal" | "pequeno" = "normal") {
+  const base = "inline-flex items-center justify-center gap-1.5 rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed";
+  const medida = tamano === "pequeno" ? "min-h-8 px-3 py-1 text-xs" : "min-h-10 px-4 py-2 text-sm";
+  return `${base} ${variante === "discreto" ? "text-xs" : medida} ${{
+    primario: "boton-primario",
+    contorno: "boton-contorno",
+    secundario: "border boton-neutro",
+    peligro: "border text-red-600 boton-neutro",
+    discreto: "text-red-600 underline",
+  }[variante]}`;
+}
+
+export function Boton({ variante = "primario", tamano = "normal", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variante?: VarianteBoton; tamano?: "normal" | "pequeno" }) {
+  return <button {...props} type={props.type ?? "button"} className={`${claseBoton(variante, tamano)} ${props.className ?? ""}`} />;
 }
 
 export function Errores({ errores }: { errores: string[] }) {

@@ -4,9 +4,10 @@
  * roles únicos, etc.), evaluadas aquí para dar retroalimentación inmediata
  * en pantalla y para el tablero de cumplimiento del organismo.
  */
-import { nombreCorto } from "../catalogo";
+import { lineaDe, nombreCorto, varianteBT } from "../catalogo";
 import { categoriaDeActividad, etiquetaCategoria } from "../requisitos";
 import { estadoCertificado, evaluarCompetencia, motivoCompetencia } from "./competencia";
+import { estadoDocumentacion } from "./documentos";
 import {
   NOMBRE_ROL, PLAZOS_POR_DEFECTO, ROLES_CON_ACTIVIDADES, ROLES_UNICOS, rolTecnico,
   type BaseOrganismos, type Designacion, type Organismo, type Persona, type RolOEC, type RolTecnico,
@@ -41,7 +42,7 @@ export function vinculacionVigente(b: BaseOrganismos, organismoId: string, perso
 export function motivoNoPuedeEjercer(
   b: BaseOrganismos, o: Organismo, p: Persona, actividad: string, fecha = hoyISO(), rol: RolTecnico = "inspector",
 ): string | null {
-  if (!lineasAcreditadas(o).includes(actividad))
+  if (!lineasAcreditadas(o).includes(lineaDe(actividad)))
     return "No está en el alcance acreditado vigente del organismo";
   if (!vinculacionVigente(b, o.id, p.id, fecha))
     return "Sin vinculación vigente con el organismo";
@@ -157,9 +158,14 @@ export function evaluarOrganismo(b: BaseOrganismos, o: Organismo, hoy = hoyISO()
     const sup = designacionesVigentes(b, o.id, ["director_tecnico_suplente"]);
     const inc: string[] = [], al: string[] = [];
     for (const a of lineas) {
-      const cubre = (ds: Designacion[]) => ds.some((d) => d.actividades.includes(a) && !motivoNoPuedeEjercer(b, o, persona(d.personaId)!, a, hoy, "director_tecnico"));
-      if (!cubre(dts)) inc.push(`${nombreCorto(a)}: sin director técnico habilitado`);
-      else if (!cubre(sup)) al.push(`${nombreCorto(a)}: sin director técnico suplente`);
+      const cubre = (ds: Designacion[], x: string) => ds.some((d) => d.actividades.includes(x) && !motivoNoPuedeEjercer(b, o, persona(d.personaId)!, x, hoy, "director_tecnico"));
+      const bt = varianteBT(a);
+      if (!cubre(dts, a) && !(bt && cubre(dts, bt))) inc.push(`${nombreCorto(a)}: sin director técnico habilitado`);
+      else {
+        if (bt && !cubre(dts, a)) al.push(`${nombreCorto(a)}: sin director técnico para más de 1.000 V AC o 1.500 V DC (categoría a)`);
+        if (bt && !cubre(dts, bt)) al.push(`${nombreCorto(a)}: sin director técnico para hasta 1.000 V AC y 1.500 V DC (categoría g)`);
+        if (!cubre(sup, a) && !(bt && cubre(sup, bt))) al.push(`${nombreCorto(a)}: sin director técnico suplente`);
+      }
     }
     res.push(control("O-5.2-02", "5.2.5 – 5.2.6", "Dirección técnica y suplencia para cada línea acreditada", inc, al));
   }
@@ -167,9 +173,13 @@ export function evaluarOrganismo(b: BaseOrganismos, o: Organismo, hoy = hoyISO()
   {
     const insp = designacionesVigentes(b, o.id, ["inspector"]);
     const al: string[] = [];
-    for (const a of lineas)
-      if (!insp.some((d) => d.actividades.includes(a) && !motivoNoPuedeEjercer(b, o, persona(d.personaId)!, a, hoy)))
-        al.push(`${nombreCorto(a)}: sin inspector habilitado (no se pueden atender servicios)`);
+    const cubre = (x: string) => insp.some((d) => d.actividades.includes(x) && !motivoNoPuedeEjercer(b, o, persona(d.personaId)!, x, hoy));
+    for (const a of lineas) {
+      const bt = varianteBT(a);
+      if (!cubre(a) && !(bt && cubre(bt))) al.push(`${nombreCorto(a)}: sin inspector habilitado (no se pueden atender servicios)`);
+      else if (bt && !cubre(a)) al.push(`${nombreCorto(a)}: sin inspector para más de 1.000 V AC o 1.500 V DC (categoría a)`);
+      else if (bt && !cubre(bt)) al.push(`${nombreCorto(a)}: sin inspector para hasta 1.000 V AC y 1.500 V DC (categoría g)`);
+    }
     res.push(control("O-6.1-01", "6.1", "Inspectores habilitados para cada línea acreditada", [], al));
   }
   // 6.1 Autorizaciones que perdieron soporte (certificado vencido o sin seguimiento, línea retirada, desvinculación)
@@ -208,7 +218,7 @@ export function evaluarOrganismo(b: BaseOrganismos, o: Organismo, hoy = hoyISO()
     const dts = designacionesVigentes(b, o.id, ["director_tecnico", "director_tecnico_suplente"]);
     const inc: string[] = [];
     const cats = new Map<string, string[]>();
-    for (const a of lineas) {
+    for (const a of lineas.flatMap((x) => [x, varianteBT(x)].filter(Boolean) as string[])) {
       const m = categoriaDeActividad(a);
       if (!m) continue;
       const k = etiquetaCategoria(m.req.reglamento, m.cat.codigo);
@@ -227,6 +237,18 @@ export function evaluarOrganismo(b: BaseOrganismos, o: Organismo, hoy = hoyISO()
       .filter((p) => !p.matriculaNumero)
       .map((p) => `${nombrePersona(p)}: sin matrícula profesional registrada`);
     res.push(control("O-6.1-03", "6.1", "Matrícula profesional de directores técnicos e inspectores", inc));
+  }
+  // 6.1.6 Documentos de designación y autorización firmados (0013)
+  {
+    const inc: string[] = [], al: string[] = [];
+    for (const d of b.designaciones.filter((x) => x.organismoId === o.id && vigenteEn(x, hoy))) {
+      const e = estadoDocumentacion(b, d);
+      if (!e.requiere) continue;
+      const quien = `${nombrePersona(persona(d.personaId))} (${NOMBRE_ROL[d.rol]})`;
+      if (!e.firmado) inc.push(`${quien}: ${e.pendiente ? `documento pendiente de firma (${e.faltan.join(", ")})` : "sin documento de designación o autorización"}`);
+      else if (e.sinFirmar.length) al.push(`${quien}: actividades sin documento firmado — ${e.sinFirmar.map(nombreCorto).join("; ")}`);
+    }
+    res.push(control("O-6.1-05", "5.2 / 6.1.6", "Documentos de designación y autorización firmados", inc, al));
   }
   // 4.1 / 4.2 Declaraciones del personal designado
   {

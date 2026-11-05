@@ -39,6 +39,35 @@ body {
   border-radius: 1rem;
 }
 .suave { color: var(--suave); }
+
+/* Botones (Formulario.tsx → claseBoton) */
+.boton-primario {
+  background: var(--marca); color: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12), 0 2px 6px color-mix(in srgb, var(--marca) 30%, transparent);
+}
+.boton-primario:hover:not(:disabled) { filter: brightness(1.08); }
+.boton-contorno {
+  border: 2px solid var(--marca); color: var(--marca);
+  background: color-mix(in srgb, var(--marca) 8%, var(--tarjeta));
+}
+.boton-contorno:hover:not(:disabled) { background: color-mix(in srgb, var(--marca) 16%, var(--tarjeta)); }
+.boton-neutro { border-color: var(--borde); background: var(--tarjeta); }
+
+/* Alertas grandes (seguimiento del mes 30, documentos por firmar) */
+.alerta-naranja { background: #fdebd9; color: #7a3a06; border: 2px solid #e8772e; }
+.alerta-roja { background: #fde3e1; color: #8f1d14; border: 2px solid #d92d20; }
+.alerta-verde { background: #dcf2e9; color: #0e5c43; border: 1px solid #1e9e74; }
+@media (prefers-color-scheme: dark) {
+  .alerta-naranja { background: #3d2412; color: #ffcf9f; }
+  .alerta-roja { background: #3f1614; color: #ffb4ab; }
+  .alerta-verde { background: #10362b; color: #9fe3c6; }
+}
+
+/* Impresión de documentos: solo el documento */
+@media print {
+  body { background: #fff !important; color: #000 !important; }
+  .no-imprimir { display: none !important; }
+  .solo-documento { box-shadow: none !important; border: none !important; padding: 0 !important; }
+}
 .marca { color: var(--marca); }
 
 h1, h2, h3, .font-titulo { font-family: Manrope, Inter, ui-sans-serif, system-ui, sans-serif; }

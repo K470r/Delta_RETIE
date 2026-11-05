@@ -1,7 +1,13 @@
 "use client";
 import { useMemo, useState } from "react";
-import { actividad, nombreCorto } from "@/lib/catalogo";
-import { actualizar, nuevoId, pedirMotivo, quitarAutorizacionPorError } from "@/lib/organismo/almacen";
+import { actividadesAutorizables, nombreAutorizacion } from "@/lib/catalogo";
+import Link from "next/link";
+import { actualizar, nuevoId, pedirMotivo, quitarAutorizacionPorError, usePersonaActual } from "@/lib/organismo/almacen";
+import { CON_SUPABASE } from "@/lib/supabase";
+import {
+  NOMBRE_CALIDAD, NOMBRE_TIPO, TIPO_DE_ROL, documentoFirmado, documentosDe, estadoDocumentacion, evaluadoresPosibles, generarDocumento, huella, puedeFirmarComo,
+} from "@/lib/organismo/documentos";
+import { usePermisosOrganismo } from "@/lib/organismo/permisos";
 import {
   hoyISO, lineasAcreditadas, motivoNoPuedeEjercer, nombrePersona,
   validarDesignacion, vigenteEn, vinculacionVigente,
@@ -11,7 +17,8 @@ import {
   NOMBRE_ROL, ROLES_CON_ACTIVIDADES, rolTecnico,
   type BaseOrganismos, type Designacion, type Organismo, type RolOEC, type Vinculacion,
 } from "@/lib/organismo/tipos";
-import { Boton, Campo, Entrada, Errores, Selector } from "../Formulario";
+import { Boton, Campo, Entrada, Errores, Selector, claseBoton } from "../Formulario";
+import { Icono } from "../Icono";
 import { SelectorActividades } from "../SelectorActividades";
 import { FormularioPersona } from "./FormularioPersona";
 import { HojaDeVida, ListaRequisitos } from "./HojaDeVida";
@@ -106,7 +113,7 @@ function TarjetaDesignacion({ base, organismo, d, onFinalizar }: {
             Desde {d.desde}{d.hasta ? ` hasta ${d.hasta}` : ""}{d.acto ? ` · ${d.acto}` : ""}
           </div>
         </div>
-        {onFinalizar && <Boton variante="peligro" onClick={onFinalizar}>Finalizar</Boton>}
+        {onFinalizar && <Boton variante="peligro" tamano="pequeno" onClick={onFinalizar}>Finalizar</Boton>}
       </div>
       <div className="flex flex-wrap gap-2 text-xs">
         <Indicador ok={!!decl("imparcialidad")} texto={`Imparcialidad ${decl("imparcialidad") ?? "sin firmar"}`} />
@@ -123,6 +130,7 @@ function TarjetaDesignacion({ base, organismo, d, onFinalizar }: {
           {d.actividades.map((a) => <FilaActividad key={a} base={base} organismo={organismo} d={d} actividad={a} corregible={!!onFinalizar} />)}
         </ul>
       )}
+      {TIPO_DE_ROL[d.rol] && <BloqueDocumento base={base} organismo={organismo} d={d} vigente={!!onFinalizar} />}
     </article>
   );
 }
@@ -139,7 +147,7 @@ function FilaActividad({ base, organismo, d, actividad: a, corregible }: { base:
       <button className="flex w-full items-start gap-2 text-left" onClick={() => setAbierta(!abierta)}>
         <span className={motivo ? "text-red-600" : "text-emerald-600"}>{motivo ? "✕" : "✓"}</span>
         <span>
-          {nombreCorto(a)} <span className="suave text-xs">({h.categoria})</span>
+          {nombreAutorizacion(a)} <span className="suave text-xs">({h.categoria})</span>
           <span className={`block text-xs ${motivo ? "text-red-600" : "suave"}`}>
             {motivo ?? (cert ? `Certificado ${cert.detalle}` : "Cumple los requisitos")}
             {h.alertas.length > 0 && <span className="text-amber-600"> · {h.alertas.join(" · ")}</span>}
@@ -151,7 +159,7 @@ function FilaActividad({ base, organismo, d, actividad: a, corregible }: { base:
           <ListaRequisitos persona={p} actividad={a} rol={rol} />
           {corregible && (
             <button className="text-xs text-red-700 underline" onClick={() => {
-              const m = pedirMotivo(`${nombreCorto(a)} — ${nombrePersona(p)}`); if (m) quitarAutorizacionPorError(d.id, a, m);
+              const m = pedirMotivo(`${nombreAutorizacion(a)} — ${nombrePersona(p)}`); if (m) quitarAutorizacionPorError(d.id, a, m);
             }}>Quitar esta actividad (autorizada por error)</button>
           )}
         </div>
@@ -175,10 +183,10 @@ function AutorizarActividades({ base, organismo, d }: { base: BaseOrganismos; or
   const [errores, setErrores] = useState<string[]>([]);
   const [guardando, setGuardando] = useState(false);
   const p = base.personas.find((x) => x.id === d.personaId)!;
-  const disponibles = lineasAcreditadas(organismo).filter((c) => !d.actividades.includes(c)).map((c) => actividad(c)!).filter(Boolean);
+  const disponibles = actividadesAutorizables(lineasAcreditadas(organismo)).filter((a) => !d.actividades.includes(a.codigo));
   if (!disponibles.length) return null;
   if (!abierto) {
-    return <button className="text-sm font-semibold underline marca" onClick={() => setAbierto(true)}>+ Autorizar actividades</button>;
+    return <Boton onClick={() => setAbierto(true)}><Icono nombre="mas" tamano={16} /> Autorizar actividades</Boton>;
   }
   const guardar = async () => {
     if (!acts.length) return setErrores(["Marque las actividades que va a autorizar"]);
@@ -243,7 +251,7 @@ function FormularioDesignacion({ base, organismo, roles, onTerminar }: {
     .filter((p) => `${p.nombres} ${p.apellidos} ${p.documento}`.toLowerCase().includes(filtro.toLowerCase()))
     .slice(0, 50);
 
-  const lineas = lineasAcreditadas(organismo).map((c) => actividad(c)!).filter(Boolean);
+  const lineas = actividadesAutorizables(lineasAcreditadas(organismo));
   const fechaEval = desde > hoy ? desde : hoy;
 
   const guardar = async () => {
@@ -306,7 +314,7 @@ function FormularioDesignacion({ base, organismo, roles, onTerminar }: {
                 ))}
               </ul>
             )}
-            <Boton variante="secundario" onClick={() => setCreandoPersona(true)}>+ Registrar persona nueva</Boton>
+            <Boton variante="contorno" onClick={() => setCreandoPersona(true)}><Icono nombre="mas" tamano={16} /> Registrar persona nueva</Boton>
           </div>
         )}
       </div>
@@ -374,7 +382,7 @@ function FormularioDesignacion({ base, organismo, roles, onTerminar }: {
                   : persona.certificados.filter((c) => !c.anulado).map((c) => (
                     <span key={c.id} className="mr-2">N.° {c.numero} (cat. {c.categorias.join(", ")}, vence {c.fechaVencimiento})</span>
                   ))}
-                <button className="ml-1 underline marca" onClick={() => setVerHoja(!verHoja)}>
+                <button className={`ml-2 ${claseBoton("contorno", "pequeno")}`} onClick={() => setVerHoja(!verHoja)}>
                   {verHoja ? "ocultar hoja de vida" : "completar hoja de vida (certificados, experiencia, formación)"}
                 </button>
               </div>
@@ -404,6 +412,110 @@ function FormularioDesignacion({ base, organismo, roles, onTerminar }: {
         <Boton onClick={guardar} disabled={!persona || guardando}>{guardando ? "Guardando…" : "Guardar designación"}</Boton>
         <Boton variante="secundario" onClick={onTerminar}>Cancelar</Boton>
       </div>
+    </div>
+  );
+}
+
+// ───────────────────────── Documento de designación o autorización (0013) ─────────────────────────
+
+function BloqueDocumento({ base, organismo, d, vigente }: { base: BaseOrganismos; organismo: Organismo; d: Designacion; vigente: boolean }) {
+  const yo = usePersonaActual(base);
+  const { gestion } = usePermisosOrganismo(base, organismo.id);
+  const [generando, setGenerando] = useState(false);
+  const [evaluador, setEvaluador] = useState("");
+  const [errores, setErrores] = useState<string[]>([]);
+  const tipo = TIPO_DE_ROL[d.rol]!;
+  const e = estadoDocumentacion(base, d);
+  const docs = documentosDe(base, d.id);
+  const esDT = base.designaciones.some((x) => x.organismoId === organismo.id && x.personaId === yo?.id && ["director_tecnico", "director_tecnico_suplente"].includes(x.rol) && vigenteEn(x, hoyISO()));
+  const puedeGenerar = vigente && (gestion || esDT || !CON_SUPABASE);
+  const esInspector = tipo === "autorizacion_inspector";
+  const sinActividades = tipo.startsWith("autorizacion_") && d.actividades.length === 0;
+  const necesitaNuevo = !e.pendiente && (!e.firmado || e.sinFirmar.length > 0);
+  const evaluadores = evaluadoresPosibles(base, d);
+  const yoFirmo = e.pendiente ? puedeFirmarComo(base, e.pendiente, yo?.id) : [];
+
+  const generar = async () => {
+    if (esInspector && !evaluador) return setErrores(["Indique el director técnico que evaluó al inspector"]);
+    const borrador = generarDocumento(base, d, evaluador || undefined);
+    if (!borrador) return setErrores(["No se pudo generar el documento"]);
+    const id = nuevoId();
+    const error = await actualizar((b) => ({
+      ...b,
+      documentosPersonal: [
+        ...(b.documentosPersonal ?? []).map((x) => (x.designacionId === d.id && !x.reemplazadoEn && !documentoFirmado(x) ? { ...x, reemplazadoEn: new Date().toISOString() } : x)),
+        { id, organismoId: organismo.id, designacionId: d.id, tipo, titulo: borrador.titulo, contenido: borrador.contenido, huella: "",
+          actividades: d.actividades, evaluadorId: evaluador || undefined, creadoEn: new Date().toISOString(), firmas: [] },
+      ],
+    }), { mostrarError: false });
+    if (error) return setErrores([error]);
+    if (!CON_SUPABASE) {
+      const h = await huella(borrador.contenido);
+      await actualizar((b) => ({ ...b, documentosPersonal: (b.documentosPersonal ?? []).map((x) => (x.id === id ? { ...x, huella: h } : x)) }));
+    }
+    setGenerando(false); setErrores([]);
+    window.location.href = `/documento?id=${id}&volver=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+  };
+
+  const estado = e.firmado && !e.sinFirmar.length
+    ? { clase: "alerta-verde", texto: `Firmado${docs.find((x) => x.firmadoAManoRuta) ? " (a mano)" : ""}` }
+    : e.pendiente ? { clase: "alerta-naranja", texto: `Pendiente de firma: falta ${e.faltan.join(" y ")}` }
+    : e.firmado ? { clase: "alerta-naranja", texto: "Hay actividades autorizadas que no están en un documento firmado" }
+    : { clase: "alerta-roja", texto: "Sin documento firmado: no puede ejercer (17020 §6.1.6)" };
+
+  return (
+    <div className="space-y-2 rounded-xl border p-3" style={{ borderColor: "var(--borde)" }}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Icono nombre="documento" tamano={20} color="var(--marca)" />
+          <span className="text-sm font-semibold">{NOMBRE_TIPO[tipo]}</span>
+        </div>
+        <span className={`rounded-lg px-3 py-1 text-xs font-bold ${estado.clase}`}>{estado.texto}</span>
+      </div>
+      {e.sinFirmar.length > 0 && e.firmado && (
+        <p className="text-xs">Sin documento firmado: {e.sinFirmar.map(nombreAutorizacion).join("; ")}. Genere un documento actualizado.</p>
+      )}
+      <div className="flex flex-wrap items-center gap-2">
+        {e.pendiente && (
+          <Link href={`/documento?id=${e.pendiente.id}`} className={claseBoton(yoFirmo.length ? "primario" : "contorno", "pequeno")}>
+            <Icono nombre={yoFirmo.length ? "firma" : "ojo"} tamano={15} />
+            {yoFirmo.length ? `Ver y firmar como ${yoFirmo.map((c) => NOMBRE_CALIDAD[c].toLowerCase()).join(" y ")}` : "Ver documento"}
+          </Link>
+        )}
+        {docs.filter((x) => !x.reemplazadoEn && x.id !== e.pendiente?.id).map((x) => (
+          <Link key={x.id} href={`/documento?id=${x.id}`} className={claseBoton("contorno", "pequeno")}>
+            <Icono nombre="ojo" tamano={15} /> Ver documento firmado ({x.creadoEn.slice(0, 10)})
+          </Link>
+        ))}
+        {puedeGenerar && (necesitaNuevo || e.pendiente) && !generando && !sinActividades && (
+          <Boton variante={necesitaNuevo ? "primario" : "secundario"} tamano="pequeno" onClick={() => setGenerando(true)}>
+            <Icono nombre="documento" tamano={15} /> {e.pendiente ? "Volver a generar" : e.firmado ? "Generar documento actualizado" : "Generar documento"}
+          </Boton>
+        )}
+        {sinActividades && <span className="suave text-xs">El documento se genera después de autorizar las actividades.</span>}
+      </div>
+      {generando && (
+        <div className="space-y-2 rounded-lg border-2 p-3" style={{ borderColor: "var(--marca)" }}>
+          <p className="text-sm">
+            Se genera con los datos de la designación{tipo.startsWith("autorizacion_") ? " y las actividades autorizadas" : ""}.
+            {e.pendiente && " Reemplaza al documento pendiente de firma."} Texto provisional, hasta adecuarlo a los formatos del organismo.
+          </p>
+          {esInspector && (
+            <Campo etiqueta="Director técnico que evaluó al inspector (firma la autorización)">
+              <Selector value={evaluador} onChange={(x) => setEvaluador(x.target.value)}>
+                <option value="">Seleccione…</option>
+                {evaluadores.map((p) => <option key={p.id} value={p.id}>{nombrePersona(p)}</option>)}
+              </Selector>
+            </Campo>
+          )}
+          {esInspector && !evaluadores.length && <p className="text-xs text-red-600">No hay director técnico vigente que pueda figurar como evaluador.</p>}
+          <Errores errores={errores} />
+          <div className="flex gap-2">
+            <Boton onClick={generar}>Generar y abrir</Boton>
+            <Boton variante="secundario" onClick={() => { setGenerando(false); setErrores([]); }}>Cancelar</Boton>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

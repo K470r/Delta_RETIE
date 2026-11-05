@@ -51,7 +51,7 @@ export default function Personas() {
                       </div>
                     ))}
                   </div>
-                  <Boton variante="secundario" onClick={() => setEditando(p.id)}>Editar</Boton>
+                  <Boton variante="contorno" tamano="pequeno" onClick={() => setEditando(p.id)}>Editar</Boton>
                 </div>
               )}
               <details open={abierta === p.id} onToggle={(e) => { if ((e.target as HTMLDetailsElement).open) setAbierta(p.id); }}>

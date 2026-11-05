@@ -8,7 +8,7 @@
 import { supabase } from "../supabase";
 import { mensajeError } from "../errores";
 import type {
-  BaseOrganismos, CertificadoCompetencia, Declaracion, Designacion, DocumentoOrganismo, Experiencia, Formacion,
+  BaseOrganismos, CertificadoCompetencia, Declaracion, Designacion, DocumentoOrganismo, DocumentoPersonal, Experiencia, Formacion,
   LineaAlcance, Organismo, Persona, RevisionSG, Sede, Vinculacion,
 } from "./tipos";
 
@@ -44,6 +44,25 @@ export async function cargarBase(): Promise<BaseOrganismos> {
     fecha: u(d.fecha as string), renovacion: u(d.renovacion as string), actualizacion: u(d.actualizacion as string),
     desde: u(d.desde as string), hasta: u(d.hasta as string), firmadoPor: u(d.firmado_por as string),
     observacion: u(d.observacion as string), cargado: d.cargado as string, reemplazadoEn: u(d.reemplazado_en as string),
+  }));
+
+  // Documentos del personal con firma (0013): si la migración aún no está, se sigue sin ellos.
+  const [dp, fd] = await Promise.all([
+    sb.from("documentos_personal").select("*").order("creado_en"),
+    sb.from("firmas_documento").select("*").order("firmado_en"),
+  ]);
+  const firmas = (fd.error ? [] : fd.data ?? []) as Fila[];
+  const documentosPersonal: DocumentoPersonal[] = (dp.error ? [] : dp.data ?? []).map((d: Fila) => ({
+    id: d.id as string, organismoId: d.organismo_id as string, designacionId: d.designacion_id as string,
+    tipo: d.tipo as DocumentoPersonal["tipo"], titulo: d.titulo as string, contenido: d.contenido as string, huella: d.huella as string,
+    actividades: (d.actividades ?? []) as string[], evaluadorId: u(d.evaluador_id as string), creadoEn: d.creado_en as string,
+    reemplazadoEn: u(d.reemplazado_en as string), firmadoAManoRuta: u(d.firmado_a_mano_ruta as string),
+    firmadoAManoPor: u(d.firmado_a_mano_por as string), firmadoAManoEn: u(d.firmado_a_mano_en as string),
+    firmas: firmas.filter((f) => f.documento_id === d.id).map((f) => ({
+      enCalidad: f.en_calidad as DocumentoPersonal["firmas"][number]["enCalidad"], personaId: f.persona_id as string,
+      firmadoEn: f.firmado_en as string, correo: u(f.correo as string), autenticadoEn: u(f.autenticado_en as string),
+      agente: u(f.agente as string), ip: u(f.ip as string), huella: f.huella as string,
+    })),
   }));
 
   const sedes = (sed.data ?? []) as Fila[];
@@ -112,6 +131,7 @@ export async function cargarBase(): Promise<BaseOrganismos> {
         fecha: c.seguimiento_fecha as string,
         resultado: c.seguimiento_resultado as "conforme" | "no_conforme",
         observacion: u(c.seguimiento_observacion as string),
+        registradoEn: u(c.seguimiento_registrado_en as string),
       } : undefined,
       anulado: !!c.anulado,
       soporteRuta: u(c.soporte_ruta as string),
@@ -148,6 +168,7 @@ export async function cargarBase(): Promise<BaseOrganismos> {
     organismos,
     personas,
     documentos,
+    documentosPersonal,
     vinculaciones: (vin.data ?? []).map((v: Fila): Vinculacion => ({
       id: v.id as string, organismoId: v.organismo_id as string, personaId: v.persona_id as string,
       sedeId: u(v.sede_id as string), tipo: v.tipo as Vinculacion["tipo"], cargo: v.cargo as string,
@@ -220,6 +241,11 @@ const filaDocumento = (d: DocumentoOrganismo): Fila => ({
   id: d.id, organismo_id: d.organismoId, tipo: d.tipo, archivo_ruta: d.archivoRuta, numero: n(d.numero), emisor: n(d.emisor),
   valor: d.valor ?? null, fecha: n(d.fecha), renovacion: n(d.renovacion), actualizacion: n(d.actualizacion),
   desde: n(d.desde), hasta: n(d.hasta), firmado_por: n(d.firmadoPor), observacion: n(d.observacion),
+});
+// Solo lo que escribe el usuario: tipo, huella, actividades y fechas los pone la base de datos.
+const filaDocumentoPersonal = (d: DocumentoPersonal): Fila => ({
+  id: d.id, organismo_id: d.organismoId, designacion_id: d.designacionId, tipo: d.tipo, titulo: d.titulo,
+  contenido: d.contenido, evaluador_id: n(d.evaluadorId),
 });
 const filaRevision = (r: RevisionSG): Fila => ({
   id: r.id, organismo_id: r.organismoId, persona_id: r.personaId, fecha: r.fecha, aspectos: r.aspectos,
@@ -299,6 +325,9 @@ export function operaciones(a: BaseOrganismos, d: BaseOrganismos): Operacion[] {
     // Documentos: solo se agregan versiones nuevas (la base reemplaza la anterior y actualiza el organismo).
     ...comparar("documentos_organismo", (a.documentos ?? []).filter((x) => d.documentos?.some((y) => y.id === x.id)),
       d.documentos ?? [], filaDocumento, porId).filter((op) => op.tipo === "insertar"),
+    // Documentos del personal: solo se generan (las firmas van por firmar_documento()).
+    ...comparar("documentos_personal", (a.documentosPersonal ?? []).filter((x) => d.documentosPersonal?.some((y) => y.id === x.id)),
+      d.documentosPersonal ?? [], filaDocumentoPersonal, porId).filter((op) => op.tipo === "insertar"),
   ];
 }
 

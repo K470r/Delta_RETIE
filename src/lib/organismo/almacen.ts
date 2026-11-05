@@ -13,7 +13,7 @@ import { mensajeError } from "../errores";
 import { CON_SUPABASE } from "../supabase";
 import { sesionActual, suscribirSesion, useSesion } from "../sesion";
 import { cargarBase, guardarCambios } from "./almacenSupabase";
-import type { BaseOrganismos, Persona } from "./tipos";
+import type { BaseOrganismos, CalidadFirma, DocumentoPersonal, Persona } from "./tipos";
 
 const CLAVE = "delta-retie:organismos:v1";
 const VACIA: BaseOrganismos = { organismos: [], personas: [], vinculaciones: [], designaciones: [], declaraciones: [], revisionesSG: [] };
@@ -163,6 +163,50 @@ export const quitarAutorizacionPorError = (designacionId: string, actividad: str
 export const aceptarMatricula = (personaId: string, motivo: string) =>
   corregir("aceptar_matricula", { p_persona: personaId, p_motivo: motivo },
     (b) => ({ ...b, personas: b.personas.map((p) => (p.id === personaId ? { ...p, matriculaAceptadaEn: new Date().toISOString(), matriculaAceptadaMotivo: motivo } : p)) }));
+
+/**
+ * Firma electrónica de un documento del personal (0013): confirma la contraseña del usuario
+ * (vale 10 minutos para la base de datos) y firma la huella del texto que se mostró.
+ */
+export async function firmarDocumento(documentoId: string, calidad: CalidadFirma, huellaVista: string, contrasena: string): Promise<string | null> {
+  if (!CON_SUPABASE) {
+    // Modo local (pruebas): firma la persona elegida en "Firmar como".
+    return actualizar((b) => ({
+      ...b, documentosPersonal: (b.documentosPersonal ?? []).map((x) => (x.id === documentoId
+        ? { ...x, firmas: [...x.firmas, { enCalidad: calidad, personaId: personaLocal ?? "", firmadoEn: new Date().toISOString(), huella: x.huella, correo: "modo local" }] } : x)),
+    }));
+  }
+  const s = sesionActual();
+  if (s.estado !== "con_sesion") return "Inicie sesión para firmar";
+  const { supabase } = await import("../supabase");
+  const sb = supabase();
+  const ingreso = await sb.auth.signInWithPassword({ email: s.correo, password: contrasena });
+  if (ingreso.error) return "La contraseña no es correcta";
+  const { error } = await sb.rpc("firmar_documento", { p_documento: documentoId, p_en_calidad: calidad, p_huella: huellaVista });
+  await recargar();
+  return error ? mensajeError(error) : null;
+}
+
+/** Respaldo: registra el PDF del documento impreso, firmado a mano y escaneado. */
+export async function registrarFirmadoAMano(doc: DocumentoPersonal, archivo: File): Promise<string | null> {
+  const { cargarArchivo, REGLAS_DOCUMENTO } = await import("../archivos");
+  const r = await cargarArchivo("documentos", `${doc.organismoId}/personal/${doc.id}/firmado-${Date.now()}.pdf`, archivo, REGLAS_DOCUMENTO);
+  if (r.error || !r.ruta) return r.error ?? "No se pudo cargar el archivo";
+  if (!CON_SUPABASE) {
+    return actualizar((b) => ({
+      ...b, documentosPersonal: (b.documentosPersonal ?? []).map((x) => (x.id === doc.id
+        ? { ...x, firmadoAManoRuta: r.ruta, firmadoAManoEn: new Date().toISOString(), firmadoAManoPor: personaLocal } : x)),
+    }));
+  }
+  const { supabase } = await import("../supabase");
+  const { error } = await supabase().rpc("registrar_firmado_a_mano", { p_documento: doc.id, p_ruta: r.ruta });
+  await recargar();
+  return error ? mensajeError(error) : null;
+}
+
+/** En modo local (sin Supabase) no hay usuario: se elige "firmar como" para probar las firmas. */
+let personaLocal: string | undefined;
+export const elegirPersonaLocal = (id: string | undefined) => { personaLocal = id; };
 
 /** Pide el motivo (obligatorio) para quitar algo registrado por error. */
 export function pedirMotivo(que: string): string | null {

@@ -93,9 +93,9 @@ function Contenido() {
         </div>
       )}
       {pestana === "dt" && (
-        <SeccionDesignaciones base={base} organismo={o} roles={["director_tecnico", "director_tecnico_suplente"]}
-          titulo="Directores técnicos"
-          descripcion="Responsables técnicos de las actividades de inspección (17020 §5.2.5) y sus suplentes (§5.2.6). Solo se autorizan actividades del alcance acreditado cubiertas por un certificado de competencias vigente." />
+        <SeccionDesignaciones base={base} organismo={o} roles={["director_tecnico", "director_tecnico_suplente", "asistente_direccion_tecnica"]}
+          titulo="Dirección técnica"
+          descripcion="Directores técnicos (17020 §5.2.5), sus suplentes (§5.2.6) y asistentes de dirección técnica. Solo se autorizan actividades del alcance acreditado cubiertas por un certificado de competencias vigente. Cada autorización o designación queda vigente cuando su documento está firmado." />
       )}
       {pestana === "inspectores" && (
         <SeccionDesignaciones base={base} organismo={o} roles={["inspector"]}
@@ -175,9 +175,9 @@ function Arranque({ base, o, irA }: { base: BaseOrganismos; o: Organismo; irA: (
       ) : (
         <div className="flex flex-wrap gap-2">
           <Boton onClick={() => irA("alcance")}>Completar datos y logos</Boton>
-          <Boton variante="secundario" onClick={() => irA("dt")}>Designarme director técnico</Boton>
-          <Boton variante="secundario" onClick={() => irA("gerencia")}>Designarme en la gerencia</Boton>
-          <Boton variante="secundario" onClick={() => irA("sg")}>Designarme responsable del SG</Boton>
+          <Boton variante="contorno" onClick={() => irA("dt")}>Designarme director técnico</Boton>
+          <Boton variante="contorno" onClick={() => irA("gerencia")}>Designarme en la gerencia</Boton>
+          <Boton variante="contorno" onClick={() => irA("sg")}>Designarme responsable del SG</Boton>
         </div>
       )}
     </section>
@@ -252,7 +252,7 @@ function Alcance({ base, o }: { base: BaseOrganismos; o: Organismo }) {
       <section className="tarjeta space-y-2 p-4 text-sm">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold">Datos generales</h2>
-          {permisos.gestion && <Boton variante="secundario" onClick={() => setEditando(true)}>Editar</Boton>}
+          {permisos.gestion && <Boton variante="contorno" onClick={() => setEditando(true)}>Editar</Boton>}
         </div>
         <dl className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
           {[
@@ -275,7 +275,7 @@ function Alcance({ base, o }: { base: BaseOrganismos; o: Organismo }) {
             <h2 className="font-semibold">Alcance acreditado</h2>
             <p className="suave text-xs">Toque una actividad para ver su detalle.</p>
           </div>
-          {permisos.gestion && !agregando && disponibles.length > 0 && <Boton variante="secundario" onClick={() => setAgregando(true)}>+ Agregar actividad</Boton>}
+          {permisos.gestion && !agregando && disponibles.length > 0 && <Boton onClick={() => setAgregando(true)}><Icono nombre="mas" tamano={16} /> Agregar actividad</Boton>}
         </div>
         {agregando && (
           <div className="tarjeta space-y-3 p-4">
@@ -533,7 +533,7 @@ function PersonalONAC({ base, o }: { base: BaseOrganismos; o: Organismo }) {
           <h2 className="text-lg font-semibold">Personas que participan en la evaluación de la conformidad</h2>
           <p className="suave text-sm">Formato solicitado por ONAC (NTE-3.3-88 / NTE-3.3-89, numeral 4.1, ítem 2).</p>
         </div>
-        <Boton variante="secundario" onClick={descargar} disabled={!filas.length}>Descargar CSV (Excel)</Boton>
+        <Boton variante="contorno" onClick={descargar} disabled={!filas.length}>Descargar CSV (Excel)</Boton>
       </div>
       <div className="tarjeta overflow-x-auto">
         <table className="w-full text-left text-sm">
