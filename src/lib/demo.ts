@@ -12,7 +12,7 @@ const f = (dias: number) => new Date(Date.now() + dias * DIA).toISOString().slic
 export function datosDemo(): DatosOEC {
   return {
     config: {
-      nombre: "Delta RETIE — OEC (demostración)",
+      nombre: "Ultra RETIE — OEC (demostración)",
       tipoOrganismo: "A",
       polizaRCVence: f(200),
       directorTecnicoId: "p-dt",
