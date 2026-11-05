@@ -44,6 +44,7 @@ function Contenido() {
     esAdminPlataforma: sesion.estado === "con_sesion" && sesion.esAdminPlataforma,
     usuarioId: sesion.estado === "con_sesion" ? sesion.usuarioId : undefined,
     base, personaId: yo?.id, organismoId: o.id,
+    enRevision: sesion.estado === "con_sesion" ? sesion.revision.map((x) => x.organismoId) : [],
   });
   if (!roles.has("gerencia")) return <VistaPersonal base={base} o={o} pestana={pestana} />;
 

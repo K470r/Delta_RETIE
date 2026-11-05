@@ -88,10 +88,15 @@ const ADMINISTRACION: RolOEC[] = ["representante_legal", "gerente", "miembro_ger
 export function rolesMenu(opciones: {
   local: boolean; esAdminPlataforma: boolean; usuarioId?: string;
   base: BaseOrganismos | null; personaId?: string; organismoId?: string;
+  /** Organismos con acceso de revisión temporal vigente (ve todo, solo lectura). */
+  enRevision?: string[];
 }): Set<RolMenu> {
   if (opciones.local) return new Set(TODOS);
   const r = new Set<RolMenu>();
   if (opciones.esAdminPlataforma) r.add("admin");
+  if (opciones.organismoId && opciones.enRevision?.includes(opciones.organismoId)) {
+    r.add("inspector"); r.add("revisor"); r.add("gerencia");
+  }
   const { base, personaId, organismoId } = opciones;
   if (!base || !organismoId) return r;
   const hoy = hoyISO();
