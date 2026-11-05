@@ -2,8 +2,9 @@
 -- Borra los datos de PRUEBA creados durante la verificación de la conexión:
 --   * organismos cuyo NIT empieza por PRUEBA
 --   * personas cuyo documento empieza por PRUEBA (con su hoja de vida)
--- La aplicación nunca borra (17020 §8.4); por eso este bloque desactiva los
--- disparadores solo mientras se ejecuta. La bitácora se conserva.
+-- La aplicación nunca borra (17020 §8.4); por eso este bloque apaga los
+-- disparadores de estas tablas mientras borra y los vuelve a encender al final
+-- (dentro de la misma operación). La bitácora se conserva.
 -- Es un solo bloque: se ejecuta completo o no se ejecuta nada.
 -- Pegar en Supabase → SQL Editor → New query → Run.
 -- ============================================================================
@@ -13,8 +14,14 @@ declare
   pers uuid[] := array(select id from personas where documento like 'PRUEBA%');
   des  uuid[];
   cer  uuid[];
+  t    text;
+  tablas text[] := array['designacion_actividades','designaciones','declaraciones','revisiones_sg','vinculaciones',
+                         'certificado_categorias','certificados_competencia','experiencias','formacion',
+                         'alcance_acreditado','sedes','organismos','personas'];
 begin
-  perform set_config('session_replication_role', 'replica', true);   -- solo en este bloque
+  foreach t in array tablas loop
+    execute format('alter table %I disable trigger user', t);
+  end loop;
   des := array(select id from designaciones where organismo_id = any(orgs) or persona_id = any(pers));
   cer := array(select id from certificados_competencia where persona_id = any(pers));
 
@@ -34,6 +41,9 @@ begin
   delete from organismos where id = any(orgs);
   delete from personas where id = any(pers);
 
+  foreach t in array tablas loop
+    execute format('alter table %I enable trigger user', t);
+  end loop;
   raise notice 'Borrados: % organismo(s) y % persona(s) de prueba', cardinality(orgs), cardinality(pers);
 end $$;
 
