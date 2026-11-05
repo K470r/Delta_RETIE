@@ -15,6 +15,7 @@ import {
 } from "@/lib/requisitos";
 import { Boton, Campo, Entrada, Errores, Grupo, Selector, claseBoton } from "../Formulario";
 import { Icono } from "../Icono";
+import { EnlaceMotivo, seccionDeMotivo } from "./EnlaceMotivo";
 import { abrirArchivo, cargarArchivo, extension, REGLAS_SOPORTE } from "@/lib/archivos";
 import { aceptarMatricula, mostrarError } from "@/lib/organismo/almacen";
 import { entidadMatricula, estadoMatricula } from "@/lib/organismo/matricula";
@@ -102,7 +103,7 @@ function Matricula({ persona }: { persona: Persona }) {
   }[e];
   const puedeAceptar = e === "por_aceptar" && gerencia && persona.id !== yo;
   return (
-    <section className="space-y-1">
+    <section id="matricula" className="scroll-mt-24 rounded-xl transition-shadow space-y-1">
       <h3 className="text-sm font-semibold">Matrícula profesional</h3>
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span>{datos || "—"}</span>
@@ -134,7 +135,7 @@ function Certificados({ persona }: { persona: Persona }) {
   const [seguimiento, setSeguimiento] = useState<string | null>(null);
   const hoy = hoyISO();
   return (
-    <section className="space-y-2">
+    <section id="certificados" className="scroll-mt-24 rounded-xl transition-shadow space-y-2">
       <h3 className="text-sm font-semibold">Certificados de competencias</h3>
       {persona.certificados.length === 0 && <p className="suave text-sm">Sin certificados registrados.</p>}
       {persona.certificados.map((c) => {
@@ -331,7 +332,7 @@ function Experiencias({ persona }: { persona: Persona }) {
     r, total: aniosExperiencia(persona, { reglamento: r.reglamento, tipos: [...r.tiposExperienciaTecnica, ...r.directorTecnico.tiposExperienciaDireccion] }, hoy),
   })).filter((x) => x.total > 0);
   return (
-    <section className="space-y-2">
+    <section id="experiencias" className="scroll-mt-24 rounded-xl transition-shadow space-y-2">
       <h3 className="text-sm font-semibold">Experiencia laboral del ejercicio profesional</h3>
       <p className="suave text-xs">Solo cuenta la experiencia con soporte <b>verificado</b> por el organismo. Los periodos que se traslapan no se suman dos veces.</p>
       {resumen.length > 0 && (
@@ -440,7 +441,7 @@ function Formaciones({ persona }: { persona: Persona }) {
   const [nueva, setNueva] = useState(false);
   const { yo } = useVerificador();
   return (
-    <section className="space-y-2">
+    <section id="formacion" className="scroll-mt-24 rounded-xl transition-shadow space-y-2">
       <h3 className="text-sm font-semibold">Formación académica</h3>
       {persona.formacion.map((f) => (
         <div key={f.id} className="flex flex-wrap items-start justify-between gap-2 rounded-lg border p-3 text-sm" style={{ borderColor: "var(--borde)" }}>
@@ -535,7 +536,7 @@ export function MatrizHabilitacion({ persona }: { persona: Persona }) {
     );
   };
   return (
-    <section className="space-y-2">
+    <section id="habilitacion" className="scroll-mt-24 rounded-xl transition-shadow space-y-2">
       <h3 className="text-sm font-semibold">Habilitación por categoría (calculada)</h3>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
@@ -571,7 +572,7 @@ export function ListaRequisitos({ persona, actividad, rol }: { persona: Persona;
       {h.items.map((i) => (
         <li key={i.requisito} className="flex gap-2">
           <span className={i.cumple ? "text-emerald-600" : i.bloquea ? "text-red-600" : "text-amber-600"}>{i.cumple ? "✓" : i.bloquea ? "✕" : "!"}</span>
-          <span><b>{i.requisito}:</b> {i.detalle}</span>
+          <span><b>{i.requisito}:</b> {i.cumple ? i.detalle : <EnlaceMotivo personaId={persona.id} texto={i.detalle} seccion={seccionDeMotivo(i.requisito)} />}</span>
         </li>
       ))}
       {h.alertas.map((a) => <li key={a} className="text-amber-600">! {a}</li>)}
