@@ -155,6 +155,14 @@ que vencen en minutos; la base de datos solo los entrega si el rol lo permite. N
   antes de designarse carga logos, póliza y declaración de independencia (después solo la
   gerencia o el SG modifican el organismo); luego designa a la gerente.
 
+## Correcciones
+
+- Nada se borra (17020 §8.4). Excepción: **"Quitar (registrada por error)"** para una actividad
+  del alcance del organismo o una actividad autorizada a un director técnico o inspector, solo si
+  nunca se usó (nadie la tiene autorizada / no hay órdenes de servicio). Lo hace quien administra
+  el organismo, con motivo obligatorio, y queda en la bitácora (`0007_quitar_por_error.sql`).
+- Lo que sí se usó no se quita: se cambia de estado (actividad retirada) o se finaliza la designación.
+
 ## Datos personales (Ley 1581 de 2012)
 
 - El personal del organismo ya autorizó el tratamiento de sus datos.
