@@ -75,7 +75,7 @@ export function mensajeAuth(msg: string): string {
     [/rate limit|too many|over_email_send_rate_limit/i, "Se enviaron demasiados correos. Espere unos minutos (Supabase limita los envíos por hora) e intente de nuevo"],
     [/For security purposes, you can only request this after (\d+) seconds?/i, "Por seguridad, espere unos segundos antes de pedir otro correo"],
     [/expired|invalid.*(token|otp)|otp_expired|token.*invalid/i, "El código o enlace es inválido o ya venció. Pida uno nuevo"],
-    [/signups? not allowed|signup is disabled/i, "El registro de usuarios nuevos está deshabilitado en Supabase"],
+    [/signups? not allowed|signup is disabled|user not found/i, "Ese correo no tiene usuario en la plataforma. Pida al administrador que se lo cree"],
     [/invalid.*email|unable to validate email/i, "El correo no es válido"],
     [/email.*not.*confirmed/i, "El correo aún no está confirmado"],
     [/redirect/i, "La dirección de regreso no está autorizada en Supabase (Authentication → URL Configuration)"],

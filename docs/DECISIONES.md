@@ -89,7 +89,40 @@ organismo de inspección). Antes de cambiar algo de esta lista, se propone y se 
 
 ## Acceso
 
+- Aplicación publicada en **https://delta-retie.vercel.app** (Vercel Hobby, equipo GCEI;
+  se publica sola cada vez que cambia `main`).
 - Ingreso con **correo y contraseña** o con **enlace al correo**. Cada persona cambia su
   contraseña en "Mi cuenta".
+- **Nadie puede crearse una cuenta por su cuenta.** Los usuarios los crea el administrador
+  (Supabase → Authentication → Users → Add user). La aplicación no crea usuarios al pedir el
+  enlace, y en Supabase está desactivado *Allow new users to sign up*.
+- Revisores de la aplicación (aliados): **opción B**, entran al organismo real con un rol y
+  firman el acuerdo de confidencialidad al ser designados.
+
+## Quién ve qué (aprobado)
+
+Todos los archivos están en carpetas privadas (incluidos los logos) y se abren con enlaces
+que vencen en minutos; la base de datos solo los entrega si el rol lo permite. Nadie más.
+
+| Información | La persona misma | Gerencia | Responsable SG | Director técnico | Revisor asignado | Inspector asignado | Otros inspectores |
+|---|---|---|---|---|---|---|---|
+| Hoja de vida y sus soportes | ✅ | ✅ | ✅ | ✅ | — | — | ❌ |
+| Procedimientos, manual y formatos vigentes | ✅ (todo el personal vinculado) | ✅ | ✅ editar | ✅ | ✅ | ✅ | ✅ |
+| Registros del SG (auditorías, revisión por la dirección, acciones) | — | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Evidencias de una inspección (fotos, videos, PDF) | — | ❌ | ✅ (auditoría) | ✅ | ✅ | ✅ | ❌ |
+| Informe de no conformidades y dictamen | — | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Cotizaciones y datos del cliente | — | ✅ | ✅ | ✅ | ❌ | solo la orden asignada | ❌ |
+
+- "Gerencia" = representante legal, gerente y miembros de la gerencia. Los logos los ve el
+  personal vinculado al organismo.
+- Hecho en `0005_acceso_por_rol.sql`: hoja de vida y soportes, logos privados. Las demás filas
+  se aplican al construir cada módulo.
+
+## Datos personales (Ley 1581 de 2012)
+
+- El personal del organismo ya autorizó el tratamiento de sus datos.
+- Clientes: el organismo les está informando. No se publica nada. Antes de cargar inspecciones
+  reales (fase 2), el aviso debe cubrir también el almacenamiento de evidencias y, si se usa,
+  su revisión con IA en la nube.
 - Las plantillas de correo de Supabase solo se editan con un servidor de correo propio (SMTP);
   queda para cuando se configure el correo con el dominio del organismo.

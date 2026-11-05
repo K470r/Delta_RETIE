@@ -72,6 +72,8 @@ export type CertificadoCompetencia = {
   /** Seguimiento obligatorio al mes 30 (RETIE §4.4.2.6 / RETILAP §4.5.2.6). */
   seguimiento?: { fecha: string; resultado: "conforme" | "no_conforme"; observacion?: string };
   anulado: boolean;
+  /** Archivo de soporte (PDF o imagen) en la carpeta privada de la persona. */
+  soporteRuta?: string;
 };
 
 export type Formacion = {
@@ -87,6 +89,8 @@ export type Formacion = {
   verificada: boolean;
   /** Persona que verificó el soporte (quien inició sesión; nunca la misma persona). */
   verificadaPor?: string;
+  /** Archivo de soporte (PDF o imagen) en la carpeta privada de la persona. */
+  soporteRuta?: string;
 };
 
 export type Experiencia = {
@@ -103,6 +107,8 @@ export type Experiencia = {
   verificada: boolean;
   /** Persona que verificó el soporte (quien inició sesión; nunca la misma persona). */
   verificadaPor?: string;
+  /** Archivo de soporte (PDF o imagen) en la carpeta privada de la persona. */
+  soporteRuta?: string;
 };
 
 export type Persona = {

@@ -14,6 +14,9 @@ import {
   AREAS_ILUMINACION, NOMBRE_TIPO_EXPERIENCIA, REQUISITOS, etiquetaCategoria, requisitosDe, type TipoExperiencia,
 } from "@/lib/requisitos";
 import { Boton, Campo, Entrada, Errores, Grupo, Selector } from "../Formulario";
+import { Icono } from "../Icono";
+import { abrirArchivo, cargarArchivo, extension, REGLAS_SOPORTE } from "@/lib/archivos";
+import { mostrarError } from "@/lib/organismo/almacen";
 
 const modificarPersona = (id: string, f: (p: Persona) => Persona, mostrarError = true) =>
   actualizar((b) => ({ ...b, personas: b.personas.map((p) => (p.id === id ? f(p) : p)) }), { mostrarError });
@@ -26,6 +29,36 @@ function useVerificador() {
     yo: yo?.id,
     nombre: (id?: string) => (id ? nombrePersona(base?.personas.find((p) => p.id === id)) : ""),
   };
+}
+
+type Lista = "certificados" | "experiencias" | "formacion";
+
+/** Ver o cargar el archivo de soporte (PDF o imagen) de un ítem de la hoja de vida. */
+function Soporte({ persona, lista, id, ruta }: { persona: Persona; lista: Lista; id: string; ruta?: string }) {
+  const [ocupado, setOcupado] = useState(false);
+  const cargar = async (archivo?: File) => {
+    if (!archivo) return;
+    setOcupado(true);
+    const r = await cargarArchivo("soportes", `${persona.id}/${lista}-${id}-${Date.now()}.${extension(archivo)}`, archivo, REGLAS_SOPORTE);
+    if (r.error || !r.ruta) { setOcupado(false); return mostrarError(r.error ?? "No se pudo cargar el soporte"); }
+    await modificarPersona(persona.id, (p) => ({ ...p, [lista]: (p[lista] as { id: string }[]).map((x) => (x.id === id ? { ...x, soporteRuta: r.ruta } : x)) }));
+    setOcupado(false);
+  };
+  return (
+    <span className="flex flex-wrap items-center gap-3 text-xs">
+      {ruta && (
+        <button type="button" className="flex items-center gap-1 font-semibold marca underline"
+          onClick={async () => { const e = await abrirArchivo("soportes", ruta); if (e) mostrarError(e); }}>
+          <Icono nombre="gestion" tamano={14} /> Ver soporte
+        </button>
+      )}
+      <label className="flex cursor-pointer items-center gap-1 suave underline">
+        <Icono nombre="subir" tamano={14} /> {ocupado ? "Cargando…" : ruta ? "Cambiar soporte" : "Cargar soporte (PDF)"}
+        <input type="file" accept="application/pdf,image/png,image/jpeg" className="sr-only" disabled={ocupado}
+          onChange={(e) => { cargar(e.target.files?.[0]); e.target.value = ""; }} />
+      </label>
+    </span>
+  );
 }
 
 function VerificadoPor({ id }: { id?: string }) {
@@ -75,6 +108,7 @@ function Certificados({ persona }: { persona: Persona }) {
                 <div className={`text-xs font-semibold ${e.vigente ? "text-emerald-600" : "text-red-600"}`}>
                   {e.vigente ? "Vigente" : e.motivo}{e.alertas.length > 0 && <span className="text-amber-600"> · {e.alertas.join(" · ")}</span>}
                 </div>
+                <div className="mt-1"><Soporte persona={persona} lista="certificados" id={c.id} ruta={c.soporteRuta} /></div>
               </div>
               {!c.anulado && (
                 <div className="flex flex-col items-end gap-1 text-xs">
@@ -205,6 +239,7 @@ function Experiencias({ persona }: { persona: Persona }) {
             <div className="suave text-xs">{e.desde} a {e.hasta ?? "la fecha"} · {NOMBRE_REG(e.reglamento)}
               {e.categorias.length > 0 && ` · categorías ${e.categorias.join(", ")}`}</div>
             <div className="suave text-xs">{e.tipos.map((t) => NOMBRE_TIPO_EXPERIENCIA[t as TipoExperiencia] ?? t).join(", ")}</div>
+            <div className="mt-1"><Soporte persona={persona} lista="experiencias" id={e.id} ruta={e.soporteRuta} /></div>
           </div>
           <div className="text-right">
             <label className="flex items-center justify-end gap-1 text-xs">
@@ -307,6 +342,7 @@ function Formaciones({ persona }: { persona: Persona }) {
           <div>
             <b>{NOMBRE_FORMACION[f.tipo]}</b>: {f.titulo} · {f.institucion} · {f.fecha}
             {f.enIluminacion && <div className="text-xs">En iluminación / alumbrado público{f.areasIluminacion.length > 0 && `: ${f.areasIluminacion.map((a) => AREAS_ILUMINACION[a]).join("; ")}`}</div>}
+            <div className="mt-1"><Soporte persona={persona} lista="formacion" id={f.id} ruta={f.soporteRuta} /></div>
           </div>
           <div className="text-right">
             <label className="flex items-center justify-end gap-1 text-xs">

@@ -16,7 +16,9 @@ import { designacionesVigentes, evaluarOrganismo, hoyISO, nombrePersona, vigente
 import type { BaseOrganismos, EstadoLinea, Organismo, RolOEC } from "@/lib/organismo/tipos";
 import { Icono, type NombreIcono } from "@/components/Icono";
 import { LogosOrganismo } from "@/components/organismo/LogosOrganismo";
-import { NOMBRE_PESTANA, seccionActual } from "@/lib/navegacion";
+import { NOMBRE_PESTANA, rolesMenu, seccionActual } from "@/lib/navegacion";
+import { HojaDeVida, MatrizHabilitacion } from "@/components/organismo/HojaDeVida";
+import { NOMBRE_ROL } from "@/lib/organismo/tipos";
 
 
 export default function PaginaOrganismo() {
@@ -28,10 +30,22 @@ function Contenido() {
   const params = useSearchParams();
   const router = useRouter();
   const base = useBase();
+  const sesion = useSesion();
+  const yo = usePersonaActual(base);
   const pestana = params.get("p") ?? "resumen";
   if (!base) return <p className="suave">Cargando…</p>;
   const o = base.organismos.find((x) => x.id === id);
   if (!o) return <p>Organismo no encontrado. <Link href="/organismos" className="underline">Volver</Link></p>;
+
+  // Tabla de acceso (docs/DECISIONES.md): quien no es de la gerencia, el SG o la dirección técnica
+  // solo ve lo suyo. La base de datos lo exige igual; esto evita mostrar datos incompletos.
+  const roles = rolesMenu({
+    local: sesion.estado === "local",
+    esAdminPlataforma: sesion.estado === "con_sesion" && sesion.esAdminPlataforma,
+    usuarioId: sesion.estado === "con_sesion" ? sesion.usuarioId : undefined,
+    base, personaId: yo?.id, organismoId: o.id,
+  });
+  if (!roles.has("gerencia")) return <VistaPersonal base={base} o={o} pestana={pestana} />;
 
   // Pestañas de la sección del menú en la que se está (el menú lateral elige la sección).
   const pestanas = seccionActual(`/organismos/${o.id}`, pestana)?.pestanas ?? [];
@@ -85,6 +99,33 @@ function Contenido() {
           descripcion="Inspectores autorizados formalmente por actividad (17020 §6.1.6). La autorización queda limitada a las actividades acreditadas del organismo que estén cubiertas por un certificado de competencias vigente; si el certificado vence o la línea se retira, el tablero lo marca de inmediato." />
       )}
       {pestana === "onac" && <PersonalONAC base={base} o={o} />}
+    </div>
+  );
+}
+
+// ───────────────────────── Vista de quien no administra ─────────────────────────
+/** Inspectores y demás personal: su habilitación y su hoja de vida, nada de los demás. */
+function VistaPersonal({ base, o, pestana }: { base: BaseOrganismos; o: Organismo; pestana: string }) {
+  const yo = usePersonaActual(base);
+  if (!yo) return <p className="tarjeta p-4 text-sm">Su usuario aún no está enlazado a una persona de este organismo.</p>;
+  const mias = designacionesVigentes(base, o.id, Object.keys(NOMBRE_ROL) as RolOEC[]).filter((d) => d.personaId === yo.id);
+  const enPersonal = ["dt", "inspectores", "onac"].includes(pestana);
+  const deGerencia = ["alcance", "gerencia", "sg"].includes(pestana);
+  if (deGerencia) return <p className="tarjeta p-4 text-sm">Esta sección la administran la gerencia y el responsable del sistema de gestión.</p>;
+  return (
+    <div className="space-y-5">
+      <section className="tarjeta space-y-2 p-4">
+        <h2 className="font-semibold">{enPersonal ? "Mi hoja de vida" : `Hola, ${yo.nombres}`}</h2>
+        <p className="suave text-sm">
+          {o.razonSocial}{mias.length ? ` · ${mias.map((d) => NOMBRE_ROL[d.rol]).join(", ")}` : " · sin designación vigente"}
+        </p>
+        {!enPersonal && mias.some((d) => d.actividades.length) && (
+          <ul className="list-disc pl-5 text-sm">
+            {mias.flatMap((d) => d.actividades).map((a) => <li key={a}>{actividad(a)?.nombre ?? a}</li>)}
+          </ul>
+        )}
+      </section>
+      {enPersonal ? <HojaDeVida persona={yo} /> : <section className="tarjeta p-4"><MatrizHabilitacion persona={yo} /></section>}
     </div>
   );
 }
