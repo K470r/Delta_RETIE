@@ -9,7 +9,9 @@ export type Sesion =
   | { estado: "local" }                       // sin Supabase: no se exige inicio de sesión
   | { estado: "cargando" }
   | { estado: "sin_sesion" }
-  | { estado: "con_sesion"; usuarioId: string; correo: string; esAdminPlataforma: boolean; aviso?: string };
+  | { estado: "con_sesion"; usuarioId: string; correo: string; esAdminPlataforma: boolean; aviso?: string;
+      /** Accesos de revisión temporal vigentes (solo lectura de todo el organismo). */
+      revision: { organismoId: string; hasta: string }[] };
 
 let actual: Sesion = CON_SUPABASE ? { estado: "cargando" } : { estado: "local" };
 let iniciada = false;
@@ -24,9 +26,13 @@ async function desdeUsuario(u: { id: string; email?: string } | null | undefined
   if (!u) return publicar({ estado: "sin_sesion" });
   const base = { estado: "con_sesion" as const, usuarioId: u.id, correo: (u.email ?? "").toLowerCase() };
   // Publicar ya la sesión y luego completar si es administrador de la plataforma.
-  if (actual.estado !== "con_sesion" || actual.usuarioId !== u.id) publicar({ ...base, esAdminPlataforma: false });
-  const { data, error } = await supabase().rpc("soy_admin_plataforma");
-  publicar({ ...base, esAdminPlataforma: data === true, aviso: error ? mensajeError(error) : undefined });
+  if (actual.estado !== "con_sesion" || actual.usuarioId !== u.id) publicar({ ...base, esAdminPlataforma: false, revision: [] });
+  const [{ data, error }, rev] = await Promise.all([
+    supabase().rpc("soy_admin_plataforma"),
+    supabase().rpc("mis_accesos_revision"),   // si aún no existe la migración 0006, se ignora
+  ]);
+  const revision = ((rev.data ?? []) as { organismo_id: string; hasta: string }[]).map((r) => ({ organismoId: r.organismo_id, hasta: r.hasta }));
+  publicar({ ...base, esAdminPlataforma: data === true, aviso: error ? mensajeError(error) : undefined, revision });
 }
 
 function iniciar() {

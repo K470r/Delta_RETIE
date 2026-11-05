@@ -50,6 +50,7 @@ function Marco({ children }: { children: ReactNode }) {
     esAdminPlataforma: sesion.estado === "con_sesion" && sesion.esAdminPlataforma,
     usuarioId: sesion.estado === "con_sesion" ? sesion.usuarioId : undefined,
     base, personaId: yo?.id, organismoId: organismo?.id,
+    enRevision: sesion.estado === "con_sesion" ? sesion.revision.map((x) => x.organismoId) : [],
   });
   const actual = seccionActual(ruta, pestana);
   const grupos = GRUPOS.map((g) => ({ ...g, secciones: g.secciones.filter((s) => visible(s, roles)) })).filter((g) => g.secciones.length);
@@ -136,6 +137,13 @@ function Marco({ children }: { children: ReactNode }) {
         </header>
         <main className="mx-auto max-w-6xl px-4 pb-28 pt-6 lg:px-8 lg:pb-12">
           <AvisoError />
+          {sesion.estado === "con_sesion" && organismo && sesion.revision.find((x) => x.organismoId === organismo.id) && (
+            <p className="mb-4 flex items-center gap-2 rounded-lg border p-3 text-sm" style={{ borderColor: "#B9D9E3", background: "#E6F3F7", color: "#0B4F64" }}>
+              <Icono nombre="dictamenes" tamano={18} />
+              <span><b>Acceso de revisión:</b> puede ver todo el organismo en solo lectura hasta el{" "}
+                {new Date(sesion.revision.find((x) => x.organismoId === organismo.id)!.hasta).toLocaleString("es-CO", { dateStyle: "long", timeStyle: "short" })}.</span>
+            </p>
+          )}
           {sesion.estado === "con_sesion" && sesion.aviso && (
             <p className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{sesion.aviso}</p>
           )}

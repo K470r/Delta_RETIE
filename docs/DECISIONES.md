@@ -96,8 +96,14 @@ organismo de inspección). Antes de cambiar algo de esta lista, se propone y se 
 - **Nadie puede crearse una cuenta por su cuenta.** Los usuarios los crea el administrador
   (Supabase → Authentication → Users → Add user). La aplicación no crea usuarios al pedir el
   enlace, y en Supabase está desactivado *Allow new users to sign up*.
-- Revisores de la aplicación (aliados): **opción B**, entran al organismo real con un rol y
-  firman el acuerdo de confidencialidad al ser designados.
+- Revisores de la aplicación (aliados): **opción B**, entran al organismo real con su rol real
+  y firman el acuerdo de confidencialidad al ser designados. Roles: Luisa, gerente;
+  Nelson, gerente e inspector; Eimi, inspectora. El segundo correo del usuario
+  no se usa. Por ahora solo se crea el usuario de Eimi.
+- **Acceso de revisión temporal** (`0006_acceso_revision.sql`): para que alguien vea todo el
+  organismo en solo lectura por un tiempo limitado, sin designaciones falsas. Lo otorga solo el
+  administrador de la plataforma, con fecha y hora de vencimiento, y queda en la bitácora.
+  Primer uso: Eimi, hasta el 6 de noviembre de 2026 (hoy y mañana).
 
 ## Quién ve qué (aprobado)
 
