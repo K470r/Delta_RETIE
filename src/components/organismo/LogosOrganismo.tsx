@@ -39,19 +39,18 @@ export function LogosOrganismo({ o }: { o: Organismo }) {
       </div>
       <Errores errores={errores} />
       <div className="tarjeta space-y-2 p-4">
-        <h3 className="text-sm font-semibold">Vista previa: encabezado del dictamen</h3>
-        <div className="flex items-center gap-4 rounded-lg border p-4" style={{ borderColor: "var(--borde)" }}>
-          <Miniatura src={logo} texto="Logo del organismo" />
-          <div className="flex-1 text-center">
+        <h3 className="text-sm font-semibold">Vista previa: encabezado del informe de no conformidades y del dictamen</h3>
+        <div className="flex flex-wrap items-start gap-6 rounded-lg border bg-white p-4 text-slate-900" style={{ borderColor: "var(--borde)" }}>
+          <EncabezadoResultados simbolo={simbolo} logo={logo} codigo={o.codigoAcreditacion} />
+          <div className="min-w-48 flex-1 self-center text-center">
             <div className="font-titulo font-extrabold">DICTAMEN DE INSPECCIÓN</div>
-            <div className="suave text-xs">{o.razonSocial} · Organismo de inspección tipo A</div>
-          </div>
-          <div className="flex flex-col items-center gap-1">
-            <Miniatura src={simbolo} texto="Símbolo ONAC" />
-            <span className="suave text-[11px]">{o.codigoAcreditacion ?? "[código de acreditación]"}</span>
+            <div className="text-xs text-slate-600">{o.razonSocial} · Organismo de inspección tipo A</div>
           </div>
         </div>
-        <p className="suave text-xs">Su uso debe seguir las reglas de ONAC para el uso del símbolo de acreditado.</p>
+        <p className="suave text-xs">
+          Símbolo ONAC a la izquierda y logo del organismo a la derecha, alineados arriba y separados el diámetro de la "O" de ONAC.
+          Solo en el informe de no conformidades y en el dictamen. Su uso debe seguir las reglas de ONAC para el uso del símbolo de acreditado.
+        </p>
       </div>
     </section>
   );
@@ -77,9 +76,27 @@ function Carga({ titulo, ayuda, imagen, ocupado, onArchivo }: {
   );
 }
 
-function Miniatura({ src, texto }: { src?: string; texto: string }) {
-  return src
-    // eslint-disable-next-line @next/next/no-img-element
-    ? <img src={src} alt={texto} className="h-14 w-24 object-contain" />
-    : <span className="suave flex h-14 w-24 items-center justify-center rounded-md text-center text-[11px]" style={{ background: "var(--fondo)" }}>[{texto}]</span>;
+
+/**
+ * Regla de GC&I (docs/DECISIONES.md): símbolo ONAC a la izquierda y logo del organismo a la
+ * derecha, alineados arriba, separados el diámetro de la "O" de ONAC (11 % del ancho del
+ * símbolo); el logo del organismo tiene la altura del recuadro verde (41 % del ancho del símbolo).
+ */
+export function EncabezadoResultados({ simbolo, logo, codigo, ancho = 200 }: { simbolo?: string; logo?: string; codigo?: string; ancho?: number }) {
+  const separacion = Math.round(ancho * 84 / 759);
+  const alto = Math.round(ancho * 312 / 759);
+  return (
+    <div className="flex items-start" style={{ gap: separacion }}>
+      {simbolo
+        // eslint-disable-next-line @next/next/no-img-element
+        ? <img src={simbolo} alt="Símbolo de acreditado ONAC" style={{ width: ancho, height: "auto" }} />
+        : <span className="flex items-center justify-center rounded-md bg-slate-100 text-center text-[11px] text-slate-500"
+            style={{ width: ancho, height: Math.round(ancho * 512 / 759) }}>[Símbolo ONAC con {codigo ?? "código"}]</span>}
+      {logo
+        // eslint-disable-next-line @next/next/no-img-element
+        ? <img src={logo} alt="Logo del organismo" style={{ height: alto, width: "auto" }} />
+        : <span className="flex items-center justify-center rounded-md bg-slate-100 text-center text-[11px] text-slate-500"
+            style={{ height: alto, width: Math.round(alto * 476 / 310) }}>[Logo del organismo]</span>}
+    </div>
+  );
 }

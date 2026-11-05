@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { actividad, nombreCorto } from "@/lib/catalogo";
-import { actualizar, nuevoId } from "@/lib/organismo/almacen";
+import { actualizar, nuevoId, pedirMotivo, quitarAutorizacionPorError } from "@/lib/organismo/almacen";
 import {
   hoyISO, lineasAcreditadas, motivoNoPuedeEjercer, nombrePersona,
   validarDesignacion, vigenteEn, vinculacionVigente,
@@ -120,14 +120,14 @@ function TarjetaDesignacion({ base, organismo, d, onFinalizar }: {
       {onFinalizar && ROLES_CON_ACTIVIDADES.includes(d.rol) && <AutorizarActividades base={base} organismo={organismo} d={d} />}
       {d.actividades.length > 0 && (
         <ul className="space-y-1 text-sm">
-          {d.actividades.map((a) => <FilaActividad key={a} base={base} organismo={organismo} d={d} actividad={a} />)}
+          {d.actividades.map((a) => <FilaActividad key={a} base={base} organismo={organismo} d={d} actividad={a} corregible={!!onFinalizar} />)}
         </ul>
       )}
     </article>
   );
 }
 
-function FilaActividad({ base, organismo, d, actividad: a }: { base: BaseOrganismos; organismo: Organismo; d: Designacion; actividad: string }) {
+function FilaActividad({ base, organismo, d, actividad: a, corregible }: { base: BaseOrganismos; organismo: Organismo; d: Designacion; actividad: string; corregible?: boolean }) {
   const [abierta, setAbierta] = useState(false);
   const p = base.personas.find((x) => x.id === d.personaId)!;
   const rol = rolTecnico(d.rol);
@@ -146,7 +146,16 @@ function FilaActividad({ base, organismo, d, actividad: a }: { base: BaseOrganis
           </span>
         </span>
       </button>
-      {abierta && <div className="ml-6 mt-1"><ListaRequisitos persona={p} actividad={a} rol={rol} /></div>}
+      {abierta && (
+        <div className="ml-6 mt-1 space-y-1">
+          <ListaRequisitos persona={p} actividad={a} rol={rol} />
+          {corregible && (
+            <button className="text-xs text-red-700 underline" onClick={() => {
+              const m = pedirMotivo(`${nombreCorto(a)} — ${nombrePersona(p)}`); if (m) quitarAutorizacionPorError(d.id, a, m);
+            }}>Quitar esta actividad (autorizada por error)</button>
+          )}
+        </div>
+      )}
     </li>
   );
 }

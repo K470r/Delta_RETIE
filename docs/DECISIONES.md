@@ -68,6 +68,14 @@ organismo de inspección). Antes de cambiar algo de esta lista, se propone y se 
   entrega de resultados: el informe de no conformidades y el dictamen**. En todo lo demás va
   únicamente el logo del organismo. Su uso debe seguir las reglas de ONAC para el uso del
   símbolo de acreditado.
+- **En el informe de no conformidades y en el dictamen van juntos**: símbolo ONAC a la
+  izquierda y logo del organismo a la derecha, alineados arriba, separados exactamente **el
+  diámetro de la "O" de la palabra ONAC** (en el archivo del usuario: símbolo de 759×312 px y
+  separación de 84 px, es decir, 11 % del ancho del símbolo). El símbolo va con el texto
+  "ISO/IEC 17020:2012" y el código de acreditación debajo, y se usa la versión **sin fondo
+  blanco** porque la hoja del dictamen es blanca.
+- Corrección pendiente en el archivo del usuario: el texto dice `17-0IN-032` (con cero); el
+  código del certificado es `17-OIN-032` (con la letra O).
 
 ## Prueba de concepto (por fases)
 
@@ -146,6 +154,14 @@ que vencen en minutos; la base de datos solo los entrega si el rol lo permite. N
 - Arranque de GC&I: el director técnico (el usuario) se designa con las actividades pendientes;
   antes de designarse carga logos, póliza y declaración de independencia (después solo la
   gerencia o el SG modifican el organismo); luego designa a la gerente.
+
+## Correcciones
+
+- Nada se borra (17020 §8.4). Excepción: **"Quitar (registrada por error)"** para una actividad
+  del alcance del organismo o una actividad autorizada a un director técnico o inspector, solo si
+  nunca se usó (nadie la tiene autorizada / no hay órdenes de servicio). Lo hace quien administra
+  el organismo, con motivo obligatorio, y queda en la bitácora (`0007_quitar_por_error.sql`).
+- Lo que sí se usó no se quita: se cambia de estado (actividad retirada) o se finaliza la designación.
 
 ## Datos personales (Ley 1581 de 2012)
 

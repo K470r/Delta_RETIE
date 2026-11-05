@@ -139,6 +139,35 @@ export function actualizar(cambio: (b: BaseOrganismos) => BaseOrganismos, opcion
 
 export const nuevoId = () => crypto.randomUUID();
 
+/**
+ * Corrige un registro hecho por error (migración 0007): lo quita con motivo y queda en la
+ * bitácora. La base de datos se niega si ya se usó. Devuelve el error en español o null.
+ */
+async function corregir(rpc: string, args: Record<string, string>, local: (b: BaseOrganismos) => BaseOrganismos): Promise<string | null> {
+  if (!CON_SUPABASE) return actualizar(local);
+  const { supabase } = await import("../supabase");
+  const { error } = await supabase().rpc(rpc, args);
+  await recargar();
+  if (error) { const m = mensajeError(error); mostrarError(m); return m; }
+  return null;
+}
+
+export const quitarAlcancePorError = (organismoId: string, actividad: string, motivo: string) =>
+  corregir("quitar_alcance_por_error", { p_organismo: organismoId, p_actividad: actividad, p_motivo: motivo },
+    (b) => ({ ...b, organismos: b.organismos.map((o) => (o.id === organismoId ? { ...o, alcance: o.alcance.filter((l) => l.actividad !== actividad) } : o)) }));
+
+export const quitarAutorizacionPorError = (designacionId: string, actividad: string, motivo: string) =>
+  corregir("quitar_autorizacion_por_error", { p_designacion: designacionId, p_actividad: actividad, p_motivo: motivo },
+    (b) => ({ ...b, designaciones: b.designaciones.map((d) => (d.id === designacionId ? { ...d, actividades: d.actividades.filter((a) => a !== actividad) } : d)) }));
+
+/** Pide el motivo (obligatorio) para quitar algo registrado por error. */
+export function pedirMotivo(que: string): string | null {
+  const m = prompt(`Quitar "${que}" porque se registró por error.\n\nQueda en la bitácora con su nombre y la fecha.\nMotivo (obligatorio):`);
+  if (m === null) return null;
+  if (!m.trim()) { alert("Debe escribir el motivo."); return null; }
+  return m.trim();
+}
+
 /** Persona enlazada al usuario que inició sesión (por el correo). */
 export function usePersonaActual(base: BaseOrganismos | null): Persona | undefined {
   const s = useSesion();

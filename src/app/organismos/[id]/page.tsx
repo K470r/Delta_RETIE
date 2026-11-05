@@ -10,7 +10,7 @@ import { SelectorActividades } from "@/components/SelectorActividades";
 import { EtiquetaEstado } from "@/components/Estado";
 import { ACTIVIDADES, actividad, agrupar } from "@/lib/catalogo";
 import { NUMERALES_17020 } from "@/lib/iso17020";
-import { actualizar, nuevoId, useBase, usePersonaActual } from "@/lib/organismo/almacen";
+import { actualizar, nuevoId, pedirMotivo, quitarAlcancePorError, useBase, usePersonaActual } from "@/lib/organismo/almacen";
 import { useSesion } from "@/lib/sesion";
 import { designacionesVigentes, evaluarOrganismo, hoyISO, nombrePersona, vigenteEn } from "@/lib/organismo/reglas";
 import type { BaseOrganismos, EstadoLinea, Organismo, RolOEC } from "@/lib/organismo/tipos";
@@ -297,6 +297,11 @@ function Alcance({ base, o }: { base: BaseOrganismos; o: Organismo }) {
                             {Object.entries(ESTADOS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                           </Selector>
                           <div className="suave text-xs">desde {l.fechaEstado}{l.observacion && ` · ${l.observacion}`}</div>
+                          {!base.designaciones.some((d) => d.organismoId === o.id && d.actividades.includes(a.codigo)) && (
+                            <button className="text-xs text-red-700 underline" onClick={() => {
+                              const m = pedirMotivo(a.nombre); if (m) quitarAlcancePorError(o.id, a.codigo, m);
+                            }}>Quitar (registrada por error)</button>
+                          )}
                         </div>
                       </li>
                     );
