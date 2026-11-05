@@ -45,10 +45,12 @@ const b2 = { ...b1, personas: [yo] };
 sql(b1, b2, "registrarse como persona");
 const b3: BaseOrganismos = { ...b2,
   vinculaciones: [{ id: "33333333-0000-0000-0000-000000000001", organismoId: O, personaId: yo.id, tipo: "laboral", cargo: "Director técnico", desde: hoy }],
-  designaciones: [{ id: "44444444-0000-0000-0000-000000000001", organismoId: O, personaId: yo.id, rol: "director_tecnico", desde: hoy, actividades: [] }],
+  designaciones: [{ id: "44444444-0000-0000-0000-000000000001", organismoId: O, personaId: yo.id, rol: "director_tecnico", desde: hoy, actividades: [] },
+    // También gerente: desde 0009 solo la gerencia y el SG modifican el organismo y el estado del alcance.
+    { id: "44444444-0000-0000-0000-0000000000a1", organismoId: O, personaId: yo.id, rol: "gerente", desde: hoy, actividades: [] }],
   declaraciones: (["imparcialidad", "confidencialidad"] as const).map((tipo, i) => ({ id: `55555555-0000-0000-0000-00000000000${i}`, organismoId: O, personaId: yo.id, tipo, fecha: hoy })),
 };
-sql(b2, b3, "vincularse, designarse director técnico y declarar");
+sql(b2, b3, "vincularse, designarse director técnico y gerente, y declarar");
 
 const desde = (dias: number) => new Date(Date.now() - dias * 864e5).toISOString().slice(0, 10);
 const inspCompleta: Persona = { ...insp,

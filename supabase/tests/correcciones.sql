@@ -14,12 +14,12 @@ set session_replication_role = origin;
 select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000002"}', false);
 set role authenticated;
 select prueba.debe_fallar('la inspectora no puede corregir el alcance',
-  $q$select quitar_alcance_por_error('bbbbbbbb-0000-0000-0000-000000000001', 'RETIE24-UF-MINAS', 'error')$q$, 'Solo quien administra');
+  $q$select quitar_alcance_por_error('bbbbbbbb-0000-0000-0000-000000000001', 'RETIE24-UF-MINAS', 'error')$q$, 'Solo');
 reset role;
 select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000003"}', false);
 set role authenticated;
 select prueba.debe_fallar('un usuario cualquiera tampoco',
-  $q$select quitar_alcance_por_error('bbbbbbbb-0000-0000-0000-000000000001', 'RETIE24-UF-MINAS', 'error')$q$, 'Solo quien administra');
+  $q$select quitar_alcance_por_error('bbbbbbbb-0000-0000-0000-000000000001', 'RETIE24-UF-MINAS', 'error')$q$, 'Solo');
 reset role;
 
 \echo '══ Quien administra (director técnico) ══'
@@ -39,8 +39,8 @@ select prueba.debe_pasar('quita la actividad autorizada por error a la inspector
   $q$select quitar_autorizacion_por_error((select id from designaciones where persona_id = 'dddddddd-0000-0000-0000-000000000002' and rol = 'inspector'), 'RETIE24-UF-BASICAS', 'Autorizada por error')$q$);
 select prueba.debe_ser('la inspectora queda sin esa actividad',
   $q$select count(*)::text from designacion_actividades da join designaciones d on d.id = da.designacion_id where d.persona_id = 'dddddddd-0000-0000-0000-000000000002'$q$, '0');
-select prueba.debe_fallar('borrar el alcance directamente sigue prohibido',
-  $q$delete from alcance_acreditado where organismo_id = 'bbbbbbbb-0000-0000-0000-000000000001'$q$, 'No se permite eliminar');
+select prueba.debe_ser('borrar el alcance directamente sigue prohibido (0 filas)',
+  $q$with b as (delete from alcance_acreditado where organismo_id = 'bbbbbbbb-0000-0000-0000-000000000001' returning 1) select count(*)::text from b$q$, '0');
 reset role;
 
 \echo '══ Bitácora ══'

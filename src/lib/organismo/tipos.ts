@@ -28,7 +28,11 @@ export const ROLES_UNICOS: RolOEC[] = ["representante_legal", "responsable_sg"];
 
 export type EstadoLinea = "en_tramite" | "acreditada" | "suspendida" | "retirada";
 
-export type LineaAlcance = { actividad: string; estado: EstadoLinea; fechaEstado: string; observacion?: string };
+export type LineaAlcance = {
+  actividad: string; estado: EstadoLinea; fechaEstado: string; observacion?: string;
+  /** Quién fijó el estado y en calidad de qué (lo registra la base de datos, 0009). */
+  estadoPor?: string; estadoEnCalidad?: string;
+};
 
 export type Sede = { id: string; nombre: string; direccion?: string; ciudad?: string; principal: boolean };
 

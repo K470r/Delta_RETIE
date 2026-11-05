@@ -17,6 +17,7 @@ import type { BaseOrganismos, EstadoLinea, Organismo, RolOEC } from "@/lib/organ
 import { Icono, type NombreIcono } from "@/components/Icono";
 import { LogosOrganismo } from "@/components/organismo/LogosOrganismo";
 import { DocumentosOrganismo } from "@/components/organismo/DocumentosOrganismo";
+import { usePermisosOrganismo } from "@/lib/organismo/permisos";
 import { NOMBRE_PESTANA, rolesMenu, seccionActual } from "@/lib/navegacion";
 import { HojaDeVida, MatrizHabilitacion } from "@/components/organismo/HojaDeVida";
 import { NOMBRE_ROL } from "@/lib/organismo/tipos";
@@ -228,6 +229,7 @@ function Alcance({ base, o }: { base: BaseOrganismos; o: Organismo }) {
   const [editando, setEditando] = useState(false);
   const [agregando, setAgregando] = useState(false);
   const [nuevas, setNuevas] = useState<string[]>([]);
+  const permisos = usePermisosOrganismo(base, o.id);
   const disponibles = ACTIVIDADES.filter((a) => !o.alcance.some((l) => l.actividad === a.codigo));
 
   const cambiarEstado = (codigo: string, estado: EstadoLinea) => {
@@ -246,11 +248,11 @@ function Alcance({ base, o }: { base: BaseOrganismos; o: Organismo }) {
 
   return (
     <div className="space-y-6">
-      <LogosOrganismo o={o} />
+      <LogosOrganismo o={o} puedeCargar={permisos.gestion} />
       <section className="tarjeta space-y-2 p-4 text-sm">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold">Datos generales</h2>
-          <Boton variante="secundario" onClick={() => setEditando(true)}>Editar</Boton>
+          {permisos.gestion && <Boton variante="secundario" onClick={() => setEditando(true)}>Editar</Boton>}
         </div>
         <dl className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
           {[
@@ -273,7 +275,7 @@ function Alcance({ base, o }: { base: BaseOrganismos; o: Organismo }) {
             <h2 className="font-semibold">Alcance acreditado</h2>
             <p className="suave text-xs">Toque una actividad para ver su detalle.</p>
           </div>
-          {!agregando && disponibles.length > 0 && <Boton variante="secundario" onClick={() => setAgregando(true)}>+ Agregar actividad</Boton>}
+          {permisos.gestion && !agregando && disponibles.length > 0 && <Boton variante="secundario" onClick={() => setAgregando(true)}>+ Agregar actividad</Boton>}
         </div>
         {agregando && (
           <div className="tarjeta space-y-3 p-4">
@@ -285,7 +287,7 @@ function Alcance({ base, o }: { base: BaseOrganismos; o: Organismo }) {
             <div className="flex gap-2"><Boton onClick={agregar} disabled={!nuevas.length}>Agregar</Boton><Boton variante="secundario" onClick={() => setAgregando(false)}>Cancelar</Boton></div>
           </div>
         )}
-        <AlcanceDosColumnas base={base} o={o} cambiarEstado={cambiarEstado} />
+        <AlcanceDosColumnas base={base} o={o} cambiarEstado={cambiarEstado} permisos={permisos} />
       </section>
     </div>
   );
@@ -300,7 +302,9 @@ const COLOR_ESTADO: Record<EstadoLinea, [string, string]> = {
   acreditada: ["#16795A", "#DCF2E9"], en_tramite: ["#0B4F64", "#DDEFF3"], suspendida: ["#8A4209", "#FBE9D8"], retirada: ["#B42318", "#FBE2E0"],
 };
 
-function AlcanceDosColumnas({ base, o, cambiarEstado }: { base: BaseOrganismos; o: Organismo; cambiarEstado: (c: string, e: EstadoLinea) => void }) {
+function AlcanceDosColumnas({ base, o, cambiarEstado, permisos }: {
+  base: BaseOrganismos; o: Organismo; cambiarEstado: (c: string, e: EstadoLinea) => void; permisos: { gerencia: boolean; gestion: boolean };
+}) {
   const [abierta, setAbierta] = useState<string | null>(null);
   const acts = o.alcance.map((l) => actividad(l.actividad)!).filter(Boolean);
   if (!acts.length) return <p className="tarjeta suave p-4 text-sm">Aún no hay actividades en el alcance.</p>;
@@ -358,14 +362,23 @@ function AlcanceDosColumnas({ base, o, cambiarEstado }: { base: BaseOrganismos; 
                             </div>
                             <ul className="suave list-disc pl-5 text-xs">{a.referencias.map((r) => <li key={r}>{r}</li>)}</ul>
                             {l.observacion && <p className="text-xs"><b>Observación del estado:</b> {l.observacion}</p>}
+                            {(l.estadoPor || l.estadoEnCalidad) && (
+                              <p className="suave text-xs">
+                                Estado fijado el {l.fechaEstado}
+                                {l.estadoPor && <> por <b>{nombrePersona(base.personas.find((p) => p.id === l.estadoPor))}</b></>}
+                                {l.estadoEnCalidad && <> · como {calidad(l.estadoEnCalidad)}</>}
+                              </p>
+                            )}
                             <div className="flex flex-wrap items-center gap-4 border-t pt-3 text-sm" style={{ borderColor: "var(--borde)" }}>
-                              <label className="flex items-center gap-2">
-                                <span className="suave text-xs">Cambiar estado</span>
-                                <Selector value={l.estado} onChange={(e) => cambiarEstado(a.codigo, e.target.value as EstadoLinea)} className="w-auto py-1 text-xs">
-                                  {Object.entries(ESTADOS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                                </Selector>
-                              </label>
-                              {!base.designaciones.some((d) => d.organismoId === o.id && d.actividades.includes(a.codigo)) && (
+                              {permisos.gerencia ? (
+                                <label className="flex items-center gap-2">
+                                  <span className="suave text-xs">Cambiar estado</span>
+                                  <Selector value={l.estado} onChange={(e) => cambiarEstado(a.codigo, e.target.value as EstadoLinea)} className="w-auto py-1 text-xs">
+                                    {Object.entries(ESTADOS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                                  </Selector>
+                                </label>
+                              ) : <span className="suave text-xs">Solo la gerencia cambia el estado de la actividad.</span>}
+                              {permisos.gestion && !base.designaciones.some((d) => d.organismoId === o.id && d.actividades.includes(a.codigo)) && (
                                 <button className="text-xs text-red-700 underline" onClick={() => {
                                   const m = pedirMotivo(a.nombre); if (m) quitarAlcancePorError(o.id, a.codigo, m);
                                 }}>Quitar (registrada por error)</button>
@@ -384,6 +397,11 @@ function AlcanceDosColumnas({ base, o, cambiarEstado }: { base: BaseOrganismos; 
       })}
     </div>
   );
+}
+
+/** "suplente_sg, gerente" → "Suplente del responsable del SG y Gerente". */
+function calidad(texto: string) {
+  return texto.split(",").map((r) => r.trim()).map((r) => NOMBRE_ROL[r as RolOEC] ?? r).join(" y ");
 }
 
 function Dato({ icono, titulo, texto }: { icono: NombreIcono; titulo: string; texto: string }) {

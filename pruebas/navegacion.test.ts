@@ -46,3 +46,19 @@ test("con organismo, cada sección se ilumina ella misma", () => {
     assert.equal(seccionActual(ruta, q ?? null)?.id, s.id, `${s.id} → ${r}`);
   }
 });
+
+test("permisos del organismo: estado solo la gerencia; agregar, documentos y datos la gerencia y el SG", async () => {
+  const { permisosOrganismo } = await import("../src/lib/navegacion");
+  const org = { id: ORG, razonSocial: "O", nit: "1", tipo: "A" as const, creado: "", sedes: [], alcance: [], creadoPor: "u-creador" };
+  const des = (personaId: string, rol: "gerente" | "suplente_sg" | "director_tecnico_suplente" | "inspector") =>
+    ({ id: personaId + rol, organismoId: ORG, personaId, rol, desde: "2020-01-01", actividades: [] });
+  const vacio: BaseOrganismos = { ...VACIA, organismos: [org] };
+  assert.deepEqual(permisosOrganismo({ local: false, usuarioId: "u-creador", base: vacio, organismoId: ORG }), { gerencia: true, gestion: true, arranque: true });
+  const base: BaseOrganismos = { ...vacio, designaciones: [des("g", "gerente"), des("s", "suplente_sg"), des("d", "director_tecnico_suplente"), des("i", "inspector")] };
+  const p = (personaId: string) => permisosOrganismo({ local: false, usuarioId: "otro", base, personaId, organismoId: ORG });
+  assert.deepEqual(p("g"), { gerencia: true, gestion: true, arranque: false });
+  assert.deepEqual(p("s"), { gerencia: false, gestion: true, arranque: false });
+  assert.deepEqual(p("d"), { gerencia: false, gestion: false, arranque: false });
+  assert.deepEqual(p("i"), { gerencia: false, gestion: false, arranque: false });
+  assert.equal(permisosOrganismo({ local: false, usuarioId: "u-creador", base, organismoId: ORG }).arranque, false, "el arranque termina al designar");
+});

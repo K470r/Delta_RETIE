@@ -114,3 +114,23 @@ export function rolesMenu(opciones: {
 }
 
 export const visible = (s: Seccion, roles: Set<RolMenu>) => s.id === "inicio" || s.roles.some((x) => roles.has(x));
+
+/**
+ * Permisos sobre el organismo (los mismos de 0009_permisos_alcance.sql; la base los exige igual):
+ * - gerencia: cambiar el estado de las actividades del alcance.
+ * - gestion (gerencia y SG, con suplentes): datos, logos, documentos; agregar y quitar actividades.
+ * En el arranque (nadie de la administración designado) el creador puede todo.
+ */
+export function permisosOrganismo(op: { local: boolean; usuarioId?: string; base: BaseOrganismos | null; personaId?: string; organismoId?: string }) {
+  if (op.local) return { gerencia: true, gestion: true, arranque: false };
+  const { base, personaId, organismoId } = op;
+  if (!base || !organismoId) return { gerencia: false, gestion: false, arranque: false };
+  const hoy = hoyISO();
+  const org = base.organismos.find((o) => o.id === organismoId);
+  const arranque = !!org && org.creadoPor === op.usuarioId &&
+    !base.designaciones.some((d) => d.organismoId === organismoId && ADMINISTRACION.includes(d.rol) && vigenteEn(d, hoy));
+  const mios = base.designaciones.filter((d) => d.organismoId === organismoId && d.personaId === personaId && vigenteEn(d, hoy)).map((d) => d.rol);
+  const gerencia = arranque || mios.some((r) => ["representante_legal", "gerente", "miembro_gerencia"].includes(r));
+  const gestion = gerencia || mios.some((r) => ["responsable_sg", "suplente_sg"].includes(r));
+  return { gerencia, gestion, arranque };
+}

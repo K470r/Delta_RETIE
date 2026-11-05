@@ -11,7 +11,7 @@ import { useEnlace } from "@/lib/archivos";
 import { cargarLogo } from "@/lib/organismo/logos";
 import type { Organismo } from "@/lib/organismo/tipos";
 
-export function LogosOrganismo({ o }: { o: Organismo }) {
+export function LogosOrganismo({ o, puedeCargar = true }: { o: Organismo; puedeCargar?: boolean }) {
   const [errores, setErrores] = useState<string[]>([]);
   const [cargando, setCargando] = useState<string | null>(null);
 
@@ -33,9 +33,9 @@ export function LogosOrganismo({ o }: { o: Organismo }) {
     <section className="space-y-3">
       <div className="grid gap-3 md:grid-cols-2">
         <Carga titulo="Logo del organismo" ayuda="Aparece arriba en el panel y en los documentos. PNG, JPG o WEBP, máximo 2 MB."
-          imagen={logo} ocupado={cargando === "logo"} onArchivo={(f) => cargar("logo", f)} />
+          imagen={logo} ocupado={cargando === "logo"} onArchivo={(f) => cargar("logo", f)} puede={puedeCargar} />
         <Carga titulo="Símbolo de acreditado ONAC" ayuda="Solo aparece en el informe de no conformidades y en el dictamen. Cargue el que ONAC entregó al organismo."
-          imagen={simbolo} ocupado={cargando === "simbolo-onac"} onArchivo={(f) => cargar("simbolo-onac", f)} />
+          imagen={simbolo} ocupado={cargando === "simbolo-onac"} onArchivo={(f) => cargar("simbolo-onac", f)} puede={puedeCargar} />
       </div>
       <Errores errores={errores} />
       <div className="tarjeta space-y-2 p-4">
@@ -56,9 +56,21 @@ export function LogosOrganismo({ o }: { o: Organismo }) {
   );
 }
 
-function Carga({ titulo, ayuda, imagen, ocupado, onArchivo }: {
-  titulo: string; ayuda: string; imagen?: string; ocupado: boolean; onArchivo: (f?: File) => void;
+function Carga({ titulo, ayuda, imagen, ocupado, onArchivo, puede }: {
+  titulo: string; ayuda: string; imagen?: string; ocupado: boolean; onArchivo: (f?: File) => void; puede: boolean;
 }) {
+  if (!puede) return (
+    <div className="tarjeta space-y-3 p-4">
+      <h3 className="text-sm font-semibold">{titulo}</h3>
+      <div className="flex flex-col items-center gap-2 rounded-xl border p-5 text-center text-sm" style={{ borderColor: "var(--borde)" }}>
+        {imagen
+          // eslint-disable-next-line @next/next/no-img-element
+          ? <img src={imagen} alt={titulo} className="h-20 max-w-full object-contain" />
+          : <span className="suave">Aún no se ha cargado.</span>}
+        <span className="suave text-xs">Lo cargan la gerencia o el responsable del SG.</span>
+      </div>
+    </div>
+  );
   return (
     <div className="tarjeta space-y-3 p-4">
       <h3 className="text-sm font-semibold">{titulo}</h3>
