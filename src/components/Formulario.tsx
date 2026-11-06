@@ -36,7 +36,7 @@ export function Texto(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
 export type VarianteBoton = "primario" | "contorno" | "secundario" | "peligro" | "discreto";
 
 export function claseBoton(variante: VarianteBoton = "primario", tamano: "normal" | "pequeno" = "normal") {
-  const base = "inline-flex items-center justify-center gap-1.5 rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed";
+  const base = "relative inline-flex items-center justify-center gap-1.5 rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed";
   const medida = tamano === "pequeno" ? "min-h-8 px-3 py-1 text-xs" : "min-h-10 px-4 py-2 text-sm";
   return `${base} ${variante === "discreto" ? "text-xs" : medida} ${{
     primario: "boton-primario",
