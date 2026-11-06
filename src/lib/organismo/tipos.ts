@@ -121,6 +121,8 @@ export type Experiencia = {
   hasta?: string;              // vacío = actual
   reglamento: string;          // a qué tipo de instalaciones corresponde
   categorias: string[];        // RETIE: categorías de instalación; RETILAP: opcional
+  /** Generación: tipo de instalación (código de la actividad: FNCE/AGPE/GD, varias fuentes, centrales), 0015. */
+  actividades?: string[];
   tipos: string[];             // TipoExperiencia
   descripcion?: string;
   /** El soporte (certificación laboral) fue revisado por el OI. Solo cuenta la experiencia verificada. */

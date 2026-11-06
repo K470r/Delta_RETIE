@@ -246,6 +246,12 @@ Para generación con FNCE, AGPE y GD y generación con varias fuentes:
   La segunda no se acredita aparte: la cubre la misma línea del alcance.
 - En la fase 2, al registrar la inspección se pedirán la tensión AC y DC y si está conectada a la
   red, y solo se podrá asignar personal con la competencia que corresponde.
+- **Hasta 1.000 V AC y 1.500 V DC** (`0015_experiencia_por_tipo_generacion.sql`): certificado de
+  competencias de la **g**, y la experiencia que pide el RETIE para la **a** (3 años) **en ese tipo
+  de instalación**: generación con FNCE, AGPE y GD, o generación con varias fuentes. Para el
+  director técnico, la experiencia total y la de dirección también en ese tipo de instalación.
+  Por eso cada experiencia de generación indica el tipo de instalación.
+- La tabla "Habilitación por categoría" tiene una fila para cada una de las dos.
 
 ## Documentos del personal con firma (`0013_documentos_personal.sql`)
 
@@ -287,6 +293,9 @@ Para generación con FNCE, AGPE y GD y generación con varias fuentes:
 
 ## Desvincular del OEC
 
+- Cada sección tiene un botón por rol ("Designar gerente", "Designar asistente de dirección técnica"…).
+- Al desvincular, el último día es **ayer** (otra persona puede tomar el rol hoy); si la designación
+  empezó hoy, termina hoy. La tarjeta queda en gris, al fondo, sin botón; a los 30 días pasa al historial.
 - El botón **DESVINCULAR DEL OEC** de cada tarjeta termina **solo ese rol** desde hoy, con motivo
   obligatorio. Los demás roles de la persona y su vinculación con el organismo siguen vigentes.
 - No se puede deshacer: para volver a darle el rol hay que designarla de nuevo.

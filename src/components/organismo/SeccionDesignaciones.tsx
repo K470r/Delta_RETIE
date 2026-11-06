@@ -15,11 +15,11 @@ import {
 import { evaluarCompetencia } from "@/lib/organismo/competencia";
 import {
   NOMBRE_ROL, ROLES_CON_ACTIVIDADES, rolTecnico,
-  type BaseOrganismos, type Designacion, type Organismo, type RolOEC, type Vinculacion,
+  type BaseOrganismos, type Designacion, type Organismo, type Persona, type RolOEC, type Vinculacion,
 } from "@/lib/organismo/tipos";
 import { Boton, Campo, Entrada, Errores, Selector, claseBoton } from "../Formulario";
 import { Icono } from "../Icono";
-import { EnlaceMotivo } from "./EnlaceMotivo";
+import { EnlaceMotivo, seccionDeMotivo } from "./EnlaceMotivo";
 import { SelectorActividades } from "../SelectorActividades";
 import { FormularioPersona } from "./FormularioPersona";
 import { HojaDeVida, ListaRequisitos } from "./HojaDeVida";
@@ -235,7 +235,8 @@ function AutorizarActividades({ base, organismo, d }: { base: BaseOrganismos; or
         del reglamento como {rolTecnico(d.rol) === "inspector" ? "inspector" : "director técnico"}, con su experiencia verificada por otra persona.
       </p>
       <SelectorActividades actividades={disponibles} seleccion={acts} onCambio={setActs}
-        bloqueo={(c) => motivoNoPuedeEjercer(base, organismo, p, c, hoyISO(), rolTecnico(d.rol))} personaId={p.id} />
+        bloqueo={(c) => motivoNoPuedeEjercer(base, organismo, p, c, hoyISO(), rolTecnico(d.rol))} personaId={p.id}
+        detalle={(c, motivo) => <RequisitosEnLinea persona={p} actividad={c} rol={rolTecnico(d.rol)} fecha={hoyISO()} motivo={motivo} />} />
       <Errores errores={errores} />
       <div className="flex gap-2">
         <Boton onClick={guardar} disabled={guardando}>{guardando ? "Guardando…" : "Autorizar"}</Boton>
@@ -418,7 +419,8 @@ function FormularioDesignacion({ base, organismo, roles, rolInicial, onTerminar 
               </div>
               {verHoja && <div className="rounded-lg border p-3" style={{ borderColor: "var(--borde)" }}><HojaDeVida persona={persona} /></div>}
               <SelectorActividades actividades={lineas} seleccion={acts} onCambio={setActs}
-                bloqueo={(c) => motivoNoPuedeEjercer(baseTentativa, organismo, persona, c, fechaEval, rolTecnico(rol))} personaId={persona.id} />
+                bloqueo={(c) => motivoNoPuedeEjercer(baseTentativa, organismo, persona, c, fechaEval, rolTecnico(rol))} personaId={persona.id}
+                detalle={(c, motivo) => <RequisitosEnLinea persona={persona} actividad={c} rol={rolTecnico(rol)} fecha={fechaEval} motivo={motivo} />} />
             </div>
           )}
 
@@ -547,5 +549,33 @@ function BloqueDocumento({ base, organismo, d, vigente }: { base: BaseOrganismos
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * Todos los requisitos del reglamento para la actividad: en verde lo que cumple, en naranja lo
+ * que falta (con enlace para completarlo en la hoja de vida) y en gris las advertencias.
+ */
+function RequisitosEnLinea({ persona, actividad, rol, fecha, motivo }: {
+  persona: Persona; actividad: string; rol: "inspector" | "director_tecnico"; fecha: string; motivo: string | null;
+}) {
+  const h = evaluarCompetencia(persona, actividad, rol, fecha);
+  // Motivos que no son de competencia (alcance, vinculación): en rojo, sin enlace.
+  const otro = motivo && !motivo.startsWith(h.categoria) ? motivo : null;
+  const items = h.items.filter((i) => i.requisito !== "Cédula");
+  return (
+    <span className="mt-0.5 block space-y-0.5 text-xs">
+      {otro && <span className="block font-semibold text-red-600">{otro}</span>}
+      <span className="flex flex-wrap gap-x-3 gap-y-0.5">
+        {items.map((i) => i.cumple ? (
+          <span key={i.requisito} className="font-semibold" style={{ color: "var(--verde)" }}>✓ {i.requisito}</span>
+        ) : i.bloquea ? (
+          <span key={i.requisito}>✕ <EnlaceMotivo personaId={persona.id} texto={`${i.requisito}: ${i.detalle}`} seccion={seccionDeMotivo(i.requisito)} /></span>
+        ) : (
+          <span key={i.requisito} className="suave">! {i.requisito}: {i.detalle}</span>
+        ))}
+        {h.alertas.map((x) => <span key={x} className="suave">! {x}</span>)}
+      </span>
+    </span>
   );
 }

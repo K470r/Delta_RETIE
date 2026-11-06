@@ -4,6 +4,7 @@
  * vigencia de los certificados (5 años con seguimiento al mes 30).
  */
 import { entidadMatricula, estadoMatricula } from "./matricula";
+import { esVarianteBT, lineaDe, nombreCorto } from "../catalogo";
 import { categoriaDeActividad, etiquetaCategoria, requisitosDe, AREAS_ILUMINACION, type RequisitosReglamento } from "../requisitos";
 import type { CertificadoCompetencia, Persona, RolTecnico } from "./tipos";
 
@@ -92,10 +93,11 @@ export function certificadoParaCategoria(p: Persona, reglamento: string, categor
 }
 
 /** Años de experiencia verificada, sin contar dos veces periodos que se traslapan. */
-export function aniosExperiencia(p: Persona, f: { reglamento: string; categoria?: string; tipos: string[] }, fecha: string): number {
+export function aniosExperiencia(p: Persona, f: { reglamento: string; categoria?: string; actividad?: string; tipos: string[] }, fecha: string): number {
   const tramos = p.experiencias
     .filter((e) => e.verificada && e.reglamento === f.reglamento)
     .filter((e) => !f.categoria || e.categorias.includes(f.categoria))
+    .filter((e) => !f.actividad || (e.actividades ?? []).includes(f.actividad))
     .filter((e) => e.tipos.some((t) => f.tipos.includes(t)))
     .map((e) => [e.desde, e.hasta && e.hasta < fecha ? e.hasta : fecha] as const)
     .filter(([a, b]) => a <= b)
@@ -152,20 +154,24 @@ export function evaluarCompetencia(p: Persona, actividad: string, rol: RolTecnic
     }
   }
 
-  // Experiencia del inspector
-  const catExp = req.experienciaPorCategoria ? cat.codigo : undefined;
-  const expTec = aniosExperiencia(p, { reglamento: req.reglamento, categoria: catExp, tipos: req.tiposExperienciaTecnica }, fecha);
-  add(`Experiencia como inspector (${cat.experienciaInspectorAnios} años${catExp ? `, categoría ${cat.codigo}` : ""})`,
-    expTec >= cat.experienciaInspectorAnios, `${a1(expTec)} años verificados`);
+  // Experiencia del inspector. Generación hasta 1.000 V AC y 1.500 V DC (0015): la de la categoría a
+  // (3 años), en ese tipo de instalación.
+  const enActividad = esVarianteBT(actividad) ? lineaDe(actividad) : undefined;
+  const aniosReq = enActividad ? req.categorias.find((k) => k.codigo === "a")!.experienciaInspectorAnios : cat.experienciaInspectorAnios;
+  const catExp = enActividad ? undefined : req.experienciaPorCategoria ? cat.codigo : undefined;
+  const donde = enActividad ? `, en ${nombreCorto(enActividad).toLowerCase()}` : catExp ? `, categoría ${cat.codigo}` : "";
+  const expTec = aniosExperiencia(p, { reglamento: req.reglamento, categoria: catExp, actividad: enActividad, tipos: req.tiposExperienciaTecnica }, fecha);
+  add(`Experiencia como inspector (${aniosReq} años${donde})`, expTec >= aniosReq, `${a1(expTec)} años verificados`);
 
   // Director técnico
   if (rol === "director_tecnico") {
     const dt = req.directorTecnico;
-    const catDT = dt.porCategoria ? cat.codigo : undefined;
-    const total = aniosExperiencia(p, { reglamento: req.reglamento, categoria: catDT, tipos: [...req.tiposExperienciaTecnica, ...dt.tiposExperienciaDireccion] }, fecha);
-    const dir = aniosExperiencia(p, { reglamento: req.reglamento, categoria: catDT, tipos: dt.tiposExperienciaDireccion }, fecha);
+    const catDT = !enActividad && dt.porCategoria ? cat.codigo : undefined;
+    const actDT = enActividad && dt.porCategoria ? enActividad : undefined;
+    const total = aniosExperiencia(p, { reglamento: req.reglamento, categoria: catDT, actividad: actDT, tipos: [...req.tiposExperienciaTecnica, ...dt.tiposExperienciaDireccion] }, fecha);
+    const dir = aniosExperiencia(p, { reglamento: req.reglamento, categoria: catDT, actividad: actDT, tipos: dt.tiposExperienciaDireccion }, fecha);
     const okTotal = dt.experienciaTotalEstricta ? total > dt.experienciaTotalAnios : total >= dt.experienciaTotalAnios;
-    add(`Experiencia total director técnico (${dt.experienciaTotalEstricta ? "más de " : ""}${dt.experienciaTotalAnios} años${catDT ? `, categoría ${cat.codigo}` : ""})`,
+    add(`Experiencia total director técnico (${dt.experienciaTotalEstricta ? "más de " : ""}${dt.experienciaTotalAnios} años${actDT ? donde : catDT ? `, categoría ${cat.codigo}` : ""})`,
       okTotal, `${a1(total)} años verificados`);
     add(`Experiencia en gerencia/dirección (${dt.experienciaDireccionAnios} años)`, dir >= dt.experienciaDireccionAnios, `${a1(dir)} años verificados`);
   }
