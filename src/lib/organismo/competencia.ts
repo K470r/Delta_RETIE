@@ -88,7 +88,7 @@ export function estadoCertificado(c: CertificadoCompetencia, fecha: string, anti
 }
 
 export function certificadoParaCategoria(p: Persona, reglamento: string, categoria: string, fecha: string) {
-  return p.certificados.find((c) => c.reglamento === reglamento && c.categorias.includes(categoria) && estadoCertificado(c, fecha).vigente);
+  return p.certificados.find((c) => c.reglamento === reglamento && c.categorias.includes(categoria) && c.verificada && estadoCertificado(c, fecha).vigente);
 }
 
 /** Años de experiencia verificada, sin contar dos veces periodos que se traslapan. */
@@ -176,7 +176,7 @@ export function evaluarCompetencia(p: Persona, actividad: string, rol: RolTecnic
     const candidatos = p.certificados.filter((x) => x.reglamento === req.reglamento && x.categorias.includes(cat.codigo));
     add(`Certificado de competencias ${etiquetaCategoria(req.reglamento, cat.codigo)}`, !!c,
       c ? `${c.numero} (${c.certificador}) vigente hasta ${c.fechaVencimiento}`
-        : candidatos.length ? candidatos.map((x) => estadoCertificado(x, fecha).motivo).filter(Boolean).join("; ")
+        : candidatos.length ? candidatos.map((x) => estadoCertificado(x, fecha).motivo ?? (x.verificada ? undefined : `Certificado ${x.numero} sin verificar (lo verifica la gerencia, el SG o un director técnico)`)).filter(Boolean).join("; ")
           : "Sin certificado para esta categoría");
     if (c) alertas.push(...estadoCertificado(c, fecha).alertas);
     if (cat.requiereCategoriaVigente) {

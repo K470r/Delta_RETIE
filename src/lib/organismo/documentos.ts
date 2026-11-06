@@ -11,7 +11,7 @@ import type {
 } from "./tipos";
 
 const vigente = (d: { desde: string; hasta?: string }, fecha: string) => d.desde <= fecha && (!d.hasta || d.hasta >= fecha);
-const hoy = () => new Date().toISOString().slice(0, 10);
+const hoy = () => new Date().toLocaleDateString("en-CA", { timeZone: "America/Bogota" });
 const nombre = (p?: Persona) => (p ? `${p.nombres} ${p.apellidos}` : "(desconocida)");
 
 export const TIPO_DE_ROL: Partial<Record<RolOEC, TipoDocumentoPersonal>> = {

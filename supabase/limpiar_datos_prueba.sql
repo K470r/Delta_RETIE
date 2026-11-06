@@ -47,6 +47,9 @@ begin
   delete from certificados_competencia where id = any(cer);
   update experiencias set verificada_por = null where verificada_por = any(pers);
   update formacion set verificada_por = null where verificada_por = any(pers);
+  if exists (select 1 from information_schema.columns where table_name = 'certificados_competencia' and column_name = 'verificada_por') then
+    execute 'update certificados_competencia set verificada_por = null where verificada_por = any($1)' using pers;
+  end if;
   delete from experiencias where persona_id = any(pers);
   delete from formacion where persona_id = any(pers);
   delete from alcance_acreditado where organismo_id = any(orgs);

@@ -41,6 +41,9 @@ que la 0013 necesita ya guardado):
 2. `supabase/migrations/0012_generacion_por_tension.sql` → `Migración 0012 aplicada: …`
 3. `supabase/migrations/0013_documentos_personal.sql` → `Migración 0013 aplicada: …`
 
+Después, igual, `supabase/migrations/0014_verificacion_soportes.sql` → `Migración 0014 aplicada: …`
+(verificación de soportes de competencia y formación).
+
 Para firmar documentos en la aplicación, cada firmante necesita **contraseña** (la confirma al
 firmar). Quien entra solo con el enlace del correo puede ponerse una en **Mi cuenta**.
 
