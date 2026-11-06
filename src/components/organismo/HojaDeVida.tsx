@@ -12,7 +12,7 @@ import { hoyISO, nombrePersona, puedeVerificar } from "@/lib/organismo/reglas";
 import { CON_SUPABASE } from "@/lib/supabase";
 import type { CertificadoCompetencia, Experiencia, Formacion, Persona, RolTecnico } from "@/lib/organismo/tipos";
 import {
-  AREAS_ILUMINACION, NOMBRE_TIPO_EXPERIENCIA, REQUISITOS, etiquetaCategoria, requisitosDe, type TipoExperiencia,
+  AREAS_ILUMINACION, NOMBRE_TIPO_EXPERIENCIA, REQUISITOS, categoriaDeActividad, etiquetaCategoria, requisitosDe, type TipoExperiencia,
 } from "@/lib/requisitos";
 import { Boton, Campo, Entrada, Errores, Grupo, Selector, claseBoton } from "../Formulario";
 import { Icono, type NombreIcono } from "../Icono";
@@ -618,6 +618,18 @@ function FormularioFormacion({ persona, lado, onTerminar }: { persona: Persona; 
 export function MatrizHabilitacion({ persona, reglamento }: { persona: Persona; reglamento?: Reg }) {
   const [detalle, setDetalle] = useState<string | null>(null);
   const hoy = hoyISO();
+  // Solo las categorías del alcance del organismo (acreditadas o en trámite). Sin organismo, todas.
+  const base = useBase();
+  const organismo = useOrganismoActual(base);
+  const lineas = organismo?.alcance.filter((l) => l.estado === "acreditada" || l.estado === "en_tramite").map((l) => l.actividad);
+  const categorias = lineas && new Set(lineas.map((a) => { const m = categoriaDeActividad(a); return m ? `${m.req.reglamento}-${m.cat.codigo}` : ""; }));
+  const enAlcance = (clave: string) => !categorias || categorias.has(clave);
+  // "En trámite": todas las actividades del organismo en esa categoría están en trámite (ninguna acreditada).
+  const claveDe = (a: string) => { const m = categoriaDeActividad(a); return m ? `${m.req.reglamento}-${m.cat.codigo}` : ""; };
+  const acreditadas = new Set(organismo?.alcance.filter((l) => l.estado === "acreditada").map((l) => claveDe(l.actividad)));
+  const enTramite = (clave: string, actividad?: string) => !!lineas && (actividad
+    ? organismo!.alcance.find((l) => l.actividad === actividad)?.estado === "en_tramite"
+    : !acreditadas.has(clave));
   const celda = (actividad: string, rol: RolTecnico, clave: string) => {
     const h = evaluarCompetencia(persona, actividad, rol, hoy);
     return (
@@ -630,21 +642,32 @@ export function MatrizHabilitacion({ persona, reglamento }: { persona: Persona; 
   return (
     <div className="space-y-2">
       {!reglamento && <h3 className="text-sm font-semibold">Habilitación por categoría (calculada)</h3>}
+      {lineas && <p className="suave text-xs">Solo las categorías del alcance de {organismo!.sigla ?? organismo!.razonSocial} (acreditadas o en trámite).</p>}
+      {lineas && reglamento && ![...(categorias ?? [])].some((c) => c.startsWith(reglamento)) && (
+        <p className="tarjeta suave p-3 text-sm">El organismo no tiene actividades del {reglamento.startsWith("RETILAP") ? "RETILAP" : "RETIE"} en su alcance.</p>
+      )}
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead className="suave text-xs uppercase"><tr><th className="py-1 pr-2">Categoría</th><th className="px-2">Inspector</th><th className="px-2">Director técnico</th></tr></thead>
           <tbody>
             {REQUISITOS.filter((r) => !reglamento || r.reglamento === reglamento).flatMap((r) => [
-              ...r.categorias.map((k) => ({ act: k.actividades[0], clave: `${r.reglamento}-${k.codigo}`, etiqueta: etiquetaCategoria(r.reglamento, k.codigo), nombre: k.nombre })),
+              ...r.categorias.filter((k) => enAlcance(`${r.reglamento}-${k.codigo}`))
+                .map((k) => ({ act: k.actividades[0], clave: `${r.reglamento}-${k.codigo}`, etiqueta: etiquetaCategoria(r.reglamento, k.codigo), nombre: k.nombre,
+                  tramite: enTramite(`${r.reglamento}-${k.codigo}`) })),
               // Generación hasta 1.000 V AC y 1.500 V DC: certificado g, experiencia en ese tipo de instalación (0015).
-              ...(r.reglamento === "RETIE-2024" ? ACTIVIDADES_POR_TENSION.map((c) => ({
+              ...(r.reglamento === "RETIE-2024" ? ACTIVIDADES_POR_TENSION.filter((c) => !lineas || lineas.includes(c)).map((c) => ({
                 act: `${c}-BT`, clave: `${c}-BT`, etiqueta: "RETIE g",
                 nombre: `${nombreCorto(c)} — ${TEXTO_BAJA} (con el certificado y la experiencia de la g)`,
+                tramite: enTramite("", c),
               })) : []),
-            ].map(({ act, clave, etiqueta, nombre }) => {
+            ].map(({ act, clave, etiqueta, nombre, tramite }) => {
               return [
                 <tr key={clave} className="border-t" style={{ borderColor: "var(--borde)" }}>
-                  <td className="py-1 pr-2"><b>{etiqueta}</b> <span className="suave text-xs">{nombre}</span></td>
+                  <td className="py-1 pr-2">
+                    <b>{etiqueta}</b>
+                    {tramite && <span className="ml-1 rounded-full px-2 py-0.5 text-xs font-bold" style={{ background: "#FBE9D8", color: "#8A4209" }}>En trámite</span>}
+                    {" "}<span className="suave text-xs">{nombre}</span>
+                  </td>
                   <td className="px-2">{celda(act, "inspector", clave + "-i")}</td>
                   <td className="px-2">{celda(act, "director_tecnico", clave + "-d")}</td>
                 </tr>,
