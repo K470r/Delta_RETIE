@@ -24,10 +24,10 @@ export async function cargarBase(): Promise<BaseOrganismos> {
     sb.from("organismos").select("*").order("creado"),
     sb.from("sedes").select("*"),
     sb.from("alcance_acreditado").select("*"),
-    sb.from("personas").select("*").order("apellidos"),
-    sb.from("certificados_competencia").select("*, certificado_categorias(categoria)"),
-    sb.from("formacion").select("*").order("fecha"),
-    sb.from("experiencias").select("*").order("desde"),
+    sb.from("personas").select("*").order("apellidos").order("id"),
+    sb.from("certificados_competencia").select("*, certificado_categorias(categoria)").order("fecha_emision").order("id"),
+    sb.from("formacion").select("*").order("fecha").order("id"),
+    sb.from("experiencias").select("*").order("desde").order("id"),
     sb.from("vinculaciones").select("*"),
     sb.from("designaciones").select("*, designacion_actividades(actividad_codigo)"),
     sb.from("declaraciones").select("*"),
@@ -160,6 +160,7 @@ export async function cargarBase(): Promise<BaseOrganismos> {
       hasta: u(e.hasta as string),
       reglamento: e.reglamento_id as string,
       categorias: (e.categorias ?? []) as string[],
+      actividades: (e.actividades ?? []) as string[],
       tipos: (e.tipos ?? []) as string[],
       descripcion: u(e.descripcion as string),
       verificada: !!e.verificada,
@@ -231,7 +232,7 @@ const filaFormacion = (persona: string, f: Formacion): Fila => ({
 });
 const filaExperiencia = (persona: string, e: Experiencia): Fila => ({
   id: e.id, persona_id: persona, empresa: e.empresa, cargo: e.cargo, desde: e.desde, hasta: n(e.hasta),
-  reglamento_id: e.reglamento, categorias: e.categorias, tipos: e.tipos, descripcion: n(e.descripcion),
+  reglamento_id: e.reglamento, categorias: e.categorias, actividades: e.actividades ?? [], tipos: e.tipos, descripcion: n(e.descripcion),
   verificada: e.verificada, verificada_por: e.verificada ? n(e.verificadaPor) : null, soporte_ruta: n(e.soporteRuta),
 });
 const filaVinculacion = (v: Vinculacion): Fila => ({

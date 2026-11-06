@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { claseBoton } from "@/components/Formulario";
 import { HojaDeVida } from "@/components/organismo/HojaDeVida";
 import { useBase, usePersonaActual } from "@/lib/organismo/almacen";
@@ -23,8 +23,12 @@ function HojaDeVidaPagina() {
   const volver = params.get("volver");
   const persona = id ? base?.personas.find((p) => p.id === id) : yo;
 
+  // Baja a la sección UNA sola vez, al llegar. Después la persona se mueve libremente: al marcar
+  // una verificación los datos se recargan, y no debe volver a saltar a la sección resaltada.
+  const yaBajo = useRef(false);
   useEffect(() => {
-    if (!persona) return;
+    if (!persona || yaBajo.current) return;
+    yaBajo.current = true;
     // La sección va en ?seccion= (no en #): el salto por # movería la pantalla completa.
     const seccion = params.get("seccion") ?? window.location.hash.slice(1);
     const el = seccion ? document.getElementById(seccion) : null;
@@ -45,7 +49,7 @@ function HojaDeVidaPagina() {
       setTimeout(() => { el.style.boxShadow = ""; }, 4000);
     }, 200);
     return () => clearTimeout(t);
-  }, [persona, params]);
+  }, [persona, params]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!base) return <p className="suave">Cargando…</p>;
   if (!persona) return <p className="tarjeta p-4 text-sm">{id ? "La persona no existe o no tiene permiso para ver su hoja de vida." : "Su usuario aún no está enlazado a una persona."}</p>;

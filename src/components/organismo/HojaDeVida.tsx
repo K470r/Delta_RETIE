@@ -17,6 +17,9 @@ import {
 import { Boton, Campo, Entrada, Errores, Grupo, Selector, claseBoton } from "../Formulario";
 import { Icono } from "../Icono";
 import { EnlaceMotivo, seccionDeMotivo } from "./EnlaceMotivo";
+import { ACTIVIDADES, ACTIVIDADES_POR_TENSION, TEXTO_BAJA, nombreCorto } from "@/lib/catalogo";
+
+const GENERACION = ACTIVIDADES.filter((a) => a.reglamento === "RETIE-2024" && a.grupo === "Generación");
 import { abrirArchivo, cargarArchivo, extension, REGLAS_SOPORTE } from "@/lib/archivos";
 import { aceptarMatricula, mostrarError } from "@/lib/organismo/almacen";
 import { entidadMatricula, estadoMatricula } from "@/lib/organismo/matricula";
@@ -162,7 +165,8 @@ function Certificados({ persona }: { persona: Persona }) {
     <section id="certificados" className="scroll-mt-24 rounded-xl transition-shadow space-y-2">
       <h3 className="text-sm font-semibold">Certificados de competencias</h3>
       {persona.certificados.length === 0 && <p className="suave text-sm">Sin certificados registrados.</p>}
-      {persona.certificados.map((c) => {
+      {[...persona.certificados].sort((x, y) => x.reglamento.localeCompare(y.reglamento) || (x.categorias[0] ?? "").localeCompare(y.categorias[0] ?? "")
+        || x.fechaEmision.localeCompare(y.fechaEmision) || x.id.localeCompare(y.id)).map((c) => {
         const e = estadoCertificado(c, hoy);
         return (
           <div key={c.id} className={`rounded-lg border p-3 text-sm ${c.anulado ? "opacity-50" : ""}`} style={{ borderColor: "var(--borde)" }}>
@@ -370,6 +374,7 @@ function Experiencias({ persona }: { persona: Persona }) {
             <b>{e.cargo}</b> · {e.empresa}
             <div className="suave text-xs">{e.desde} a {e.hasta ?? "la fecha"} · {NOMBRE_REG(e.reglamento)}
               {e.categorias.length > 0 && ` · categorías ${e.categorias.join(", ")}`}</div>
+            {(e.actividades ?? []).length > 0 && <div className="text-xs">Generación: {(e.actividades ?? []).map((c) => nombreCorto(c)).join("; ")}</div>}
             <div className="suave text-xs">{e.tipos.map((t) => NOMBRE_TIPO_EXPERIENCIA[t as TipoExperiencia] ?? t).join(", ")}</div>
             <div className="mt-1"><Soporte persona={persona} lista="experiencias" id={e.id} ruta={e.soporteRuta} /></div>
           </div>
@@ -398,9 +403,11 @@ function FormularioExperiencia({ persona, onTerminar }: { persona: Persona; onTe
     if (e.desde > hoyISO()) err.push("La experiencia no puede iniciar en el futuro");
     if (!e.tipos.length) err.push("Marque el tipo de actividad desarrollada");
     if (req.experienciaPorCategoria && !e.categorias.length) err.push("Marque la(s) categoría(s) de instalación en que se obtuvo la experiencia");
+    if (e.categorias.includes("a") && e.reglamento === "RETIE-2024" && !(e.actividades ?? []).length) err.push("Indique el tipo de instalación de generación");
     setErrores(err);
     if (err.length) return;
-    const error = await modificarPersona(persona.id, (p) => ({ ...p, experiencias: [...p.experiencias, { ...e, id: nuevoId(), hasta: e.hasta || undefined, verificadaPor: e.verificada ? yo : undefined }] }), false);
+    const actividades = e.categorias.includes("a") ? e.actividades ?? [] : [];
+    const error = await modificarPersona(persona.id, (p) => ({ ...p, experiencias: [...p.experiencias, { ...e, actividades, id: nuevoId(), hasta: e.hasta || undefined, verificadaPor: e.verificada ? yo : undefined }] }), false);
     if (error) return setErrores([error]);
     onTerminar();
   };
@@ -440,6 +447,19 @@ function FormularioExperiencia({ persona, onTerminar }: { persona: Persona; onTe
           ))}
         </div>
       </Grupo>
+        {e.reglamento === "RETIE-2024" && e.categorias.includes("a") && (
+        <Grupo etiqueta="Tipo de instalación de generación (para la generación hasta 1.000 V AC y 1.500 V DC se exige experiencia en ese tipo)">
+          <div className="space-y-1">
+            {GENERACION.map((a) => (
+              <label key={a.codigo} className="flex items-start gap-2 text-sm">
+                <input type="checkbox" className="mt-1" checked={(e.actividades ?? []).includes(a.codigo)}
+                  onChange={() => setE({ ...e, actividades: (e.actividades ?? []).includes(a.codigo) ? (e.actividades ?? []).filter((x) => x !== a.codigo) : [...(e.actividades ?? []), a.codigo] })} />
+                <span>{nombreCorto(a.codigo)}</span>
+              </label>
+            ))}
+          </div>
+        </Grupo>
+      )}
       {puede ? (
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={e.verificada} onChange={() => setE({ ...e, verificada: !e.verificada })} />
@@ -558,12 +578,17 @@ export function MatrizHabilitacion({ persona }: { persona: Persona }) {
         <table className="w-full text-left text-sm">
           <thead className="suave text-xs uppercase"><tr><th className="py-1 pr-2">Categoría</th><th className="px-2">Inspector</th><th className="px-2">Director técnico</th></tr></thead>
           <tbody>
-            {REQUISITOS.flatMap((r) => r.categorias.map((k) => {
-              const act = k.actividades[0];
-              const clave = `${r.reglamento}-${k.codigo}`;
+            {REQUISITOS.flatMap((r) => [
+              ...r.categorias.map((k) => ({ act: k.actividades[0], clave: `${r.reglamento}-${k.codigo}`, etiqueta: etiquetaCategoria(r.reglamento, k.codigo), nombre: k.nombre })),
+              // Generación hasta 1.000 V AC y 1.500 V DC: certificado g, experiencia en ese tipo de instalación (0015).
+              ...(r.reglamento === "RETIE-2024" ? ACTIVIDADES_POR_TENSION.map((c) => ({
+                act: `${c}-BT`, clave: `${c}-BT`, etiqueta: "RETIE g",
+                nombre: `${nombreCorto(c)} — ${TEXTO_BAJA} (certificado g, 3 años de experiencia en ese tipo de instalación)`,
+              })) : []),
+            ].map(({ act, clave, etiqueta, nombre }) => {
               return [
                 <tr key={clave} className="border-t" style={{ borderColor: "var(--borde)" }}>
-                  <td className="py-1 pr-2"><b>{etiquetaCategoria(r.reglamento, k.codigo)}</b> <span className="suave text-xs">{k.nombre}</span></td>
+                  <td className="py-1 pr-2"><b>{etiqueta}</b> <span className="suave text-xs">{nombre}</span></td>
                   <td className="px-2">{celda(act, "inspector", clave + "-i")}</td>
                   <td className="px-2">{celda(act, "director_tecnico", clave + "-d")}</td>
                 </tr>,
