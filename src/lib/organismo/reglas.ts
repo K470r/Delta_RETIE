@@ -13,7 +13,8 @@ import {
   type BaseOrganismos, type Designacion, type Organismo, type Persona, type RolOEC, type RolTecnico,
 } from "./tipos";
 
-export const hoyISO = () => new Date().toISOString().slice(0, 10);
+/** Fecha de hoy en Colombia (después de las 7 p. m. la hora universal ya es el día siguiente). */
+export const hoyISO = () => new Date().toLocaleDateString("en-CA", { timeZone: "America/Bogota" });
 const DIA = 86_400_000;
 const dias = (desde: string, hasta: string) => Math.round((new Date(hasta).getTime() - new Date(desde).getTime()) / DIA);
 const sumar = (fecha: string, n: number) => new Date(new Date(fecha).getTime() + n * DIA).toISOString().slice(0, 10);
@@ -47,6 +48,17 @@ export function motivoNoPuedeEjercer(
   if (!vinculacionVigente(b, o.id, p.id, fecha))
     return "Sin vinculación vigente con el organismo";
   return motivoCompetencia(p, actividad, rol, fecha);
+}
+
+/** Roles que verifican los soportes de competencia y formación (0014). */
+export const ROLES_VERIFICACION: RolOEC[] = ["representante_legal", "gerente", "miembro_gerencia", "responsable_sg", "suplente_sg", "director_tecnico", "director_tecnico_suplente"];
+
+/** ¿Puede "yo" verificar los soportes de la persona? (lo mismo que exige la base de datos) */
+export function puedeVerificar(b: BaseOrganismos, yo: string | undefined, personaId: string, fecha = hoyISO()): boolean {
+  if (!yo || yo === personaId) return false;
+  const vinculada = b.vinculaciones.filter((v) => v.personaId === personaId);
+  return b.designaciones.some((d) => d.personaId === yo && ROLES_VERIFICACION.includes(d.rol) && vigenteEn(d, fecha)
+    && (vinculada.length === 0 || vinculada.some((v) => v.organismoId === d.organismoId && vigenteEn(v, fecha))));
 }
 
 /** Valida una designación nueva antes de guardarla. */

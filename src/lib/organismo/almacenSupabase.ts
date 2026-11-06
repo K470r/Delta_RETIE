@@ -135,6 +135,9 @@ export async function cargarBase(): Promise<BaseOrganismos> {
       } : undefined,
       anulado: !!c.anulado,
       soporteRuta: u(c.soporte_ruta as string),
+      verificada: !!c.verificada,
+      verificadaPor: u(c.verificada_por as string),
+      verificadaEn: u(c.verificada_en as string),
     })),
     formacion: forms.filter((f) => f.persona_id === p.id).map((f): Formacion => ({
       id: f.id as string,
@@ -146,6 +149,7 @@ export async function cargarBase(): Promise<BaseOrganismos> {
       areasIluminacion: (f.areas_iluminacion ?? []) as string[],
       verificada: !!f.verificada,
       verificadaPor: u(f.verificada_por as string),
+      verificadaEn: u(f.verificada_en as string),
       soporteRuta: u(f.soporte_ruta as string),
     })),
     experiencias: exps.filter((e) => e.persona_id === p.id).map((e): Experiencia => ({
@@ -160,6 +164,7 @@ export async function cargarBase(): Promise<BaseOrganismos> {
       descripcion: u(e.descripcion as string),
       verificada: !!e.verificada,
       verificadaPor: u(e.verificada_por as string),
+      verificadaEn: u(e.verificada_en as string),
       soporteRuta: u(e.soporte_ruta as string),
     })),
   }));
@@ -217,6 +222,7 @@ const filaCertificado = (persona: string, c: CertificadoCompetencia): Fila => ({
   fecha_emision: c.fechaEmision, fecha_vencimiento: c.fechaVencimiento,
   seguimiento_fecha: n(c.seguimiento?.fecha), seguimiento_resultado: n(c.seguimiento?.resultado),
   seguimiento_observacion: n(c.seguimiento?.observacion), anulado: c.anulado, soporte_ruta: n(c.soporteRuta),
+  verificada: !!c.verificada, verificada_por: c.verificada ? n(c.verificadaPor) : null,
 });
 const filaFormacion = (persona: string, f: Formacion): Fila => ({
   id: f.id, persona_id: persona, tipo: f.tipo, titulo: f.titulo, institucion: f.institucion, fecha: f.fecha,

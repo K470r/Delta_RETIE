@@ -88,6 +88,11 @@ export type CertificadoCompetencia = {
   anulado: boolean;
   /** Archivo de soporte (PDF o imagen) en la carpeta privada de la persona. */
   soporteRuta?: string;
+  /** Verificado por la gerencia, el SG o un director técnico (0014). Sin verificar no cuenta. */
+  verificada?: boolean;
+  verificadaPor?: string;
+  /** Cuándo se verificó (lo pone la base de datos). */
+  verificadaEn?: string;
 };
 
 export type Formacion = {
@@ -103,6 +108,7 @@ export type Formacion = {
   verificada: boolean;
   /** Persona que verificó el soporte (quien inició sesión; nunca la misma persona). */
   verificadaPor?: string;
+  verificadaEn?: string;
   /** Archivo de soporte (PDF o imagen) en la carpeta privada de la persona. */
   soporteRuta?: string;
 };
@@ -121,6 +127,7 @@ export type Experiencia = {
   verificada: boolean;
   /** Persona que verificó el soporte (quien inició sesión; nunca la misma persona). */
   verificadaPor?: string;
+  verificadaEn?: string;
   /** Archivo de soporte (PDF o imagen) en la carpeta privada de la persona. */
   soporteRuta?: string;
 };

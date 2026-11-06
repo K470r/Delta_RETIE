@@ -272,6 +272,19 @@ Para generación con FNCE, AGPE y GD y generación con varias fuentes:
   documento actualizado; los firmados se conservan y siguen valiendo para sus actividades.
 - Los textos son **provisionales**: se adecuarán a los formatos del organismo cuando lleguen.
 
+## Verificación de soportes (`0014_verificacion_soportes.sql`)
+
+- Todo lo de competencia y formación de una persona (experiencia, formación académica y
+  **certificados de competencias**) cuenta solo si lo verificó alguien de la **gerencia**
+  (representante legal, gerente, miembro de la gerencia), del **sistema de gestión**
+  (responsable o suplente) o de la **dirección técnica** (director técnico o suplente) de un
+  organismo donde la persona está vinculada. **Nunca la misma persona.**
+- Queda **quién verificó y cuándo** (la fecha la pone la base de datos).
+- Si cambian los datos o el soporte de algo verificado, la verificación se pierde y hay que
+  verificarlo de nuevo. Registrar el seguimiento del mes 30 no la quita.
+- Quitar una verificación también lo pueden hacer solo esos roles.
+- Los certificados registrados antes de esta regla quedaron sin verificar.
+
 ## Desvincular del OEC
 
 - El botón **DESVINCULAR DEL OEC** de cada tarjeta termina **solo ese rol** desde hoy, con motivo

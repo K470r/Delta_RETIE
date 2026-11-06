@@ -14,7 +14,7 @@ let n = 0;
 const exp = (desde: string, hasta: string | undefined, cats: string[], tipos = ["inspeccion"], reglamento = "RETIE-2024", verificada = true): Experiencia =>
   ({ id: `e${n++}`, empresa: "X", cargo: "Y", desde, hasta, reglamento, categorias: cats, tipos, verificada });
 const cert = (cats: string[], emision: string, extra: Partial<CertificadoCompetencia> = {}): CertificadoCompetencia =>
-  ({ id: `c${n++}`, numero: `N${n}`, certificador: "OCP", reglamento: "RETIE-2024", categorias: cats, fechaEmision: emision, fechaVencimiento: sumarAnios(emision, 5), anulado: false, ...extra });
+  ({ id: `c${n++}`, numero: `N${n}`, certificador: "OCP", reglamento: "RETIE-2024", categorias: cats, fechaEmision: emision, fechaVencimiento: sumarAnios(emision, 5), anulado: false, verificada: true, verificadaPor: "verificador", ...extra });
 const persona = (p: Partial<Persona>): Persona => ({
   id: "p", tipoDocumento: "CC", documento: "123", nombres: "A", apellidos: "B", matriculaNumero: "CN-1", matriculaEntidad: "COPNIA",
   formacion: [], experiencias: [], certificados: [], creado: "", ...p,
@@ -107,4 +107,11 @@ test("director técnico RETILAP: 7 años en total y 1 en coordinación/gerencia"
   assert.equal(ok(p("2019-01-01", "2025-01-02"), ILUM_INT, "director_tecnico"), true);
   assert.equal(ok(p("2021-01-01", "2025-01-02"), ILUM_INT, "director_tecnico"), false, "menos de 7 años");
   assert.equal(ok(p("2019-01-01", "2026-06-01"), ILUM_INT, "director_tecnico"), false, "menos de 1 año en coordinación");
+});
+
+test("un certificado sin verificar no cuenta (0014)", () => {
+  const p = persona({ certificados: [cert(["g"], "2025-01-01", { verificada: false, verificadaPor: undefined })], experiencias: [exp("2015-01-01", "2024-12-31", ["g"], ["inspeccion"])] });
+  const h = evaluarCompetencia(p, "RETIE24-UF-BASICAS", "inspector", "2026-01-01");
+  assert.equal(h.cumple, false);
+  assert.ok(h.items.some((i) => i.detalle.includes("sin verificar")));
 });
