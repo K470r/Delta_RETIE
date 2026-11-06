@@ -19,6 +19,16 @@ export function entidadMatricula(e?: string): string | undefined {
   return e.trim();
 }
 
+/** Nombre completo de la entidad (CPNIEMPA o COPNIA); otra entidad, tal como se escribió. */
+export const NOMBRE_ENTIDAD: Record<string, string> = {
+  CPNIEMPA: "Consejo Profesional Nacional de Ingenierías Eléctrica, Mecánica y Profesiones Afines (CPNIEMPA)",
+  COPNIA: "Consejo Profesional Nacional de Ingeniería (COPNIA)",
+};
+export function nombreEntidadMatricula(e?: string): string | undefined {
+  const c = entidadMatricula(e);
+  return c ? NOMBRE_ENTIDAD[c] ?? c : undefined;
+}
+
 export const esConte = (e?: string) => !!e && /CONTE|CONALTEL|T[ÉE]CNICOS ELECTRICISTAS|TECN[ÓO]LOGOS/i.test(e);
 
 export type EstadoMatricula = "sin_matricula" | "ingeniero" | "aceptada" | "conte" | "por_aceptar";

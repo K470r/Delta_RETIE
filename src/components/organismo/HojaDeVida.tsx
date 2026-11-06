@@ -21,7 +21,7 @@ import { ACTIVIDADES_POR_TENSION, TEXTO_BAJA, nombreCorto } from "@/lib/catalogo
 
 import { abrirArchivo, cargarArchivo, extension, REGLAS_SOPORTE } from "@/lib/archivos";
 import { aceptarMatricula, mostrarError } from "@/lib/organismo/almacen";
-import { entidadMatricula, estadoMatricula } from "@/lib/organismo/matricula";
+import { entidadMatricula, estadoMatricula, nombreEntidadMatricula } from "@/lib/organismo/matricula";
 import { useOrganismoActual } from "@/lib/organismo/actual";
 import { usePermisosOrganismo } from "@/lib/organismo/permisos";
 
@@ -187,7 +187,7 @@ function Matricula({ persona }: { persona: Persona }) {
   const { gerencia } = usePermisosOrganismo(base, organismo?.id);
   const { yo, nombre } = useVerificador();
   const e = estadoMatricula(persona);
-  const datos = [persona.matriculaNumero, entidadMatricula(persona.matriculaEntidad), persona.matriculaEspecialidad].filter(Boolean).join(" · ");
+  const datos = [persona.matriculaNumero, nombreEntidadMatricula(persona.matriculaEntidad), persona.matriculaEspecialidad].filter(Boolean).join(" · ");
   const [texto, color, fondo] = {
     sin_matricula: ["Sin matrícula registrada", "#B42318", "#FBE2E0"],
     ingeniero: ["Matrícula de ingeniero", "#16795A", "#DCF2E9"],
