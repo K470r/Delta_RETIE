@@ -272,6 +272,12 @@ Para generación con FNCE, AGPE y GD y generación con varias fuentes:
   documento actualizado; los firmados se conservan y siguen valiendo para sus actividades.
 - Los textos son **provisionales**: se adecuarán a los formatos del organismo cuando lleguen.
 
+## Desvincular del OEC
+
+- El botón **DESVINCULAR DEL OEC** de cada tarjeta termina **solo ese rol** desde hoy, con motivo
+  obligatorio. Los demás roles de la persona y su vinculación con el organismo siguen vigentes.
+- No se puede deshacer: para volver a darle el rol hay que designarla de nuevo.
+
 ## Asistente de dirección técnica
 
 - Pide las evidencias de las inspecciones y revisa que estén completas antes de pasarlas al
