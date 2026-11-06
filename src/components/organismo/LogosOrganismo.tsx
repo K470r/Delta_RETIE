@@ -34,7 +34,7 @@ export function LogosOrganismo({ o, puedeCargar = true }: { o: Organismo; puedeC
       <div className="grid gap-3 md:grid-cols-2">
         <Carga titulo="Logo del organismo" ayuda="Aparece arriba en el panel y en los documentos. PNG, JPG o WEBP, máximo 2 MB."
           imagen={logo} ocupado={cargando === "logo"} onArchivo={(f) => cargar("logo", f)} puede={puedeCargar} />
-        <Carga titulo="Símbolo de acreditado ONAC" ayuda="Solo aparece en el informe de no conformidades y en el dictamen. Cargue el que ONAC entregó al organismo."
+        <Carga titulo="Símbolo de acreditado ONAC" ayuda="Solo aparece en el informe de no conformidades y en el dictamen. Cargue uno que cumpla el Reglamento de uso de los símbolos de Acreditado y/o Asociado de ONAC."
           imagen={simbolo} ocupado={cargando === "simbolo-onac"} onArchivo={(f) => cargar("simbolo-onac", f)} puede={puedeCargar} />
       </div>
       <Errores errores={errores} />
