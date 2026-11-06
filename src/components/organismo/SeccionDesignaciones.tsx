@@ -212,11 +212,17 @@ function FilaActividad({ base, organismo, d, actividad: a, corregible }: { base:
       {abierta && (
         <div className="ml-6 mt-1 space-y-1">
           <ListaRequisitos persona={p} actividad={a} rol={rol} />
-          {corregible && (
-            <button className="text-xs text-red-700 underline" onClick={() => {
-              const m = pedirMotivo(`${nombreAutorizacion(a)} — ${nombrePersona(p)}`); if (m) quitarAutorizacionPorError(d.id, a, m);
-            }}>Quitar esta actividad (autorizada por error)</button>
-          )}
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            <Link href={`/mi-hoja-de-vida?persona=${p.id}&volver=${encodeURIComponent(typeof window === "undefined" ? "" : window.location.pathname + window.location.search)}`}
+              className={claseBoton("contorno", "pequeno")}>
+              <Icono nombre="documento" tamano={15} /> Ver hoja de vida técnica
+            </Link>
+            {corregible && (
+              <button className="text-xs text-red-700 underline" onClick={() => {
+                const m = pedirMotivo(`${nombreAutorizacion(a)} — ${nombrePersona(p)}`); if (m) quitarAutorizacionPorError(d.id, a, m);
+              }}>Quitar esta actividad (autorizada por error)</button>
+            )}
+          </div>
         </div>
       )}
     </li>
