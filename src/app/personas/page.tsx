@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { FormularioPersona } from "@/components/organismo/FormularioPersona";
 import { HojaDeVida } from "@/components/organismo/HojaDeVida";
-import { Boton, Entrada } from "@/components/Formulario";
+import { Boton, Entrada, claseBoton } from "@/components/Formulario";
+import { Icono } from "@/components/Icono";
 import { useBase } from "@/lib/organismo/almacen";
 import { hoyISO, nombrePersona, vigenteEn } from "@/lib/organismo/reglas";
 import { NOMBRE_ROL } from "@/lib/organismo/tipos";
@@ -54,9 +55,12 @@ export default function Personas() {
                   <Boton variante="contorno" tamano="pequeno" onClick={() => setEditando(p.id)}>Editar</Boton>
                 </div>
               )}
-              <details open={abierta === p.id} onToggle={(e) => { if ((e.target as HTMLDetailsElement).open) setAbierta(p.id); }}>
-                <summary className="cursor-pointer text-sm font-semibold marca">
-                  Hoja de vida técnica · {p.certificados.filter((c) => !c.anulado).length} certificado(s) · {p.experiencias.length} experiencia(s)
+              <details open={abierta === p.id} onToggle={(e) => { const abierto = (e.target as HTMLDetailsElement).open; setAbierta((x) => (abierto ? p.id : x === p.id ? null : x)); }}>
+                <summary className={`list-none [&::-webkit-details-marker]:hidden ${claseBoton("contorno")}`}>
+                  <Icono nombre="documento" tamano={17} />
+                  {abierta === p.id ? "Ocultar hoja de vida técnica" : "Ver hoja de vida técnica"}
+                  <span className="font-normal">· {p.certificados.filter((c) => !c.anulado).length} certificado(s) · {p.experiencias.length} experiencia(s)</span>
+                  <span aria-hidden>{abierta === p.id ? "▲" : "▼"}</span>
                 </summary>
                 <div className="mt-3"><HojaDeVida persona={p} /></div>
               </details>
