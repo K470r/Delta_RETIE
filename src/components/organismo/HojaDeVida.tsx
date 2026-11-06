@@ -15,7 +15,7 @@ import {
   AREAS_ILUMINACION, NOMBRE_TIPO_EXPERIENCIA, REQUISITOS, etiquetaCategoria, requisitosDe, type TipoExperiencia,
 } from "@/lib/requisitos";
 import { Boton, Campo, Entrada, Errores, Grupo, Selector, claseBoton } from "../Formulario";
-import { Icono } from "../Icono";
+import { Icono, type NombreIcono } from "../Icono";
 import { EnlaceMotivo, seccionDeMotivo } from "./EnlaceMotivo";
 import { ACTIVIDADES_POR_TENSION, TEXTO_BAJA, nombreCorto } from "@/lib/catalogo";
 
@@ -99,14 +99,57 @@ function Soporte({ persona, lista, id, ruta }: { persona: Persona; lista: Lista;
 
 const NOMBRE_REG = (r: string) => (r.startsWith("RETILAP") ? "RETILAP 2024" : "RETIE 2024");
 
+type Reg = "RETIE-2024" | "RETILAP-2024";
+const REGS: { id: Reg; titulo: string; sub: string }[] = [
+  { id: "RETIE-2024", titulo: "RETIE", sub: "Instalaciones eléctricas" },
+  { id: "RETILAP-2024", titulo: "RETILAP", sub: "Iluminación y alumbrado público" },
+];
+
+/** Bloque de la hoja de vida con encabezado y borde de color propio, para separarlo de los demás. */
+function Bloque({ id, titulo, icono, color, children }: { id: string; titulo: string; icono: NombreIcono; color: string; children: React.ReactNode }) {
+  return (
+    <section id={id} className="scroll-mt-24 space-y-3 rounded-2xl border-2 p-4 transition-shadow" style={{ borderColor: color }}>
+      <h3 className="flex items-center gap-2 font-titulo text-lg font-extrabold" style={{ color }}>
+        <Icono nombre={icono} tamano={22} color={color} /> {titulo}
+      </h3>
+      {children}
+    </section>
+  );
+}
+
+/** Dos columnas: RETIE a la izquierda y RETILAP a la derecha (en el celular, una debajo de la otra). */
+function DosColumnas({ children }: { children: (r: Reg) => React.ReactNode }) {
+  return (
+    <div className="grid gap-4 lg:grid-cols-2">
+      {REGS.map((r) => (
+        <div key={r.id} className="min-w-0 space-y-2 rounded-xl p-3" style={{ background: "color-mix(in srgb, var(--borde) 35%, transparent)" }}>
+          <div className="border-b pb-1" style={{ borderColor: "var(--borde)" }}>
+            <span className="text-base font-bold">{r.titulo}</span> <span className="suave text-xs">· {r.sub}</span>
+          </div>
+          {children(r.id)}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function HojaDeVida({ persona }: { persona: Persona }) {
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <Matricula persona={persona} />
-      <Certificados persona={persona} />
-      <Experiencias persona={persona} />
-      <Formaciones persona={persona} />
-      <MatrizHabilitacion persona={persona} />
+      <Bloque id="certificados" titulo="Certificados de competencias" icono="dictamenes" color="var(--marca)">
+        <DosColumnas>{(r) => <Certificados persona={persona} reglamento={r} />}</DosColumnas>
+      </Bloque>
+      <Bloque id="experiencias" titulo="Experiencia laboral del ejercicio profesional" icono="personal" color="var(--verde)">
+        <p className="suave text-xs">Solo cuenta la experiencia con soporte <b>verificado</b> por el organismo. Los periodos que se traslapan no se suman dos veces.</p>
+        <DosColumnas>{(r) => <Experiencias persona={persona} reglamento={r} />}</DosColumnas>
+      </Bloque>
+      <Bloque id="formacion" titulo="Formación académica" icono="bombillo" color="var(--suave)">
+        <DosColumnas>{(r) => <Formaciones persona={persona} lado={r} />}</DosColumnas>
+      </Bloque>
+      <Bloque id="habilitacion" titulo="Habilitación por categoría (calculada)" icono="dictamenes" color="var(--suave)">
+        <DosColumnas>{(r) => <MatrizHabilitacion persona={persona} reglamento={r} />}</DosColumnas>
+      </Bloque>
     </div>
   );
 }
@@ -156,15 +199,15 @@ function Matricula({ persona }: { persona: Persona }) {
 }
 
 // ───────────────────────────── Certificados ─────────────────────────────
-function Certificados({ persona }: { persona: Persona }) {
+function Certificados({ persona, reglamento }: { persona: Persona; reglamento: Reg }) {
   const [nuevo, setNuevo] = useState(false);
   const [seguimiento, setSeguimiento] = useState<string | null>(null);
   const hoy = hoyISO();
+  const lista = persona.certificados.filter((c) => c.reglamento === reglamento);
   return (
-    <section id="certificados" className="scroll-mt-24 rounded-xl transition-shadow space-y-2">
-      <h3 className="text-sm font-semibold">Certificados de competencias</h3>
-      {persona.certificados.length === 0 && <p className="suave text-sm">Sin certificados registrados.</p>}
-      {[...persona.certificados].sort((x, y) => x.reglamento.localeCompare(y.reglamento) || (x.categorias[0] ?? "").localeCompare(y.categorias[0] ?? "")
+    <div className="space-y-2">
+      {lista.length === 0 && <p className="suave text-sm">Sin certificados registrados.</p>}
+      {[...lista].sort((x, y) => x.reglamento.localeCompare(y.reglamento) || (x.categorias[0] ?? "").localeCompare(y.categorias[0] ?? "")
         || x.fechaEmision.localeCompare(y.fechaEmision) || x.id.localeCompare(y.id)).map((c) => {
         const e = estadoCertificado(c, hoy);
         return (
@@ -180,7 +223,7 @@ function Certificados({ persona }: { persona: Persona }) {
                 <div className="mt-2"><Soporte persona={persona} lista="certificados" id={c.id} ruta={c.soporteRuta} /></div>
               </div>
               {!c.anulado && (
-                <div className="flex flex-col items-end gap-2">
+                <div className="flex flex-wrap items-start gap-3">
                 <Verificacion persona={persona} lista="certificados" item={c} />
                 <Boton variante="discreto" onClick={() => {
                   if (confirm(`¿Anular el certificado ${c.numero}? Quedará en el historial.`))
@@ -194,9 +237,9 @@ function Certificados({ persona }: { persona: Persona }) {
           </div>
         );
       })}
-      {nuevo ? <FormularioCertificado persona={persona} onTerminar={() => setNuevo(false)} />
-        : <Boton onClick={() => setNuevo(true)}><Icono nombre="mas" tamano={16} /> Agregar certificado</Boton>}
-    </section>
+      {nuevo ? <FormularioCertificado persona={persona} reglamento={reglamento} onTerminar={() => setNuevo(false)} />
+        : <Boton onClick={() => setNuevo(true)}><Icono nombre="mas" tamano={16} /> Agregar certificado {NOMBRE_REG(reglamento).split(" ")[0]}</Boton>}
+    </div>
   );
 }
 
@@ -248,9 +291,9 @@ function AvisoSeguimiento({ cert, abierto, onRegistrar }: { cert: CertificadoCom
   );
 }
 
-function FormularioCertificado({ persona, onTerminar }: { persona: Persona; onTerminar: () => void }) {
+function FormularioCertificado({ persona, reglamento, onTerminar }: { persona: Persona; reglamento: Reg; onTerminar: () => void }) {
   const [c, setC] = useState<Omit<CertificadoCompetencia, "id" | "anulado">>({
-    numero: "", certificador: "", reglamento: "RETIE-2024", categorias: [], fechaEmision: "", fechaVencimiento: "",
+    numero: "", certificador: "", reglamento, categorias: [], fechaEmision: "", fechaVencimiento: "",
   });
   const [venceManual, setVenceManual] = useState(false);
   const [errores, setErrores] = useState<string[]>([]);
@@ -354,20 +397,17 @@ function FormularioSeguimiento({ persona, cert, onTerminar }: { persona: Persona
 }
 
 // ───────────────────────────── Experiencia ─────────────────────────────
-function Experiencias({ persona }: { persona: Persona }) {
+function Experiencias({ persona, reglamento }: { persona: Persona; reglamento: Reg }) {
   const [nueva, setNueva] = useState(false);
   const hoy = hoyISO();
-  const resumen = REQUISITOS.map((r) => ({
-    r, total: aniosExperiencia(persona, { reglamento: r.reglamento, tipos: [...r.tiposExperienciaTecnica, ...r.directorTecnico.tiposExperienciaDireccion] }, hoy),
-  })).filter((x) => x.total > 0);
+  const r = requisitosDe(reglamento)!;
+  const total = aniosExperiencia(persona, { reglamento, tipos: [...r.tiposExperienciaTecnica, ...r.directorTecnico.tiposExperienciaDireccion] }, hoy);
+  const lista = persona.experiencias.filter((e) => e.reglamento === reglamento);
   return (
-    <section id="experiencias" className="scroll-mt-24 rounded-xl transition-shadow space-y-2">
-      <h3 className="text-sm font-semibold">Experiencia laboral del ejercicio profesional</h3>
-      <p className="suave text-xs">Solo cuenta la experiencia con soporte <b>verificado</b> por el organismo. Los periodos que se traslapan no se suman dos veces.</p>
-      {resumen.length > 0 && (
-        <p className="text-xs">{resumen.map((x) => `${NOMBRE_REG(x.r.reglamento)}: ${x.total.toFixed(1).replace(".", ",")} años verificados`).join(" · ")}</p>
-      )}
-      {persona.experiencias.map((e) => (
+    <div className="space-y-2">
+      {total > 0 && <p className="text-xs font-semibold">{total.toFixed(1).replace(".", ",")} años verificados</p>}
+      {lista.length === 0 && <p className="suave text-sm">Sin experiencia registrada.</p>}
+      {lista.map((e) => (
         <div key={e.id} className="flex flex-wrap items-start justify-between gap-2 rounded-lg border p-3 text-sm" style={{ borderColor: "var(--borde)" }}>
           <div>
             <b>{e.cargo}</b> · {e.empresa}
@@ -380,14 +420,14 @@ function Experiencias({ persona }: { persona: Persona }) {
           <Verificacion persona={persona} lista="experiencias" item={e} />
         </div>
       ))}
-      {nueva ? <FormularioExperiencia persona={persona} onTerminar={() => setNueva(false)} />
-        : <Boton onClick={() => setNueva(true)}><Icono nombre="mas" tamano={16} /> Agregar experiencia</Boton>}
-    </section>
+      {nueva ? <FormularioExperiencia persona={persona} reglamento={reglamento} onTerminar={() => setNueva(false)} />
+        : <Boton onClick={() => setNueva(true)}><Icono nombre="mas" tamano={16} /> Agregar experiencia {NOMBRE_REG(reglamento).split(" ")[0]}</Boton>}
+    </div>
   );
 }
 
-function FormularioExperiencia({ persona, onTerminar }: { persona: Persona; onTerminar: () => void }) {
-  const [e, setE] = useState<Omit<Experiencia, "id">>({ empresa: "", cargo: "", desde: "", reglamento: "RETIE-2024", categorias: [], tipos: [], verificada: false });
+function FormularioExperiencia({ persona, reglamento, onTerminar }: { persona: Persona; reglamento: Reg; onTerminar: () => void }) {
+  const [e, setE] = useState<Omit<Experiencia, "id">>({ empresa: "", cargo: "", desde: "", reglamento, categorias: [], tipos: [], verificada: false });
   const [errores, setErrores] = useState<string[]>([]);
   const { yo, puede } = useVerificador(persona);
   const req = requisitosDe(e.reglamento)!;
@@ -462,13 +502,18 @@ const NOMBRE_FORMACION: Record<Formacion["tipo"], string> = {
   curso_profundizacion: "Curso de profundización", otro: "Otro",
 };
 
-function Formaciones({ persona }: { persona: Persona }) {
+/** RETILAP: posgrados y cursos en iluminación o alumbrado público. RETIE: lo demás (pregrado, otros posgrados). */
+const esDeRetilap = (f: Formacion) => f.enIluminacion || f.tipo === "curso_profundizacion";
+
+function Formaciones({ persona, lado }: { persona: Persona; lado: Reg }) {
   const [nueva, setNueva] = useState(false);
-  const { yo } = useVerificador();
+  const lista = persona.formacion.filter((f) => esDeRetilap(f) === (lado === "RETILAP-2024"));
   return (
-    <section id="formacion" className="scroll-mt-24 rounded-xl transition-shadow space-y-2">
-      <h3 className="text-sm font-semibold">Formación académica</h3>
-      {persona.formacion.map((f) => (
+    <div className="space-y-2">
+      {lado === "RETILAP-2024" && <p className="suave text-xs">Posgrado en iluminación y/o alumbrado público y cursos de profundización (RETILAP §4.5.2.5).</p>}
+      {lado === "RETIE-2024" && <p className="suave text-xs">Pregrado y demás formación.</p>}
+      {lista.length === 0 && <p className="suave text-sm">Sin formación registrada.</p>}
+      {lista.map((f) => (
         <div key={f.id} className="flex flex-wrap items-start justify-between gap-2 rounded-lg border p-3 text-sm" style={{ borderColor: "var(--borde)" }}>
           <div>
             <b>{NOMBRE_FORMACION[f.tipo]}</b>: {f.titulo} · {f.institucion} · {f.fecha}
@@ -478,14 +523,16 @@ function Formaciones({ persona }: { persona: Persona }) {
           <Verificacion persona={persona} lista="formacion" item={f} />
         </div>
       ))}
-      {nueva ? <FormularioFormacion persona={persona} onTerminar={() => setNueva(false)} />
-        : <Boton onClick={() => setNueva(true)}><Icono nombre="mas" tamano={16} /> Agregar formación</Boton>}
-    </section>
+      {nueva ? <FormularioFormacion persona={persona} lado={lado} onTerminar={() => setNueva(false)} />
+        : <Boton onClick={() => setNueva(true)}><Icono nombre="mas" tamano={16} /> Agregar formación {NOMBRE_REG(lado).split(" ")[0]}</Boton>}
+    </div>
   );
 }
 
-function FormularioFormacion({ persona, onTerminar }: { persona: Persona; onTerminar: () => void }) {
-  const [f, setF] = useState<Omit<Formacion, "id">>({ tipo: "especializacion", titulo: "", institucion: "", fecha: "", areasIluminacion: [], enIluminacion: false, verificada: false });
+function FormularioFormacion({ persona, lado, onTerminar }: { persona: Persona; lado: Reg; onTerminar: () => void }) {
+  const [f, setF] = useState<Omit<Formacion, "id">>(lado === "RETILAP-2024"
+    ? { tipo: "especializacion", titulo: "", institucion: "", fecha: "", areasIluminacion: [], enIluminacion: true, verificada: false }
+    : { tipo: "pregrado", titulo: "", institucion: "", fecha: "", areasIluminacion: [], enIluminacion: false, verificada: false });
   const [errores, setErrores] = useState<string[]>([]);
   const { yo, puede } = useVerificador(persona);
   const guardar = async () => {
@@ -543,7 +590,7 @@ function FormularioFormacion({ persona, onTerminar }: { persona: Persona; onTerm
 
 // ───────────────────────────── Habilitación ─────────────────────────────
 /** Matriz: para cada categoría, ¿cumple como inspector y como director técnico? */
-export function MatrizHabilitacion({ persona }: { persona: Persona }) {
+export function MatrizHabilitacion({ persona, reglamento }: { persona: Persona; reglamento?: Reg }) {
   const [detalle, setDetalle] = useState<string | null>(null);
   const hoy = hoyISO();
   const celda = (actividad: string, rol: RolTecnico, clave: string) => {
@@ -556,13 +603,13 @@ export function MatrizHabilitacion({ persona }: { persona: Persona }) {
     );
   };
   return (
-    <section id="habilitacion" className="scroll-mt-24 rounded-xl transition-shadow space-y-2">
-      <h3 className="text-sm font-semibold">Habilitación por categoría (calculada)</h3>
+    <div className="space-y-2">
+      {!reglamento && <h3 className="text-sm font-semibold">Habilitación por categoría (calculada)</h3>}
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead className="suave text-xs uppercase"><tr><th className="py-1 pr-2">Categoría</th><th className="px-2">Inspector</th><th className="px-2">Director técnico</th></tr></thead>
           <tbody>
-            {REQUISITOS.flatMap((r) => [
+            {REQUISITOS.filter((r) => !reglamento || r.reglamento === reglamento).flatMap((r) => [
               ...r.categorias.map((k) => ({ act: k.actividades[0], clave: `${r.reglamento}-${k.codigo}`, etiqueta: etiquetaCategoria(r.reglamento, k.codigo), nombre: k.nombre })),
               // Generación hasta 1.000 V AC y 1.500 V DC: certificado g, experiencia en ese tipo de instalación (0015).
               ...(r.reglamento === "RETIE-2024" ? ACTIVIDADES_POR_TENSION.map((c) => ({
@@ -586,7 +633,7 @@ export function MatrizHabilitacion({ persona }: { persona: Persona }) {
           </tbody>
         </table>
       </div>
-    </section>
+    </div>
   );
 }
 
