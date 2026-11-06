@@ -191,7 +191,7 @@ function FormularioVersion({ base, o, tipo, anterior, onTerminar }: {
         </>)}
         <Campo etiqueta="Observación (opcional)"><Entrada value={d.observacion ?? ""} onChange={set("observacion")} /></Campo>
       </div>
-      <label className="flex cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed p-3 text-sm" style={{ borderColor: "var(--borde)" }}>
+      <label className="relative flex cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed p-3 text-sm" style={{ borderColor: "var(--borde)" }}>
         <Icono nombre="subir" color="var(--marca)" />
         <span className="flex-1">{archivo ? archivo.name : "Adjuntar el PDF (máximo 15 MB)"}</span>
         <input type="file" accept="application/pdf" className="sr-only" onChange={(e) => setArchivo(e.target.files?.[0])} />

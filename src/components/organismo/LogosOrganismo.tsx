@@ -74,7 +74,7 @@ function Carga({ titulo, ayuda, imagen, ocupado, onArchivo, puede }: {
   return (
     <div className="tarjeta space-y-3 p-4">
       <h3 className="text-sm font-semibold">{titulo}</h3>
-      <label className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed p-5 text-center text-sm" style={{ borderColor: "var(--borde)" }}>
+      <label className="relative flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed p-5 text-center text-sm" style={{ borderColor: "var(--borde)" }}>
         {imagen
           // eslint-disable-next-line @next/next/no-img-element
           ? <img src={imagen} alt={titulo} className="h-20 max-w-full object-contain" />
