@@ -19,7 +19,7 @@ export function EnlaceMotivo({ personaId, texto, className = "", seccion: dada }
   if (!personaId || !seccion) return <span className={className}>{texto}</span>;
   const volver = typeof window === "undefined" ? "" : `&volver=${encodeURIComponent(window.location.pathname + window.location.search)}`;
   return (
-    <Link href={`/mi-hoja-de-vida?persona=${personaId}${volver}#${seccion}`} className={`underline decoration-dotted underline-offset-2 hover:decoration-solid ${className}`}
+    <Link href={`/mi-hoja-de-vida?persona=${personaId}&seccion=${seccion}${volver}`} scroll={false} className={`underline decoration-dotted underline-offset-2 hover:decoration-solid ${className}`}
       title="Ir a la hoja de vida para cargar o diligenciar lo que falta">
       {texto} →
     </Link>

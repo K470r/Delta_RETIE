@@ -13,7 +13,7 @@ export default function Pagina() {
 
 /**
  * Hoja de vida de quien inició sesión, o de otra persona (?persona=id). A esta página llevan
- * los avisos y los motivos de "no cumple": baja a la parte que falta (#experiencias, …) y la resalta.
+ * los avisos y los motivos de "no cumple": baja a la parte que falta (?seccion=experiencias, …) y la resalta.
  */
 function HojaDeVidaPagina() {
   const params = useSearchParams();
@@ -25,17 +25,27 @@ function HojaDeVidaPagina() {
 
   useEffect(() => {
     if (!persona) return;
-    const seccion = window.location.hash.slice(1);
+    // La sección va en ?seccion= (no en #): el salto por # movería la pantalla completa.
+    const seccion = params.get("seccion") ?? window.location.hash.slice(1);
     const el = seccion ? document.getElementById(seccion) : null;
     if (!el) return;
     const t = setTimeout(() => {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Solo baja la lista (el contenedor con desplazamiento), no la pantalla completa:
+      // scrollIntoView movería también la página y dejaría el menú y el encabezado corridos.
+      let c = el.parentElement;
+      while (c && !/(auto|scroll)/.test(getComputedStyle(c).overflowY)) c = c.parentElement;
+      const encabezado = 90;
+      if (c && c !== document.body && c !== document.documentElement) {
+        c.scrollTo({ top: c.scrollTop + el.getBoundingClientRect().top - c.getBoundingClientRect().top - encabezado, behavior: "smooth" });
+      } else {
+        window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top - encabezado, behavior: "smooth" });
+      }
       el.style.boxShadow = "0 0 0 3px var(--naranja)";
       el.style.padding = "12px";
       setTimeout(() => { el.style.boxShadow = ""; }, 4000);
     }, 200);
     return () => clearTimeout(t);
-  }, [persona]);
+  }, [persona, params]);
 
   if (!base) return <p className="suave">Cargando…</p>;
   if (!persona) return <p className="tarjeta p-4 text-sm">{id ? "La persona no existe o no tiene permiso para ver su hoja de vida." : "Su usuario aún no está enlazado a una persona."}</p>;
