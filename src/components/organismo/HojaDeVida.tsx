@@ -162,7 +162,8 @@ function Certificados({ persona }: { persona: Persona }) {
     <section id="certificados" className="scroll-mt-24 rounded-xl transition-shadow space-y-2">
       <h3 className="text-sm font-semibold">Certificados de competencias</h3>
       {persona.certificados.length === 0 && <p className="suave text-sm">Sin certificados registrados.</p>}
-      {persona.certificados.map((c) => {
+      {[...persona.certificados].sort((x, y) => x.reglamento.localeCompare(y.reglamento) || (x.categorias[0] ?? "").localeCompare(y.categorias[0] ?? "")
+        || x.fechaEmision.localeCompare(y.fechaEmision) || x.id.localeCompare(y.id)).map((c) => {
         const e = estadoCertificado(c, hoy);
         return (
           <div key={c.id} className={`rounded-lg border p-3 text-sm ${c.anulado ? "opacity-50" : ""}`} style={{ borderColor: "var(--borde)" }}>

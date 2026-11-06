@@ -33,23 +33,31 @@ type Props = {
 };
 
 export function SeccionDesignaciones({ base, organismo, roles, titulo, descripcion }: Props) {
-  const [agregando, setAgregando] = useState(false);
+  const [agregando, setAgregando] = useState<RolOEC | null>(null);
   const [verHistorial, setVerHistorial] = useState(false);
   const hoy = hoyISO();
+  const hace30 = new Date(Date.now() - 30 * 86_400_000).toLocaleDateString("en-CA", { timeZone: "America/Bogota" });
   const todas = base.designaciones
     .filter((d) => d.organismoId === organismo.id && roles.includes(d.rol))
     .sort((a, b) => roles.indexOf(a.rol) - roles.indexOf(b.rol) || b.desde.localeCompare(a.desde));
-  const vigentes = todas.filter((d) => vigenteEn(d, hoy) || d.desde > hoy);
-  const historicas = todas.filter((d) => !vigentes.includes(d));
+  // Activas: sin fecha final, o que terminan después de hoy. Las desvinculadas hace poco van al
+  // fondo, en gris y sin botón; las más antiguas, en el historial.
+  const activas = todas.filter((d) => !d.hasta || d.hasta > hoy);
+  const recientes = todas.filter((d) => d.hasta && d.hasta <= hoy && d.hasta >= hace30);
+  const historicas = todas.filter((d) => d.hasta && d.hasta < hace30);
 
   const finalizar = (d: Designacion) => {
     const motivo = prompt(`DESVINCULAR DEL OEC a ${nombrePersona(base.personas.find((p) => p.id === d.personaId))} como ${NOMBRE_ROL[d.rol].toLowerCase()}.\n\nDeja de tener este rol desde hoy y ya no puede ejercerlo. No se puede deshacer (habría que designarla de nuevo).\nSi solo quiere terminar de cargar documentos, haga clic en Cancelar: todo se guarda solo.\n\nMotivo (obligatorio, queda en el registro):`);
     if (motivo === null) return;
     if (!motivo.trim()) return alert("Debe escribir el motivo.");
+    // Deja de tener el rol desde hoy: su último día es ayer (así otra persona puede tomar hoy un
+    // rol único). Si la designación empezó hoy, termina hoy y el reemplazo empieza mañana.
+    const ayer = new Date(Date.now() - 86_400_000).toLocaleDateString("en-CA", { timeZone: "America/Bogota" });
+    const hasta = d.desde < hoy ? ayer : hoy;
     actualizar((b) => ({
       ...b,
       designaciones: b.designaciones.map((x) => (x.id === d.id
-        ? { ...x, hasta: hoy, acto: [x.acto, `Desvinculada del OEC ${hoy}: ${motivo.trim()}`].filter(Boolean).join(" · ") } : x)),
+        ? { ...x, hasta, acto: [x.acto, `Desvinculada del OEC ${hoy}: ${motivo.trim()}`].filter(Boolean).join(" · ") } : x)),
     }));
   };
 
@@ -60,19 +68,32 @@ export function SeccionDesignaciones({ base, organismo, roles, titulo, descripci
           <h2 className="text-lg font-semibold">{titulo}</h2>
           <p className="suave max-w-3xl text-sm">{descripcion}</p>
         </div>
-        {!agregando && <Boton onClick={() => setAgregando(true)}>+ Designar persona</Boton>}
+        {!agregando && (
+          <div className="flex flex-wrap justify-end gap-2">
+            {roles.map((r, i) => (
+              <Boton key={r} variante={i === 0 ? "primario" : "contorno"} onClick={() => setAgregando(r)}>
+                <Icono nombre="mas" tamano={16} /> Designar {NOMBRE_ROL[r].toLowerCase()}
+              </Boton>
+            ))}
+          </div>
+        )}
       </div>
 
       {agregando && (
-        <FormularioDesignacion base={base} organismo={organismo} roles={roles}
-          onTerminar={() => setAgregando(false)} />
+        <FormularioDesignacion key={agregando} base={base} organismo={organismo} roles={roles} rolInicial={agregando}
+          onTerminar={() => setAgregando(null)} />
       )}
 
-      {vigentes.length === 0 && !agregando && (
-        <p className="tarjeta suave p-4 text-sm">Aún no hay personas designadas.</p>
+      {activas.length === 0 && !agregando && (
+        <p className="tarjeta suave p-4 text-sm">{recientes.length ? "No hay personas vigentes en estos roles." : "Aún no hay personas designadas."}</p>
       )}
       <div className="grid gap-3">
-        {vigentes.map((d) => <TarjetaDesignacion key={d.id} base={base} organismo={organismo} d={d} onFinalizar={() => finalizar(d)} />)}
+        {activas.map((d) => <TarjetaDesignacion key={d.id} base={base} organismo={organismo} d={d} onFinalizar={() => finalizar(d)} />)}
+        {recientes.map((d) => (
+          <div key={d.id} className="opacity-60 grayscale">
+            <TarjetaDesignacion base={base} organismo={organismo} d={d} />
+          </div>
+        ))}
       </div>
 
       {historicas.length > 0 && (
@@ -104,7 +125,14 @@ function TarjetaDesignacion({ base, organismo, d, onFinalizar }: {
     <article className="tarjeta space-y-2 p-4">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-wide marca">{NOMBRE_ROL[d.rol]}</div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wide marca">{NOMBRE_ROL[d.rol]}</span>
+            {d.hasta && d.hasta <= hoy && (
+              <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ background: "var(--borde)" }}>
+                Desvinculado del OEC · último día {d.hasta}
+              </span>
+            )}
+          </div>
           <div className="font-semibold">{nombrePersona(p)}</div>
           <div className="suave text-xs">
             {p.tipoDocumento} {p.documento}
@@ -219,20 +247,20 @@ function AutorizarActividades({ base, organismo, d }: { base: BaseOrganismos; or
 
 // ───────────────────────── Formulario de designación ─────────────────────────
 
-function FormularioDesignacion({ base, organismo, roles, onTerminar }: {
-  base: BaseOrganismos; organismo: Organismo; roles: RolOEC[]; onTerminar: () => void;
+function FormularioDesignacion({ base, organismo, roles, rolInicial, onTerminar }: {
+  base: BaseOrganismos; organismo: Organismo; roles: RolOEC[]; rolInicial: RolOEC; onTerminar: () => void;
 }) {
   const hoy = hoyISO();
   const [personaId, setPersonaId] = useState("");
   const [creandoPersona, setCreandoPersona] = useState(false);
   const [verHoja, setVerHoja] = useState(false);
   const [filtro, setFiltro] = useState("");
-  const [rol, setRol] = useState<RolOEC>(roles[0]);
+  const [rol, setRol] = useState<RolOEC>(rolInicial);
   const [desde, setDesde] = useState(hoy);
   const [acto, setActo] = useState("");
   const [acts, setActs] = useState<string[]>([]);
   const [vinc, setVinc] = useState<Omit<Vinculacion, "id" | "organismoId" | "personaId">>({
-    tipo: "laboral", cargo: NOMBRE_ROL[roles[0]], desde: hoy, sedeId: organismo.sedes.find((s) => s.principal)?.id,
+    tipo: "laboral", cargo: NOMBRE_ROL[rolInicial], desde: hoy, sedeId: organismo.sedes.find((s) => s.principal)?.id,
   });
   const [declImp, setDeclImp] = useState(hoy);
   const [declConf, setDeclConf] = useState(hoy);

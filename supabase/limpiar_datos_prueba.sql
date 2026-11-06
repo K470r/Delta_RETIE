@@ -2,6 +2,7 @@
 -- Borra los datos de PRUEBA creados durante la verificación de la conexión:
 --   * organismos cuyo NIT empieza por PRUEBA
 --   * personas cuyo documento empieza por PRUEBA (con su hoja de vida)
+-- Lo que una persona de prueba verificó en otras hojas de vida vuelve a "sin verificar".
 -- La aplicación nunca borra (17020 §8.4); por eso este bloque apaga los
 -- disparadores de estas tablas mientras borra y los vuelve a encender al final
 -- (dentro de la misma operación). La bitácora se conserva.
@@ -45,10 +46,12 @@ begin
   delete from vinculaciones where organismo_id = any(orgs) or persona_id = any(pers);
   delete from certificado_categorias where certificado_id = any(cer);
   delete from certificados_competencia where id = any(cer);
-  update experiencias set verificada_por = null where verificada_por = any(pers);
-  update formacion set verificada_por = null where verificada_por = any(pers);
+  update experiencias set verificada = false, verificada_por = null where verificada_por = any(pers);
+  update formacion set verificada = false, verificada_por = null where verificada_por = any(pers);
   if exists (select 1 from information_schema.columns where table_name = 'certificados_competencia' and column_name = 'verificada_por') then
-    execute 'update certificados_competencia set verificada_por = null where verificada_por = any($1)' using pers;
+    execute 'update certificados_competencia set verificada = false, verificada_por = null, verificada_en = null where verificada_por = any($1)' using pers;
+    update experiencias set verificada_en = null where not verificada and verificada_en is not null;
+    update formacion set verificada_en = null where not verificada and verificada_en is not null;
   end if;
   delete from experiencias where persona_id = any(pers);
   delete from formacion where persona_id = any(pers);
