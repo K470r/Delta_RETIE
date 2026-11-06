@@ -136,7 +136,7 @@ function DosColumnas({ children }: { children: (r: Reg) => React.ReactNode }) {
 export function HojaDeVida({ persona }: { persona: Persona }) {
   return (
     <div className="space-y-6">
-      <Matricula persona={persona} />
+      <DatosPersona persona={persona} />
       <Bloque id="certificados" titulo="Certificados de competencias" icono="dictamenes" color="var(--marca)">
         <DosColumnas>{(r) => <Certificados persona={persona} reglamento={r} />}</DosColumnas>
       </Bloque>
@@ -151,6 +151,31 @@ export function HojaDeVida({ persona }: { persona: Persona }) {
         <DosColumnas>{(r) => <MatrizHabilitacion persona={persona} reglamento={r} />}</DosColumnas>
       </Bloque>
     </div>
+  );
+}
+
+// ───────────────────────────── Datos de la persona ─────────────────────────────
+/** Nombre, cédula, matrícula, correo y teléfono, a todo el ancho. */
+function DatosPersona({ persona }: { persona: Persona }) {
+  const dato = (etiqueta: string, valor?: string) => (
+    <div className="min-w-0">
+      <div className="suave text-xs font-semibold uppercase tracking-wide">{etiqueta}</div>
+      <div className="truncate text-sm font-semibold" title={valor}>{valor || "—"}</div>
+    </div>
+  );
+  return (
+    <section className="space-y-3 rounded-2xl border-2 p-4" style={{ borderColor: "var(--borde)" }}>
+      <div>
+        <div className="font-titulo text-xl font-extrabold">{nombrePersona(persona)}</div>
+        {persona.profesion && <div className="suave text-sm">{persona.profesion}</div>}
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        {dato("Cédula", `${persona.tipoDocumento} ${persona.documento}`)}
+        {dato("Correo", persona.correo)}
+        {dato("Teléfono", persona.telefono)}
+      </div>
+      <Matricula persona={persona} />
+    </section>
   );
 }
 
@@ -173,7 +198,7 @@ function Matricula({ persona }: { persona: Persona }) {
   const puedeAceptar = e === "por_aceptar" && gerencia && persona.id !== yo;
   return (
     <section id="matricula" className="scroll-mt-24 rounded-xl transition-shadow space-y-1">
-      <h3 className="text-sm font-semibold">Matrícula profesional</h3>
+      <div className="suave text-xs font-semibold uppercase tracking-wide">Matrícula profesional</div>
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span>{datos || "—"}</span>
         <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ color, background: fondo }}>{texto}</span>
