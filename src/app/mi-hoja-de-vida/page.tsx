@@ -57,7 +57,6 @@ function HojaDeVidaPagina() {
     <div className="space-y-4">
       {volver && <Link href={volver} className={claseBoton("secundario", "pequeno")}>← Volver</Link>}
       <h1 className="text-2xl font-bold">{persona.id === yo?.id ? "Mi hoja de vida" : `Hoja de vida de ${nombrePersona(persona)}`}</h1>
-      <p className="suave text-sm">{nombrePersona(persona)} · {persona.tipoDocumento} {persona.documento}</p>
       <section className="tarjeta p-4"><HojaDeVida persona={persona} /></section>
     </div>
   );
