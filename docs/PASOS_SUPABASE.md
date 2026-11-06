@@ -45,6 +45,8 @@ Después, igual, `supabase/migrations/0014_verificacion_soportes.sql` → `Migra
 (verificación de soportes de competencia y formación).
 Y `supabase/migrations/0015_experiencia_por_tipo_generacion.sql` → `Migración 0015 aplicada: …`
 (generación hasta 1.000 V: experiencia por tipo de instalación).
+Y `supabase/migrations/0016_generacion_baja_tension_como_g.sql` → `Migración 0016 aplicada: …`
+(la generación hasta 1.000 V usa el certificado y la experiencia de la g; reemplaza la regla de 0015).
 
 Para firmar documentos en la aplicación, cada firmante necesita **contraseña** (la confirma al
 firmar). Quien entra solo con el enlace del correo puede ponerse una en **Mi cuenta**.

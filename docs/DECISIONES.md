@@ -246,11 +246,10 @@ Para generación con FNCE, AGPE y GD y generación con varias fuentes:
   La segunda no se acredita aparte: la cubre la misma línea del alcance.
 - En la fase 2, al registrar la inspección se pedirán la tensión AC y DC y si está conectada a la
   red, y solo se podrá asignar personal con la competencia que corresponde.
-- **Hasta 1.000 V AC y 1.500 V DC** (`0015_experiencia_por_tipo_generacion.sql`): certificado de
-  competencias de la **g**, y la experiencia que pide el RETIE para la **a** (3 años) **en ese tipo
-  de instalación**: generación con FNCE, AGPE y GD, o generación con varias fuentes. Para el
-  director técnico, la experiencia total y la de dirección también en ese tipo de instalación.
-  Por eso cada experiencia de generación indica el tipo de instalación.
+- **Hasta 1.000 V AC y 1.500 V DC** (`0016_generacion_baja_tension_como_g.sql`, reemplaza la regla de
+  0015): sirven el **certificado de la g** y **cualquier experiencia de la g**, con los **2 años**
+  que exige la g (y para el director técnico, lo que exige el RETIE en la g). Por encima de esos
+  valores, todo de la a.
 - La tabla "Habilitación por categoría" tiene una fila para cada una de las dos.
 
 ## Documentos del personal con firma (`0013_documentos_personal.sql`)

@@ -4,7 +4,7 @@
  * vigencia de los certificados (5 años con seguimiento al mes 30).
  */
 import { entidadMatricula, estadoMatricula } from "./matricula";
-import { esVarianteBT, lineaDe, nombreCorto } from "../catalogo";
+import { nombreCorto } from "../catalogo";
 import { categoriaDeActividad, etiquetaCategoria, requisitosDe, AREAS_ILUMINACION, type RequisitosReglamento } from "../requisitos";
 import type { CertificadoCompetencia, Persona, RolTecnico } from "./tipos";
 
@@ -154,9 +154,8 @@ export function evaluarCompetencia(p: Persona, actividad: string, rol: RolTecnic
     }
   }
 
-  // Experiencia del inspector. Generación hasta 1.000 V AC y 1.500 V DC (0015): la de la categoría a
-  // (3 años), en ese tipo de instalación.
-  const enActividad = esVarianteBT(actividad) ? lineaDe(actividad) : undefined;
+  // Experiencia del inspector. (La generación hasta 1.000 V AC y 1.500 V DC se trata como la g, 0016.)
+  const enActividad: string | undefined = undefined;
   const aniosReq = enActividad ? req.categorias.find((k) => k.codigo === "a")!.experienciaInspectorAnios : cat.experienciaInspectorAnios;
   const catExp = enActividad ? undefined : req.experienciaPorCategoria ? cat.codigo : undefined;
   const donde = enActividad ? `, en ${nombreCorto(enActividad).toLowerCase()}` : catExp ? `, categoría ${cat.codigo}` : "";

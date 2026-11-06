@@ -17,9 +17,8 @@ import {
 import { Boton, Campo, Entrada, Errores, Grupo, Selector, claseBoton } from "../Formulario";
 import { Icono } from "../Icono";
 import { EnlaceMotivo, seccionDeMotivo } from "./EnlaceMotivo";
-import { ACTIVIDADES, ACTIVIDADES_POR_TENSION, TEXTO_BAJA, nombreCorto } from "@/lib/catalogo";
+import { ACTIVIDADES_POR_TENSION, TEXTO_BAJA, nombreCorto } from "@/lib/catalogo";
 
-const GENERACION = ACTIVIDADES.filter((a) => a.reglamento === "RETIE-2024" && a.grupo === "Generación");
 import { abrirArchivo, cargarArchivo, extension, REGLAS_SOPORTE } from "@/lib/archivos";
 import { aceptarMatricula, mostrarError } from "@/lib/organismo/almacen";
 import { entidadMatricula, estadoMatricula } from "@/lib/organismo/matricula";
@@ -403,11 +402,9 @@ function FormularioExperiencia({ persona, onTerminar }: { persona: Persona; onTe
     if (e.desde > hoyISO()) err.push("La experiencia no puede iniciar en el futuro");
     if (!e.tipos.length) err.push("Marque el tipo de actividad desarrollada");
     if (req.experienciaPorCategoria && !e.categorias.length) err.push("Marque la(s) categoría(s) de instalación en que se obtuvo la experiencia");
-    if (e.categorias.includes("a") && e.reglamento === "RETIE-2024" && !(e.actividades ?? []).length) err.push("Indique el tipo de instalación de generación");
     setErrores(err);
     if (err.length) return;
-    const actividades = e.categorias.includes("a") ? e.actividades ?? [] : [];
-    const error = await modificarPersona(persona.id, (p) => ({ ...p, experiencias: [...p.experiencias, { ...e, actividades, id: nuevoId(), hasta: e.hasta || undefined, verificadaPor: e.verificada ? yo : undefined }] }), false);
+    const error = await modificarPersona(persona.id, (p) => ({ ...p, experiencias: [...p.experiencias, { ...e, id: nuevoId(), hasta: e.hasta || undefined, verificadaPor: e.verificada ? yo : undefined }] }), false);
     if (error) return setErrores([error]);
     onTerminar();
   };
@@ -447,20 +444,7 @@ function FormularioExperiencia({ persona, onTerminar }: { persona: Persona; onTe
           ))}
         </div>
       </Grupo>
-        {e.reglamento === "RETIE-2024" && e.categorias.includes("a") && (
-        <Grupo etiqueta="Tipo de instalación de generación (para la generación hasta 1.000 V AC y 1.500 V DC se exige experiencia en ese tipo)">
-          <div className="space-y-1">
-            {GENERACION.map((a) => (
-              <label key={a.codigo} className="flex items-start gap-2 text-sm">
-                <input type="checkbox" className="mt-1" checked={(e.actividades ?? []).includes(a.codigo)}
-                  onChange={() => setE({ ...e, actividades: (e.actividades ?? []).includes(a.codigo) ? (e.actividades ?? []).filter((x) => x !== a.codigo) : [...(e.actividades ?? []), a.codigo] })} />
-                <span>{nombreCorto(a.codigo)}</span>
-              </label>
-            ))}
-          </div>
-        </Grupo>
-      )}
-      {puede ? (
+        {puede ? (
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={e.verificada} onChange={() => setE({ ...e, verificada: !e.verificada })} />
           Revisé la certificación laboral que soporta esta experiencia
@@ -583,7 +567,7 @@ export function MatrizHabilitacion({ persona }: { persona: Persona }) {
               // Generación hasta 1.000 V AC y 1.500 V DC: certificado g, experiencia en ese tipo de instalación (0015).
               ...(r.reglamento === "RETIE-2024" ? ACTIVIDADES_POR_TENSION.map((c) => ({
                 act: `${c}-BT`, clave: `${c}-BT`, etiqueta: "RETIE g",
-                nombre: `${nombreCorto(c)} — ${TEXTO_BAJA} (certificado g, 3 años de experiencia en ese tipo de instalación)`,
+                nombre: `${nombreCorto(c)} — ${TEXTO_BAJA} (con el certificado y la experiencia de la g)`,
               })) : []),
             ].map(({ act, clave, etiqueta, nombre }) => {
               return [
