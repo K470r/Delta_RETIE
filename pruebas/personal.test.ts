@@ -123,14 +123,14 @@ test("la variante de baja tensión la cubre la línea de generación del alcance
   assert.doesNotMatch(m ?? "", /alcance/);
 });
 
-test("generación hasta 1.000 V: certificado g y 3 años de experiencia en ese tipo de instalación (0015)", async () => {
+test("generación hasta 1.000 V: sirven el certificado y cualquier experiencia de la g, con sus 2 años (0016)", async () => {
   const { evaluarCompetencia } = await import("../src/lib/organismo/competencia");
   const p = { ...persona("x", "Gloria"), matriculaNumero: "M", matriculaEntidad: "CPNIEMPA",
     certificados: [{ ...c, categorias: ["g"], fechaEmision: "2026-01-01", fechaVencimiento: "2030-12-31", verificada: true, verificadaPor: "v" }],
-    experiencias: [{ id: "e", empresa: "E", cargo: "C", desde: "2015-01-01", hasta: "2026-01-01", reglamento: "RETIE-2024", categorias: ["g"], tipos: ["inspeccion"], verificada: true, verificadaPor: "v" }] };
-  assert.equal(evaluarCompetencia(p, "RETIE24-UF-BASICAS", "inspector", "2026-11-05").cumple, true);
-  assert.equal(evaluarCompetencia(p, "RETIE24-GEN-FNCE-BT", "inspector", "2026-11-05").cumple, false);   // sin experiencia en AGPE/GD
-  const conAgpe = { ...p, experiencias: [...p.experiencias, { id: "e2", empresa: "Solar", cargo: "C", desde: "2022-06-01", reglamento: "RETIE-2024", categorias: ["a"], actividades: ["RETIE24-GEN-FNCE"], tipos: ["inspeccion"], verificada: true, verificadaPor: "v" }] };
-  assert.equal(evaluarCompetencia(conAgpe, "RETIE24-GEN-FNCE-BT", "inspector", "2026-11-05").cumple, true);
-  assert.equal(evaluarCompetencia(conAgpe, "RETIE24-GEN-VARIAS-BT", "inspector", "2026-11-05").cumple, false);   // otra fuente
+    experiencias: [{ id: "e", empresa: "E", cargo: "C", desde: "2024-06-01", hasta: "2026-11-01", reglamento: "RETIE-2024", categorias: ["g"], tipos: ["inspeccion"], verificada: true, verificadaPor: "v" }] };
+  for (const a of ["RETIE24-UF-BASICAS", "RETIE24-GEN-FNCE-BT", "RETIE24-GEN-VARIAS-BT"])
+    assert.equal(evaluarCompetencia(p, a, "inspector", "2026-11-05").cumple, true, a);
+  assert.equal(evaluarCompetencia(p, "RETIE24-GEN-FNCE", "inspector", "2026-11-05").cumple, false);   // más de 1.000 V: la a
+  const corta = { ...p, experiencias: [{ ...p.experiencias[0], desde: "2025-06-01" }] };
+  assert.equal(evaluarCompetencia(corta, "RETIE24-GEN-FNCE-BT", "inspector", "2026-11-05").cumple, false);   // menos de 2 años
 });

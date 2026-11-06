@@ -3,7 +3,7 @@
 -- Pegar TODO este archivo en Supabase → SQL Editor → New query → Run.
 -- Ejecutar UNA sola vez sobre un proyecto vacío.
 -- Si ya lo ejecutó antes, NO lo repita: pegue solo las migraciones nuevas
--- (por ejemplo supabase/migrations/0015_experiencia_por_tipo_generacion.sql).
+-- (por ejemplo supabase/migrations/0016_generacion_baja_tension_como_g.sql).
 -- Generado a partir de supabase/migrations/*.sql y supabase/seed.sql
 -- ============================================================================
 
@@ -3107,3 +3107,21 @@ begin
 end $$;
 
 select 'Migración 0015 aplicada: experiencia por tipo de instalación de generación' as resultado;
+
+
+-- >>>>>>>>>> supabase/migrations/0016_generacion_baja_tension_como_g.sql
+-- ============================================================================
+-- Ultra RETIE — 0016 Generación hasta 1.000 V AC y 1.500 V DC: todo como la categoría g
+--
+-- Decisión (reemplaza la regla de experiencia de 0015): para generación con FNCE, AGPE y GD
+-- y generación con varias fuentes hasta 1.000 V AC y 1.500 V DC sirve el certificado de la g y
+-- CUALQUIER experiencia de la g, con los 2 años que exige la g (y para el director técnico, lo
+-- que exige el RETIE en la g). Por encima de esos valores sigue la categoría a.
+-- Se puede ejecutar más de una vez sin dañar nada.
+-- ============================================================================
+
+update actividades set experiencia_en_actividad = null, experiencia_anios = null
+ where variante_de is not null and tension = 'hasta_1000ac_1500dc'
+   and (experiencia_en_actividad is not null or experiencia_anios is not null);
+
+select 'Migración 0016 aplicada: generación hasta 1.000 V con certificado y experiencia de la g' as resultado;
