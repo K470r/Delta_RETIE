@@ -52,6 +52,11 @@ body {
 .boton-contorno:hover:not(:disabled) { background: color-mix(in srgb, var(--marca) 16%, var(--tarjeta)); }
 .boton-neutro { border-color: var(--borde); background: var(--tarjeta); }
 
+/* Motivo de "no cumple" que lleva a completar la hoja de vida (naranja legible en ambos modos) */
+.enlace-motivo { color: #b54708; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.enlace-motivo:hover { text-decoration-thickness: 2px; }
+@media (prefers-color-scheme: dark) { .enlace-motivo { color: #fdb022; } }
+
 /* Alertas grandes (seguimiento del mes 30, documentos por firmar) */
 .alerta-naranja { background: #fdebd9; color: #7a3a06; border: 2px solid #e8772e; }
 .alerta-roja { background: #fde3e1; color: #8f1d14; border: 2px solid #d92d20; }
