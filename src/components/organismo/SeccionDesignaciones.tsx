@@ -20,6 +20,7 @@ import {
 import { Boton, Campo, Entrada, Errores, Selector, claseBoton } from "../Formulario";
 import { Icono } from "../Icono";
 import { EnlaceMotivo, seccionDeMotivo } from "./EnlaceMotivo";
+import { categoriaDeActividad, etiquetaCategoria } from "@/lib/requisitos";
 import { SelectorActividades } from "../SelectorActividades";
 import { FormularioPersona } from "./FormularioPersona";
 import { HojaDeVida, ListaRequisitos } from "./HojaDeVida";
@@ -155,13 +156,37 @@ function TarjetaDesignacion({ base, organismo, d, onFinalizar }: {
         </p>
       )}
       {onFinalizar && ROLES_CON_ACTIVIDADES.includes(d.rol) && <AutorizarActividades base={base} organismo={organismo} d={d} />}
-      {d.actividades.length > 0 && (
-        <ul className="space-y-1 text-sm">
-          {d.actividades.map((a) => <FilaActividad key={a} base={base} organismo={organismo} d={d} actividad={a} corregible={!!onFinalizar} />)}
-        </ul>
-      )}
+      {d.actividades.length > 0 && <ActividadesPorCategoria base={base} organismo={organismo} d={d} corregible={!!onFinalizar} />}
       {TIPO_DE_ROL[d.rol] && <BloqueDocumento base={base} organismo={organismo} d={d} vigente={!!onFinalizar} />}
     </article>
+  );
+}
+
+/** Actividades autorizadas agrupadas por categoría (RETIE a → g, luego RETILAP 1 → 5), con aire entre ellas. */
+function ActividadesPorCategoria({ base, organismo, d, corregible }: { base: BaseOrganismos; organismo: Organismo; d: Designacion; corregible: boolean }) {
+  const grupos = new Map<string, { etiqueta: string; nombre: string; acts: string[] }>();
+  for (const a of d.actividades) {
+    const m = categoriaDeActividad(a);
+    const clave = m ? `${m.req.reglamento}|${m.cat.codigo}` : "zzz";
+    const g = grupos.get(clave) ?? { etiqueta: m ? etiquetaCategoria(m.req.reglamento, m.cat.codigo) : "Otras", nombre: m?.cat.nombre ?? "", acts: [] };
+    g.acts.push(a);
+    grupos.set(clave, g);
+  }
+  const orden = [...grupos.entries()].sort(([x], [y]) => x.localeCompare(y));
+  return (
+    <div className="space-y-4 pt-1">
+      {orden.map(([clave, g]) => (
+        <section key={clave} className="space-y-2">
+          <h4 className="border-b pb-1 text-base font-bold marca" style={{ borderColor: "var(--borde)" }}>
+            {g.etiqueta} <span className="suave text-sm font-normal">· {g.nombre}</span>
+          </h4>
+          <ul className="space-y-3">
+            {g.acts.sort((x, y) => nombreAutorizacion(x).localeCompare(nombreAutorizacion(y), "es"))
+              .map((a) => <FilaActividad key={a} base={base} organismo={organismo} d={d} actividad={a} corregible={corregible} />)}
+          </ul>
+        </section>
+      ))}
+    </div>
   );
 }
 
@@ -174,11 +199,11 @@ function FilaActividad({ base, organismo, d, actividad: a, corregible }: { base:
   const cert = h.items.find((i) => i.requisito.startsWith("Certificado de competencias") && i.cumple);
   return (
     <li>
-      <button className="flex w-full items-start gap-2 text-left" onClick={() => setAbierta(!abierta)}>
-        <span className={motivo ? "text-red-600" : "text-emerald-600"}>{motivo ? "✕" : "✓"}</span>
+      <button className="flex w-full items-start gap-3 text-left" onClick={() => setAbierta(!abierta)}>
+        <span className={`text-lg leading-6 ${motivo ? "text-red-600" : "text-emerald-600"}`}>{motivo ? "✕" : "✓"}</span>
         <span>
-          {nombreAutorizacion(a)} <span className="suave text-xs">({h.categoria})</span>
-          <span className={`block text-xs ${motivo ? "text-red-600" : "suave"}`}>
+          <span className="text-base font-semibold leading-6">{nombreAutorizacion(a)}</span>
+          <span className={`mt-0.5 block text-sm ${motivo ? "text-red-600" : "suave"}`}>
             {motivo ? <EnlaceMotivo personaId={p.id} texto={motivo} /> : (cert ? `Certificado ${cert.detalle}` : "Cumple los requisitos")}
             {h.alertas.length > 0 && <span className="text-amber-600"> · {h.alertas.join(" · ")}</span>}
           </span>
@@ -236,7 +261,7 @@ function AutorizarActividades({ base, organismo, d }: { base: BaseOrganismos; or
       </p>
       <SelectorActividades actividades={disponibles} seleccion={acts} onCambio={setActs}
         bloqueo={(c) => motivoNoPuedeEjercer(base, organismo, p, c, hoyISO(), rolTecnico(d.rol))} personaId={p.id}
-        detalle={(c, motivo) => <RequisitosEnLinea persona={p} actividad={c} rol={rolTecnico(d.rol)} fecha={hoyISO()} motivo={motivo} />} />
+        porCategoria detalle={(c, motivo) => <RequisitosEnLinea persona={p} actividad={c} rol={rolTecnico(d.rol)} fecha={hoyISO()} motivo={motivo} />} />
       <Errores errores={errores} />
       <div className="flex gap-2">
         <Boton onClick={guardar} disabled={guardando}>{guardando ? "Guardando…" : "Autorizar"}</Boton>
@@ -420,7 +445,7 @@ function FormularioDesignacion({ base, organismo, roles, rolInicial, onTerminar 
               {verHoja && <div className="rounded-lg border p-3" style={{ borderColor: "var(--borde)" }}><HojaDeVida persona={persona} /></div>}
               <SelectorActividades actividades={lineas} seleccion={acts} onCambio={setActs}
                 bloqueo={(c) => motivoNoPuedeEjercer(baseTentativa, organismo, persona, c, fechaEval, rolTecnico(rol))} personaId={persona.id}
-                detalle={(c, motivo) => <RequisitosEnLinea persona={persona} actividad={c} rol={rolTecnico(rol)} fecha={fechaEval} motivo={motivo} />} />
+                porCategoria detalle={(c, motivo) => <RequisitosEnLinea persona={persona} actividad={c} rol={rolTecnico(rol)} fecha={fechaEval} motivo={motivo} />} />
             </div>
           )}
 
