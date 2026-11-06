@@ -19,9 +19,10 @@ export function EnlaceMotivo({ personaId, texto, className = "", seccion: dada }
   if (!personaId || !seccion) return <span className={className}>{texto}</span>;
   const volver = typeof window === "undefined" ? "" : `&volver=${encodeURIComponent(window.location.pathname + window.location.search)}`;
   return (
-    <Link href={`/mi-hoja-de-vida?persona=${personaId}&seccion=${seccion}${volver}`} scroll={false} className={`underline decoration-dotted underline-offset-2 hover:decoration-solid ${className}`}
+    <Link href={`/mi-hoja-de-vida?persona=${personaId}&seccion=${seccion}${volver}`} scroll={false}
+      className={`${className.replace(/text-red-\d+/g, "")} enlace-motivo`}
       title="Ir a la hoja de vida para cargar o diligenciar lo que falta">
-      {texto} →
+      {texto} <span className="whitespace-nowrap">→ Completar</span>
     </Link>
   );
 }

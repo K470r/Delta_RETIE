@@ -39,11 +39,11 @@ export function SelectorActividades({ actividades, seleccion, onCambio, bloqueo,
                   {acts.map((a) => {
                     const motivo = bloqueo?.(a.codigo) ?? null;
                     return (
-                      <label key={a.codigo} className={`flex items-start gap-2 text-sm ${motivo ? "opacity-60" : ""}`}>
+                      <label key={a.codigo} className="flex items-start gap-2 text-sm">
                         <input type="checkbox" className="mt-1" disabled={!!motivo}
                           checked={seleccion.includes(a.codigo)} onChange={() => alternar(a.codigo)} />
                         <span>
-                          {a.nombre}
+                          <span className={motivo ? "opacity-60" : ""}>{a.nombre}</span>
                           {motivo && <EnlaceMotivo personaId={personaId} texto={motivo} className="block text-xs text-red-600" />}
                         </span>
                       </label>
