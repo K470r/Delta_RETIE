@@ -261,7 +261,7 @@ function AutorizarActividades({ base, organismo, d }: { base: BaseOrganismos; or
       </p>
       <SelectorActividades actividades={disponibles} seleccion={acts} onCambio={setActs}
         bloqueo={(c) => motivoNoPuedeEjercer(base, organismo, p, c, hoyISO(), rolTecnico(d.rol))} personaId={p.id}
-        detalle={(c, motivo) => <RequisitosEnLinea persona={p} actividad={c} rol={rolTecnico(d.rol)} fecha={hoyISO()} motivo={motivo} />} />
+        porCategoria detalle={(c, motivo) => <RequisitosEnLinea persona={p} actividad={c} rol={rolTecnico(d.rol)} fecha={hoyISO()} motivo={motivo} />} />
       <Errores errores={errores} />
       <div className="flex gap-2">
         <Boton onClick={guardar} disabled={guardando}>{guardando ? "Guardando…" : "Autorizar"}</Boton>
@@ -445,7 +445,7 @@ function FormularioDesignacion({ base, organismo, roles, rolInicial, onTerminar 
               {verHoja && <div className="rounded-lg border p-3" style={{ borderColor: "var(--borde)" }}><HojaDeVida persona={persona} /></div>}
               <SelectorActividades actividades={lineas} seleccion={acts} onCambio={setActs}
                 bloqueo={(c) => motivoNoPuedeEjercer(baseTentativa, organismo, persona, c, fechaEval, rolTecnico(rol))} personaId={persona.id}
-                detalle={(c, motivo) => <RequisitosEnLinea persona={persona} actividad={c} rol={rolTecnico(rol)} fecha={fechaEval} motivo={motivo} />} />
+                porCategoria detalle={(c, motivo) => <RequisitosEnLinea persona={persona} actividad={c} rol={rolTecnico(rol)} fecha={fechaEval} motivo={motivo} />} />
             </div>
           )}
 
