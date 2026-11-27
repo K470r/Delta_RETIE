@@ -42,6 +42,10 @@ organismo de inspección). Antes de cambiar algo de esta lista, se propone y se 
     hospedaje que permita uso comercial.
 - Operación real estimada: 25 a 50 USD/mes para todos los organismos juntos.
 
+- **Supabase gratuito se pausa** tras una semana sin actividad. Mientras sigan las pruebas, Vercel
+  llama una vez al día a `/api/mantener-activa` (`vercel.json`), que hace una consulta mínima de
+  solo lectura. Al pasar a operación real, Supabase Pro (no se pausa) y se puede quitar.
+
 ## Diseño visual (aprobado con la muestra)
 
 - **Panel lateral fijo** a la izquierda; el contenido se desplaza y el panel queda quieto.
